@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------ Authentication Model ------------------
+
+model User {
+  id                     Int       @id @default(autoincrement())
+  username               String?
+  lastName               String?
+  middleName             String?
+  token                  String?
+  email                  String    @unique
+  password               String
+  phoneNumber            String?   @unique
+  group                  Int?
+  createdAt              DateTime  @default(now())
+  nrc_card_id            String?
+  role                   UserRole  @default(STAFF)
+  isEmailVerified        Boolean   @default(false)
+  emailVerificationToken String?
+  bloodGroup             String?
+  address                String?
+  dateOfBirth            DateTime?
+  gender                 String?
+  emergencyContact       String?
+
+  // Assigned stores & warehouses with referential actions
+  
+}
+
+enum UserRole {
+  ADMIN
+  SUPERUSER
+  INSPECTOR
+  STAFF
+  STOREMANAGER
+}
+
+model SystemSettings {
+  id                Int      @id @default(autoincrement())
+  companyName       String   @default("Default Company Name")
+  adminEmail        String   @default("admin@example.com")
+  supportEmail      String   @default("support@example.com")
+  notificationEmail String   @default("notifications@example.com")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
