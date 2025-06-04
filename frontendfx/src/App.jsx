@@ -196,10 +196,7 @@ function App() {
     <RecoilRoot>
       <DocumentTitle />
       <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-        
-          <Route path='/test' element={<Test />} />
+        <Routes>          {/* Public routes */}
           <Route path='/register' element={<Register />} />
           <Route path='/login' element={<Login />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
