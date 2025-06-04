@@ -48,7 +48,7 @@ const SystemSettings = () => {
       const data = await response.json();
       setSettings(data);
       // Update company name in Recoil state
-      setCompanyName(data.businessName || "Inventory System");
+      setCompanyName(data.businessName || "book8 ");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -74,7 +74,7 @@ const SystemSettings = () => {
       console.log('Updated settings:', data);
       setSettings(data);
       // Update company name in Recoil state after successful update
-      setCompanyName(data.businessName || "Inventory System");
+      setCompanyName(data.businessName || "book8 ");
     } catch (err) {
       setError(err.message);
     } finally {

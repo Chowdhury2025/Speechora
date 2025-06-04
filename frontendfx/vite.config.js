@@ -4,13 +4,17 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    port: 8800,
+    host: true,  // Added to allow access from other devices on the network
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['vite.svg'],
       manifest: {
-        name: 'S Store MOBILE CENTRE',
+        name: 'book8',
         short_name: 'S Store',
         description: 'Inventory Management System',
         theme_color: '#ffffff',
@@ -61,11 +65,7 @@ export default defineConfig({
   ],
   build: {
     sourcemap: true,
-  },
-  server: {
-    port: 5173,
-  },
-  // PWA Configuration
+  },  // PWA Configuration
   manifest: {
     name: 'Inventory Management System',
     short_name: 'Inventory',

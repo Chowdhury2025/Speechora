@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { RecoilRoot, useRecoilValue, useSetRecoilState } from 'recoil';
-import { authState, userStates } from './atoms';
+import { RecoilRoot, useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
+import { authState, userStates, sidebarState } from './atoms';
 import { API_URL } from './config';
-import axios from 'axios';
+import api from './utils/api';
 
 import Sidebar from './app/components/common/Sidebar.jsx';
 import DocumentTitle from './components/DocumentTitle.jsx';
@@ -16,8 +16,6 @@ import ImagesPage from './app/pages/ImagesPage.jsx';
 import PremiumSalesPage from './app/pages/PremiumSalesPage.jsx';
 import AnalyticsPage from './app/pages/AnalyticsPage.jsx';
 import SettingsPage from './app/pages/SettingsPage.jsx';
-import ExpensesPage from './app/pages/ExpensesPage.jsx';
-import Test from './app/Test.jsx';
 
 import Register from './auth/Register.jsx';
 import { ForgotPassword } from './auth/Forgot_password.jsx';
@@ -34,6 +32,7 @@ const ROLE_PERMISSIONS = {
   ADMIN: ['Dashboard', 'Users', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings'],
   CONTENTMANAGER: ['Tests', 'Images'],
   SUPPORT: ['Users', 'Premium'],
+  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Images'],
 };
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
@@ -90,12 +89,11 @@ function IndexRouteHandler() {
     return <Navigate to='/no-role' replace />;
   }
 
-  const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
-  if (!allowed.includes('Overview')) {
+  const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];  if (!allowed.includes('Dashboard')) {
     return <Navigate to={getFirstAllowedRoute(user.role)} replace />;
   }
 
-  return <OverviewPage />;
+  return <DashboardPage />;
 }
 
 // AutoLogout component to handleLogout user after 3 minutes of inactivity
@@ -104,20 +102,10 @@ function AutoLogout() {
   const setUser = useSetRecoilState(userStates);
   const navigate = useNavigate();
   const [autoLogoutTime, setAutoLogoutTime] = useState(30); // Default to 30 minutes
-
   useEffect(() => {
-    // Fetch system settings when component mounts
-    const fetchSettings = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/api/system/settings`);
-        if (response.data && response.data.autoLogoutTime) {
-          setAutoLogoutTime(response.data.autoLogoutTime);
-        }
-      } catch (error) {
-        console.error('Failed to fetch auto logout time:', error);
-      }
-    };
-    fetchSettings();
+    // Using default auto logout time since system settings API is not ready
+    const defaultAutoLogoutTime = 30; // 30 minutes
+    setAutoLogoutTime(defaultAutoLogoutTime);
   }, []);
 
   useEffect(() => {
@@ -154,40 +142,49 @@ function AutoLogout() {
 function Layout() {
   const isAuthenticated = useRecoilValue(authState);
   const user = useRecoilValue(userStates);
+  const [isSidebarOpen] = useRecoilState(sidebarState);
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to='/login' replace />;
   }
 
-  return (
-    <div className='flex h-screen bg-gray-50 overflow-hidden'>
+  return (    <div className='flex h-screen bg-gradient-to-br from-azure-500 to-azure-400 overflow-hidden'>
       {/* Sidebar */}
       <Sidebar />
       
       {/* Main Content */}
-      <div className='flex-1 flex flex-col overflow-hidden'>
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
         {/* Top Navigation Bar */}
-        <header className='bg-white shadow-sm'>
-          <div className='px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between'>
-            <h1 className='text-2xl font-semibold text-gray-900'>
+        <header className='bg-white border-b border-azure-300'>
+          <div className='px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between'>
+            <h1 className='text-xl font-semibold text-sky_blue-400 transition-all duration-300'>
               Kids Learning Platform Admin
             </h1>
             <div className='flex items-center space-x-4'>
-              <span className='text-gray-600'>
-                {user?.email}
-              </span>
-              <span className='px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800'>
-                {user?.role}
-              </span>
+              <div className='flex items-center space-x-3'>
+                <div className='h-8 w-8 rounded-full bg-sky_blue-500 flex items-center justify-center'>
+                  <span className='text-white text-sm font-medium'>
+                    {user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
+                  </span>
+                </div>
+                <div className='flex flex-col'>
+                  <span className='text-sm font-medium text-gray-700'>
+                    {user?.email}
+                  </span>
+                  <span className='text-xs text-gray-500'>
+                    {user?.role}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </header>
-
-        {/* Page Content */}
-        <main className='flex-1 overflow-auto bg-gray-50 p-6'>
-          <AutoLogout />
-          <Outlet />
+        </header>        {/* Main Content Area */}
+        <main className='flex-1 overflow-auto bg-azure-500 bg-opacity-20'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+            <AutoLogout />
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
@@ -201,7 +198,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
-          <Route path='/quotation' element={<QuotationPage />} />
+        
           <Route path='/test' element={<Test />} />
           <Route path='/register' element={<Register />} />
           <Route path='/login' element={<Login />} />

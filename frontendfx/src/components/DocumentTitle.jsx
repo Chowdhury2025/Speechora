@@ -6,7 +6,7 @@ const DocumentTitle = () => {
   const companyName = useRecoilValue(companyNameState);
 
   useEffect(() => {
-    document.title = companyName || 'Inventory System';
+    document.title = companyName || 'book8 ';
   }, [companyName]);
 
   return null;

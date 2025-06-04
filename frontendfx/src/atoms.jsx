@@ -50,6 +50,12 @@ export const authState = atom({
 
 export const companyNameState = atom({
   key: 'companyNameState',
-  default: 'Inventory System',
+  default: 'book8 ',
+  effects: [localPersistEffect]
+});
+
+export const sidebarState = atom({
+  key: 'sidebarState',
+  default: true,
   effects: [localPersistEffect]
 });

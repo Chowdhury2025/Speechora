@@ -10,5 +10,5 @@ export const GOOGLE_CONFIG = {
 export const BACKUP_CONFIG = {
   folderName: "platformdata",
   version: "1.0",
-  description: "Database backup created by Inventory System",
+  description: "Database backup created by book8 ",
 };
