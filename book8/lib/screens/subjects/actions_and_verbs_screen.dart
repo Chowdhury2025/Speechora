@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:book8/screens/subjects/base_subject_screen.dart';
+import 'base_subject_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  static const routeName = '/home';
+class ActionsAndVerbsScreen extends StatelessWidget {
+  static const routeName = '/actions-and-verbs';
   final Color backgroundColor;
 
-  const HomeScreen({
+  const ActionsAndVerbsScreen({
     super.key,
     required this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final homeItems = [
-      'Living Room', 'Kitchen', 'Bathroom', 'Bedroom', 'Dining Room',
-      'Garage', 'Garden', 'Basement', 'Attic', 'Front Door',
-      'Back Door', 'Windows', 'Stairs', 'Hallway', 'Closet',
-      'Laundry Room', 'Office', 'Playroom', 'Storage', 'Patio'
+    final actionItems = [
+      'Walk', 'Run', 'Jump', 'Sleep', 'Eat',
+      'Drink', 'Play', 'Read', 'Write', 'Draw',
+      'Sing', 'Dance', 'Swim', 'Climb', 'Throw',
+      'Catch', 'Push', 'Pull', 'Open', 'Close'
     ];
 
     return BaseSubjectScreen(
-      title: 'Home',
+      title: 'Actions / Verbs',
       backgroundColor: backgroundColor,
-      children: homeItems.map((item) => 
+      children: actionItems.map((item) => 
         SizedBox(
           width: 150,
           height: 150,
@@ -30,7 +30,7 @@ class HomeScreen extends StatelessWidget {
             elevation: 4,
             child: InkWell(
               onTap: () {
-                // TODO: Add video or detailed view for each home item
+                // TODO: Add video or detailed view for each action/verb item
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

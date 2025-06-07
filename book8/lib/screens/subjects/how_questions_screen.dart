@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:book8/screens/subjects/base_subject_screen.dart';
+import 'base_subject_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  static const routeName = '/home';
+class HowQuestionsScreen extends StatelessWidget {
+  static const routeName = '/how-questions';
   final Color backgroundColor;
 
-  const HomeScreen({
+  const HowQuestionsScreen({
     super.key,
     required this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final homeItems = [
-      'Living Room', 'Kitchen', 'Bathroom', 'Bedroom', 'Dining Room',
-      'Garage', 'Garden', 'Basement', 'Attic', 'Front Door',
-      'Back Door', 'Windows', 'Stairs', 'Hallway', 'Closet',
-      'Laundry Room', 'Office', 'Playroom', 'Storage', 'Patio'
+    final questionItems = [
+      'How to do this?', 'How to make it?', 'How to fix it?', 'How to play?', 'How to help?',
+      'How to start?', 'How to finish?', 'How to open?', 'How to close?', 'How to get there?',
+      'How do you feel?', 'How was school?', 'How was your day?', 'How does it work?', 'How much?',
+      'How many?', 'How big?', 'How small?', 'How fast?', 'How slow?'
     ];
 
     return BaseSubjectScreen(
-      title: 'Home',
+      title: 'How Questions',
       backgroundColor: backgroundColor,
-      children: homeItems.map((item) => 
+      children: questionItems.map((item) => 
         SizedBox(
           width: 150,
           height: 150,
@@ -30,7 +30,7 @@ class HomeScreen extends StatelessWidget {
             elevation: 4,
             child: InkWell(
               onTap: () {
-                // TODO: Add video or detailed view for each home item
+                // TODO: Add video or detailed view for each question item
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

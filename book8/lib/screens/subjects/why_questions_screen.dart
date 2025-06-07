@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:book8/screens/subjects/base_subject_screen.dart';
+import 'base_subject_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  static const routeName = '/home';
+class WhyQuestionsScreen extends StatelessWidget {
+  static const routeName = '/why-questions';
   final Color backgroundColor;
 
-  const HomeScreen({
+  const WhyQuestionsScreen({
     super.key,
     required this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final homeItems = [
-      'Living Room', 'Kitchen', 'Bathroom', 'Bedroom', 'Dining Room',
-      'Garage', 'Garden', 'Basement', 'Attic', 'Front Door',
-      'Back Door', 'Windows', 'Stairs', 'Hallway', 'Closet',
-      'Laundry Room', 'Office', 'Playroom', 'Storage', 'Patio'
+    final questionItems = [
+      'Why do this?', 'Why not?', 'Why now?', 'Why later?', 'Why here?',
+      'Why there?', 'Why sad?', 'Why happy?', 'Why angry?', 'Why tired?',
+      'Why hungry?', 'Why thirsty?', 'Why sick?', 'Why hurt?', 'Why scared?',
+      'Why excited?', 'Why worried?', 'Why confused?', 'Why different?', 'Why same?'
     ];
 
     return BaseSubjectScreen(
-      title: 'Home',
+      title: 'Why Questions',
       backgroundColor: backgroundColor,
-      children: homeItems.map((item) => 
+      children: questionItems.map((item) => 
         SizedBox(
           width: 150,
           height: 150,
@@ -30,7 +30,7 @@ class HomeScreen extends StatelessWidget {
             elevation: 4,
             child: InkWell(
               onTap: () {
-                // TODO: Add video or detailed view for each home item
+                // TODO: Add video or detailed view for each question item
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -7,7 +7,7 @@ import os from 'os';
 
 
 import userRouter from "./User/router";
-
+import videoRouter from "./Video/router";
 
 const app: Express = express();
 
@@ -48,8 +48,9 @@ app.options('*', cors(corsOptions));  // Handle OPTIONS for all routes
 
 // routes 😂
 app.use("/api/user", userRouter);
+app.use("/api/videos", videoRouter);
 
- // Add email configuration router
+// Add email configuration router
 
 
 

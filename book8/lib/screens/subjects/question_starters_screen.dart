@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:book8/screens/subjects/base_subject_screen.dart';
+import 'base_subject_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  static const routeName = '/home';
+class QuestionStartersScreen extends StatelessWidget {
+  static const routeName = '/question-starters';
   final Color backgroundColor;
 
-  const HomeScreen({
+  const QuestionStartersScreen({
     super.key,
     required this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final homeItems = [
-      'Living Room', 'Kitchen', 'Bathroom', 'Bedroom', 'Dining Room',
-      'Garage', 'Garden', 'Basement', 'Attic', 'Front Door',
-      'Back Door', 'Windows', 'Stairs', 'Hallway', 'Closet',
-      'Laundry Room', 'Office', 'Playroom', 'Storage', 'Patio'
+    final questionItems = [
+      'Can I...?', 'May I...?', 'Will you...?', 'Do you...?', 'Are you...?',
+      'Is it...?', 'Could you...?', 'Would you...?', 'Should I...?', 'Did you...?',
+      'Have you...?', 'Does it...?', 'Was it...?', 'Were you...?', 'Am I...?',
+      'Can we...?', 'Will they...?', 'Has anyone...?', 'Are we...?', 'Is there...?'
     ];
 
     return BaseSubjectScreen(
-      title: 'Home',
+      title: 'Question Starters',
       backgroundColor: backgroundColor,
-      children: homeItems.map((item) => 
+      children: questionItems.map((item) => 
         SizedBox(
           width: 150,
           height: 150,
@@ -30,7 +30,7 @@ class HomeScreen extends StatelessWidget {
             elevation: 4,
             child: InkWell(
               onTap: () {
-                // TODO: Add video or detailed view for each home item
+                // TODO: Add video or detailed view for each question starter item
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

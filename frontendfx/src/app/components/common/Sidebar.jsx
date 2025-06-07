@@ -19,10 +19,10 @@ const Sidebar = () => {
   const location = useLocation();
   const user = useRecoilValue(userStates);
   const role = user?.role?.toUpperCase();
-
   const allNavItems = [
     { path: '/', label: 'Dashboard', icon: Home, roles: ['SUPERUSER', 'ADMIN', 'PARENT_GUARDIAN'] },
     { path: '/users', label: 'Users', icon: Users, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
+    { path: '/videos', label: 'Videos', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'teacher'] },
     { path: '/tests', label: 'Tests', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN'] },
     { path: '/images', label: 'Images', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: '/premium', label: 'Premium', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },

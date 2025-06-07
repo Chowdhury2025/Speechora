@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'subjects/daily_life_screen.dart';
+import 'subjects/home_screen.dart' as subject;
+import 'subjects/school_screen.dart';
+import 'subjects/therapy_screen.dart';
+import 'subjects/activities_screen.dart';
+import 'subjects/family_and_friends_screen.dart';
+import 'subjects/toys_and_games_screen.dart';
+import 'subjects/food_and_drink_screen.dart';
+import 'subjects/places_screen.dart';
+import 'subjects/wants_and_needs_screen.dart';
+import 'subjects/actions_and_verbs_screen.dart';
+import 'subjects/what_questions_screen.dart';
+import 'subjects/where_questions_screen.dart';
+import 'subjects/who_questions_screen.dart';
+import 'subjects/when_questions_screen.dart';
+import 'subjects/how_questions_screen.dart';
+import 'subjects/choice_questions_screen.dart';
+import 'subjects/question_starters_screen.dart';
+import 'subjects/others_screen.dart';
 
 class SubjectCard {
   final String title;
@@ -139,6 +158,76 @@ class MyHomePage extends StatelessWidget {
     ),
   ];
 
+  void _navigateToScreen(BuildContext context, String title, Color color) {
+    Widget screen;
+    switch (title) {
+      case 'My World & Daily Life':
+        screen = DailyLifeScreen(backgroundColor: color);
+        break;
+      case 'Home':
+        screen = subject.HomeScreen(backgroundColor: color);
+        break;
+      case 'School':
+        screen = SchoolScreen(backgroundColor: color);
+        break;
+      case 'Therapy':
+        screen = TherapyScreen(backgroundColor: color);
+        break;
+      case 'Activities':
+        screen = ActivitiesScreen(backgroundColor: color);
+        break;
+      case 'Family & Friends':
+        screen = FamilyAndFriendsScreen(backgroundColor: color);
+        break;
+      case 'Toys & Games':
+        screen = ToysAndGamesScreen(backgroundColor: color);
+        break;
+      case 'Food & Drink':
+        screen = FoodAndDrinkScreen(backgroundColor: color);
+        break;
+      case 'Places':
+        screen = PlacesScreen(backgroundColor: color);
+        break;
+      case 'I Want / Needs':
+        screen = WantsAndNeedsScreen(backgroundColor: color);
+        break;
+      case 'Actions / Verbs':
+        screen = ActionsAndVerbsScreen(backgroundColor: color);
+        break;
+      case 'What Questions':
+        screen = WhatQuestionsScreen(backgroundColor: color);
+        break;
+      case 'Where Questions':
+        screen = WhereQuestionsScreen(backgroundColor: color);
+        break;
+      case 'Who Questions':
+        screen = WhoQuestionsScreen(backgroundColor: color);
+        break;
+      case 'When Questions':
+        screen = WhenQuestionsScreen(backgroundColor: color);
+        break;
+      case 'How Questions':
+        screen = HowQuestionsScreen(backgroundColor: color);
+        break;
+      case 'Choice Questions':
+        screen = ChoiceQuestionsScreen(backgroundColor: color);
+        break;
+      case 'Question Starters':
+        screen = QuestionStartersScreen(backgroundColor: color);
+        break;
+      case 'Others':
+        screen = OthersScreen(backgroundColor: color);
+        break;
+      default:
+        return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,9 +255,11 @@ class MyHomePage extends StatelessWidget {
                               child: Card(
                                 color: subjects[j].color,
                                 child: InkWell(
-                                  onTap: () {
-                                    // Handle category tap
-                                  },
+                                  onTap: () => _navigateToScreen(
+                                    context,
+                                    subjects[j].title,
+                                    subjects[j].color,
+                                  ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Row(

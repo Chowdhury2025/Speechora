@@ -17,6 +17,7 @@ import ImagesPage from './app/pages/ImagesPage.jsx';
 import PremiumSalesPage from './app/pages/PremiumSalesPage.jsx';
 import AnalyticsPage from './app/pages/AnalyticsPage.jsx';
 import SettingsPage from './app/pages/SettingsPage.jsx';
+import VideoUploadPage from './app/pages/VideoUploadPage.jsx';
 
 import Register from './auth/Register.jsx';
 import { ForgotPassword } from './auth/Forgot_password.jsx';
@@ -29,17 +30,19 @@ import ProfileUpdateModal from './app/modals/ProfileUpdateModal.jsx';
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
-  SUPERUSER: ['Dashboard', 'Users', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
-  ADMIN: ['Dashboard', 'Users', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
-  CONTENTMANAGER: ['Tests', 'Images', 'IWantNeeds'],
+  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  ADMIN: ['Dashboard', 'Users', 'Videos', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  CONTENTMANAGER: ['Videos', 'Tests', 'Images', 'IWantNeeds'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds'],
   PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Images', 'IWantNeeds'],
+  TEACHER: ['Videos', 'Tests'],
 };
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
 const APP_ROUTES = [
   { name: 'Dashboard', path: '/',         element: DashboardPage },
   { name: 'Users',     path: 'users',     element: UsersPage },
+  { name: 'Videos',    path: 'videos',    element: VideoUploadPage },
   { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'base_subject_screen.dart';
+import 'package:book8/screens/subjects/base_subject_screen.dart';
 
 class ActivitiesScreen extends StatelessWidget {
   static const routeName = '/activities';

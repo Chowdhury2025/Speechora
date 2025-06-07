@@ -49,7 +49,7 @@ const EpicInstituteHeader = () => {
       <div className="bg-white border-b py-3 px-4">
         <nav>
           <ul className="flex justify-center space-x-6">
-            {['HOME', 'OUR PROGRAMMES', 'STUDENTS', 'CAREERS', 'COURSES', 'BLOGS', 'CONTACT'].map((item) => (
+            {['HOME', 'OUR PROGRAMMES', 'childS', 'CAREERS', 'COURSES', 'BLOGS', 'CONTACT'].map((item) => (
               <li key={item} className="text-gray-700 hover:text-green-600 transition">
                 <a href="#">{item}</a>
               </li>

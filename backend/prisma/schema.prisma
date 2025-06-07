@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ------------------ Authentication Model ------------------
-
 model User {
   id                     Int       @id @default(autoincrement())
   username               String?
@@ -29,17 +27,7 @@ model User {
   dateOfBirth            DateTime?
   gender                 String?
   emergencyContact       String?
-
-  // Assigned stores & warehouses with referential actions
-  
-}
-
-enum UserRole {
-  ADMIN
-  teacher 
-  guidian_parent
-  STAFF
-  finace
+  videos                 videos[]
 }
 
 model SystemSettings {
@@ -52,13 +40,29 @@ model SystemSettings {
   updatedAt         DateTime @updatedAt
 }
 
+model videos {
+  id               Int      @id @default(autoincrement())
+  linkyoutube_link String
+  title            String
+  thumbnail        String?
+  category         String?
+  position         Int?
+  description      String?
+  ageGroup         String?
+  name             String?
+  userId           Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  userUploader     User?    @relation(fields: [userId], references: [id])
+}
 
-// model for stories {}
-// model for question and multiple choice answers {}
-// modile for lessons{}
-//  model videos {link ,
-// category,
-// age group,
-// name ,
-// user_uploader}
-
+enum UserRole {
+  ADMIN
+  SUPERUSER
+  INSPECTOR
+  STAFF
+  STOREMANAGER
+  TEACHER
+  GUARDIAN_PARENT
+  FINANCE
+}

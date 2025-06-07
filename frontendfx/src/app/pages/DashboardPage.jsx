@@ -55,7 +55,7 @@ const DashboardPage = () => {
         />
         <StatCard
           title="Total Revenue"
-          value={`$${stats.totalRevenue.toFixed(2)}`}
+          value={`K${stats.totalRevenue.toFixed(2)}`}
           icon="💰"
           color="bg-indigo-500"
         />
