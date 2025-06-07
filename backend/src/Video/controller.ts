@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../config/db';
 
-// Add a new videos
-export const addvideos = async (req: Request, res: Response) => {
+// Add a new video
+export const addVideo = async (req: Request, res: Response) => {
     try {
         const { title, linkyoutube_link, category, description, ageGroup, name } = req.body;
 
@@ -11,8 +11,8 @@ export const addvideos = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Title and YouTube link are required' });
         }
 
-        // Create new videos
-        const videos = await prisma.videos.create({
+        // Create new video
+        const video = await prisma.videos.create({
             data: {
                 title,
                 linkyoutube_link,
@@ -23,33 +23,33 @@ export const addvideos = async (req: Request, res: Response) => {
             },
         });
 
-        res.status(201).json({ message: 'videos added successfully', videos });
+        res.status(201).json({ message: 'Video added successfully', video });
     } catch (error) {
-        console.error('Error adding videos:', error);
-        res.status(500).json({ message: 'Failed to add videos' });
+        console.error('Error adding video:', error);
+        res.status(500).json({ message: 'Failed to add video' });
     }
 };
 
-// Get all videoss
-export const getAllvideoss = async (req: Request, res: Response) => {
+// Get all videos
+export const getAllVideos = async (_req: Request, res: Response) => {
     try {
-        const videoss = await prisma.videos.findMany({
+        const videos = await prisma.videos.findMany({
             orderBy: {
                 createdAt: 'desc',
             },
         });
-        res.json(videoss);
+        res.json(videos);
     } catch (error) {
-        console.error('Error fetching videoss:', error);
-        res.status(500).json({ message: 'Failed to fetch videoss' });
+        console.error('Error fetching videos:', error);
+        res.status(500).json({ message: 'Failed to fetch videos' });
     }
 };
 
-// Get videoss by category
-export const getvideossByCategory = async (req: Request, res: Response) => {
+// Get videos by category
+export const getVideosByCategory = async (req: Request, res: Response) => {
     try {
         const { category } = req.params;
-        const videoss = await prisma.videos.findMany({
+        const videos = await prisma.videos.findMany({
             where: {
                 category: category,
             },
@@ -57,15 +57,15 @@ export const getvideossByCategory = async (req: Request, res: Response) => {
                 createdAt: 'desc',
             },
         });
-        res.json(videoss);
+        res.json(videos);
     } catch (error) {
-        console.error('Error fetching videoss by category:', error);
-        res.status(500).json({ message: 'Failed to fetch videoss' });
+        console.error('Error fetching videos by category:', error);
+        res.status(500).json({ message: 'Failed to fetch videos' });
     }
 };
 
-// Delete videos
-export const deletevideos = async (req: Request, res: Response) => {
+// Delete video
+export const deleteVideo = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         await prisma.videos.delete({
@@ -73,9 +73,9 @@ export const deletevideos = async (req: Request, res: Response) => {
                 id: parseInt(id),
             },
         });
-        res.json({ message: 'videos deleted successfully' });
+        res.json({ message: 'Video deleted successfully' });
     } catch (error) {
-        console.error('Error deleting videos:', error);
-        res.status(500).json({ message: 'Failed to delete videos' });
+        console.error('Error deleting video:', error);
+        res.status(500).json({ message: 'Failed to delete video' });
     }
 };

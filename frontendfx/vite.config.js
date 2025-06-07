@@ -44,9 +44,8 @@ export default defineConfig({
         globDirectory: process.env.NODE_ENV === 'production' ? 'dist' : 'dev-dist',
         globPatterns: [
           '**/*.{js,css,html,ico,png,svg}'
-        ],
-        navigateFallback: 'index.html',
-        navigateFallbackAllowlist: [/^\/$/,/^\/products/,/^\/quotation/],
+        ],        navigateFallback: 'index.html',
+        navigateFallbackAllowlist: [/^\/$/,/^\/products/,/^\/quotation/,/^\/videos.*/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./, // Adjust this pattern based on your API URL

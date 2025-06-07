@@ -18,6 +18,7 @@ import PremiumSalesPage from './app/pages/PremiumSalesPage.jsx';
 import AnalyticsPage from './app/pages/AnalyticsPage.jsx';
 import SettingsPage from './app/pages/SettingsPage.jsx';
 import VideoUploadPage from './app/pages/VideoUploadPage.jsx';
+import VideoListPage from './app/pages/VideoListPage.jsx';
 
 import Register from './auth/Register.jsx';
 import { ForgotPassword } from './auth/Forgot_password.jsx';
@@ -42,7 +43,8 @@ const ROLE_PERMISSIONS = {
 const APP_ROUTES = [
   { name: 'Dashboard', path: '/',         element: DashboardPage },
   { name: 'Users',     path: 'users',     element: UsersPage },
-  { name: 'Videos',    path: 'videos',    element: VideoUploadPage },
+  { name: 'Videos',    path: 'videos',    element: VideoListPage },
+  { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },
   { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },

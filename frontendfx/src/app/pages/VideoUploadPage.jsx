@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useRecoilValue } from 'recoil';
+import { userStates } from '../../atoms';
 import { API_URL } from '../../config';
-
-const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
+import { TabNavigator } from '../components/common/TabNavigator';
+import { getThumbnailUrl } from '../utils/youtube';
+const VideoUploadPage = () => {
+  const userState = useRecoilValue(userStates);
+  const [videoData, setVideoData] = useState({
     title: '',
     linkyoutube_link: '',
     thumbnail: '',
@@ -10,15 +15,22 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
     position: 0,
     description: '',
     ageGroup: '',
-    name: ''
+    name: userState.username || ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-
-  const validateYoutubeUrl = (url) => {
+  const [success, setSuccess] = useState(false);  const validateYoutubeUrl = (url) => {
     const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})$/;
     return pattern.test(url);
+  };
+
+  const handleYoutubeUrlChange = (e) => {
+    const url = e.target.value;
+    setVideoData(prev => ({
+      ...prev,
+      linkyoutube_link: url,
+      thumbnail: getThumbnailUrl(url)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -34,8 +46,8 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
 
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/api/videos`, videoData);
-      setSuccess(true);    setVideoData({
+      await axios.post(`${API_URL}/api/videos`, videoData);      setSuccess(true);    
+      setVideoData(prev => ({
         title: '',
         linkyoutube_link: '',
         thumbnail: '',
@@ -43,8 +55,8 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
         position: 0,
         description: '',
         ageGroup: '',
-        name: ''
-      });
+        name: prev.name // Preserve the name when resetting
+      }));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to upload video');
     } finally {
@@ -58,19 +70,27 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
       ...prev,
       [name]: value
     }));
-  };
-  const categories = [
-    'Morning Routine',
-    'Daily Routine',
-    'Bedtime Routine',
-    'Mathematics',
-    'Science',
-    'English',
-    'History',
-    'Geography',
-    'Art',
-    'Music',
-    'Physical Education'
+  };  const categories = [
+    'My World & Daily Life',
+    'Home',
+    'School',
+    'Therapy',
+    'Activities',
+    'Family & Friends',
+    'Toys & Games',
+    'Food & Drink',
+    'Places',
+    'I Want / Needs',
+    'Actions / Verbs',
+    'What Questions',
+    'Where Questions',
+    'Who Questions',
+    'When Questions',
+    'Why Questions',
+    'How Questions',
+    'Choice Questions',
+    'Question Starters',
+    'Others'
   ];
 
   const ageGroups = [
@@ -84,6 +104,8 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
 
   return (
     <div className="container mx-auto p-4">
+      <TabNavigator />
+      
       <h1 className="text-2xl font-bold mb-6">Upload Educational Video</h1>
       
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -93,10 +115,10 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
               {error}
             </div>
           )}
-          
-          {success && (
+            {success && (
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-              Video uploaded successfully!
+              <p>Video successfully uploaded by {videoData.name}!</p>
+              <p className="text-sm mt-1">You can upload another video or return to the dashboard.</p>
             </div>
           )}
 
@@ -119,8 +141,7 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
             <input
               type="url"
               name="linkyoutube_link"
-              value={videoData.linkyoutube_link}
-              onChange={handleChange}
+              value={videoData.linkyoutube_link}              onChange={handleYoutubeUrlChange}
               placeholder="https://youtube.com/watch?v=..."
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
@@ -129,16 +150,34 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
 
           <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">
-              Thumbnail URL
+              Thumbnail Preview
             </label>
-            <input
-              type="url"
-              name="thumbnail"
-              value={videoData.thumbnail}
-              onChange={handleChange}
-              placeholder="https://example.com/thumbnail.jpg"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <input
+                type="url"
+                name="thumbnail"
+                value={videoData.thumbnail}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                readOnly
+              />              {videoData.thumbnail && (
+                <div className="mt-2 relative w-[640px] h-[360px] mx-auto">
+                  <img
+                    src={videoData.thumbnail}
+                    alt="Video thumbnail"
+                    className="w-full h-full object-contain bg-gray-100 rounded-lg shadow-md"
+                    style={{ maxWidth: '640px', maxHeight: '360px' }}
+                    onError={(e) => {
+                      // If maxresdefault fails, try hqdefault
+                      if (e.target.src.includes('maxresdefault')) {
+                        const videoId = extractVideoId(videoData.linkyoutube_link);
+                        e.target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
@@ -217,11 +256,11 @@ const VideoUploadPage = () => {  const [videoData, setVideoData] = useState({
               Teacher's Name
             </label>
             <input
-              type="text"
-              name="name"
+              type="text"              name="name"
               value={videoData.name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
             />
           </div>
 
