@@ -7,6 +7,7 @@ import api from './utils/api';
 
 import Sidebar from './app/components/common/Sidebar.jsx';
 import DocumentTitle from './components/DocumentTitle.jsx';
+import IWantNeedsPage from './app/pages/IWantNeedsPage.jsx';
 
 // Dashboard Pages
 import DashboardPage from './app/pages/DashboardPage.jsx';
@@ -28,11 +29,11 @@ import ProfileUpdateModal from './app/modals/ProfileUpdateModal.jsx';
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
-  SUPERUSER: ['Dashboard', 'Users', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings'],
-  ADMIN: ['Dashboard', 'Users', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings'],
-  CONTENTMANAGER: ['Tests', 'Images'],
-  SUPPORT: ['Users', 'Premium'],
-  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Images'],
+  SUPERUSER: ['Dashboard', 'Users', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  ADMIN: ['Dashboard', 'Users', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  CONTENTMANAGER: ['Tests', 'Images', 'IWantNeeds'],
+  SUPPORT: ['Users', 'Premium', 'IWantNeeds'],
+  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Images', 'IWantNeeds'],
 };
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
@@ -44,6 +45,7 @@ const APP_ROUTES = [
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
   { name: 'Analytics', path: 'analytics', element: AnalyticsPage },
   { name: 'Settings',  path: 'settings',  element: SettingsPage },
+  { name: 'IWantNeeds', path: 'i-want-needs', element: IWantNeedsPage },
 ];
 
 // Find the first allowed route for a given user role

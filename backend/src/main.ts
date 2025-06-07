@@ -55,7 +55,7 @@ app.use("/api/user", userRouter);
 
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);
-  res.json("Api xcx iventory latest");
+  res.json("book8 latest");
 }); 
 
 app.listen(8000, '0.0.0.0', () => {
