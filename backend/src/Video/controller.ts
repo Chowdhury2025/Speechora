@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
-import { prisma } from '../../config/db';
+import { PrismaClient } from '@prisma/client';
+import { StatusCodes } from 'http-status-codes';
+
+const prisma = new PrismaClient();
 
 // Add a new video
 export const addVideo = async (req: Request, res: Response) => {
@@ -46,21 +49,42 @@ export const getAllVideos = async (_req: Request, res: Response) => {
 };
 
 // Get videos by category
-export const getVideosByCategory = async (req: Request, res: Response) => {
+export const getVideosByCategoryController = async (req: Request, res: Response) => {
     try {
-        const { category } = req.params;
+        console.log('Request body:', req.body);
+        const { category } = req.body;
+
+        if (!category) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "Category is required in request body"
+            });
+        }
+
+        // First, let's check what categories exist in the database
+        const allCategories = await prisma.videos.findMany({
+            select: {
+                category: true
+            },
+            distinct: ['category']
+        });
+        console.log('Available categories in DB:', allCategories);
+
         const videos = await prisma.videos.findMany({
             where: {
-                category: category,
+                category: category
             },
             orderBy: {
-                createdAt: 'desc',
-            },
+                position: 'asc'
+            }
         });
-        res.json(videos);
-    } catch (error) {
-        console.error('Error fetching videos by category:', error);
-        res.status(500).json({ message: 'Failed to fetch videos' });
+        console.log('Found videos:', videos.length);
+
+        return res.status(StatusCodes.OK).json(videos);
+    } catch (error: any) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: "Failed to fetch videos",
+            error: error?.stack || error?.message || error,
+        });
     }
 };
 

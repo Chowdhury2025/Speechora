@@ -7,7 +7,7 @@ import api from './utils/api';
 
 import Sidebar from './app/components/common/Sidebar.jsx';
 import DocumentTitle from './components/DocumentTitle.jsx';
-import IWantNeedsPage from './app/pages/IWantNeedsPage.jsx';
+// import IWantNeedsPage from './app/pages/IWantNeedsPage.jsx';
 
 // Dashboard Pages
 import DashboardPage from './app/pages/DashboardPage.jsx';
@@ -50,7 +50,7 @@ const APP_ROUTES = [
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
   { name: 'Analytics', path: 'analytics', element: AnalyticsPage },
   { name: 'Settings',  path: 'settings',  element: SettingsPage },
-  { name: 'IWantNeeds', path: 'i-want-needs', element: IWantNeedsPage },
+ 
 ];
 
 // Find the first allowed route for a given user role

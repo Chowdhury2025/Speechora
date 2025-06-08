@@ -70,27 +70,29 @@ const VideoUploadPage = () => {
       ...prev,
       [name]: value
     }));
-  };  const categories = [
-    'My World & Daily Life',
-    'Home',
-    'School',
-    'Therapy',
-    'Activities',
-    'Family & Friends',
-    'Toys & Games',
-    'Food & Drink',
-    'Places',
-    'I Want / Needs',
-    'Actions / Verbs',
-    'What Questions',
-    'Where Questions',
-    'Who Questions',
-    'When Questions',
-    'Why Questions',
-    'How Questions',
-    'Choice Questions',
-    'Question Starters',
-    'Others'
+  };
+
+  const categoryOptions = [
+    { name: 'My World & Daily Life', slug: 'my_world_daily_life' },
+    { name: 'Home', slug: 'home' },
+    { name: 'School', slug: 'school' },
+    { name: 'Therapy', slug: 'therapy' },
+    { name: 'Activities', slug: 'activities' },
+    { name: 'Family & Friends', slug: 'family_friends' },
+    { name: 'Toys & Games', slug: 'toys_games' },
+    { name: 'Food & Drink', slug: 'food_drink' },
+    { name: 'Places', slug: 'places' },
+    { name: 'I Want / Needs', slug: 'i_want_needs' },
+    { name: 'Actions / Verbs', slug: 'actions_verbs' },
+    { name: 'What Questions', slug: 'what_questions' },
+    { name: 'Where Questions', slug: 'where_questions' },
+    { name: 'Who Questions', slug: 'who_questions' },
+    { name: 'When Questions', slug: 'when_questions' },
+    { name: 'Why Questions', slug: 'why_questions' },
+    { name: 'How Questions', slug: 'how_questions' },
+    { name: 'Choice Questions', slug: 'choice_questions' },
+    { name: 'Question Starters', slug: 'question_starters' },
+    { name: 'Others', slug: 'others' }
   ];
 
   const ageGroups = [
@@ -209,9 +211,9 @@ const VideoUploadPage = () => {
               required
             >
               <option value="">Select a category</option>
-              {categories.map(category => (
-                <option key={category} value={category}>
-                  {category}
+              {categoryOptions.map(category => (
+                <option key={category.slug} value={category.slug}>
+                  {category.name}
                 </option>
               ))}
             </select>

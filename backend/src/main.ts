@@ -49,6 +49,7 @@ app.options('*', cors(corsOptions));  // Handle OPTIONS for all routes
 // routes 😂
 app.use("/api/user", userRouter);
 app.use("/api/videos", videoRouter);
+app.use("/api/video", videoRouter);
 
 // Add email configuration router
 

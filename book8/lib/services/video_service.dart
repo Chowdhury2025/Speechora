@@ -1,66 +1,56 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:book8/constants/constants.dart';
+import 'package:book8/utils/youtube.dart';
 
-class VideoService {  static final Map<String, List<Video>> _staticVideos = {
-    'daily_life': [
-      // Morning Routine videos
-      Video(
-        title: 'Wake Up! Daily Routines Song for Kids',
-        linkyoutube_link: 'https://www.youtube.com/watch?v=eUXkj6j6Ezw',
-        category: 'Morning Routine',
-        description: 'Fun song to learn morning routines',
-      ),
-      Video(
-        title: 'Morning Routine Song | Fun Kids English',
-        linkyoutube_link: 'https://www.youtube.com/watch?v=b_8G7yFJS5g',
-        category: 'Morning Routine',
-        description: 'Learn English with morning routines',
-      ),
-      // Daily Routine videos
-      Video(
-        title: 'This Is The Way Song | Daily Routine Song',
-        linkyoutube_link: 'https://www.youtube.com/watch?v=VnZlAOSEmYQ',
-        category: 'Daily Routine',
-        description: 'Fun way to learn daily activities',
-      ),
-      Video(
-        title: "Daniel Tiger's Neighborhood - The Morning Routine",
-        linkyoutube_link: 'https://youtube.com/watch?v=qCUNRhPBCYQ',
-        category: 'Morning Routine',
-        description: 'Learn morning routine with Daniel Tiger',
-      ),
-      // Bedtime Routine videos
-      Video(
-        title: 'Bedtime Routine for Babies | CoComelon',
-        linkyoutube_link: 'https://www.youtube.com/watch?v=1DlOysdHP3c',
-        category: 'Bedtime Routine',
-        description: 'Bedtime routine songs for babies',
-      ),
-      Video(
-        title: 'Bedtime Routine Songs | Super Simple Songs',
-        linkyoutube_link: 'https://www.youtube.com/watch?v=ts-qvuqweEg',
-        category: 'Bedtime Routine',
-        description: 'Learn bedtime routines with fun songs',
-      ),
-      Video(
-        title: "Daniel Tiger's Bedtime Routine",
-        linkyoutube_link: 'https://youtube.com/watch?v=qCUNRhPBCYQ',
-        category: 'Bedtime Routine',
-        description: 'Learn bedtime routine with Daniel Tiger',
-      ),
-      Video(
-        title: 'Moshi Bedtime Stories',
-        linkyoutube_link: 'https://www.youtube.com/watch?v=80Cn59kzTI4',
-        category: 'Bedtime Routine',
-        description: 'Relaxing bedtime stories for kids',
-      ),
-    ],
-  };
+class VideoService {
+  // Update this with your actual backend URL
+  static String baseUrl = Constants.baseUrl;
+
+  // Map Flutter category names to backend slugs
+  static String getCategorySlug(String category) {
+    final Map<String, String> categoryMap = {
+      'My World & Daily Life': 'my_world_daily_life',
+      'Home': 'home',
+      'School': 'school',
+      'Therapy': 'therapy',
+      'Activities': 'activities',
+      'Family & Friends': 'family_friends',
+      'Toys & Games': 'toys_games',
+      'Food & Drink': 'food_drink',
+      'Places': 'places',
+      'I Want / Needs': 'i_want_needs',
+      'Actions / Verbs': 'actions_verbs',
+      'What Questions': 'what_questions',
+      'Where Questions': 'where_questions',
+      'Who Questions': 'who_questions',
+      'When Questions': 'when_questions',
+      'Why Questions': 'why_questions',
+      'How Questions': 'how_questions',
+      'Choice Questions': 'choice_questions',
+      'Question Starters': 'question_starters',
+      'Others': 'others',
+    };
+    return categoryMap[category] ?? category;
+  }
 
   static Future<List<Video>> getVideosByCategory(String category) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _staticVideos[category] ?? [];
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/videos/category'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'category': getCategorySlug(category)}),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((video) => Video.fromJson(video)).toList();
+      } else {
+        throw Exception('Failed to load videos: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to connect to server: $e');
+    }
   }
 }
 
@@ -80,6 +70,9 @@ class Video {
     this.ageGroup,
     this.name,
   });
+
+  String get thumbnailUrl => getThumbnailUrl(linkyoutube_link);
+  String get fallbackThumbnailUrl => getThumbnailUrl(linkyoutube_link, quality: 'hqdefault');
 
   factory Video.fromJson(Map<String, dynamic> json) {
     return Video(
