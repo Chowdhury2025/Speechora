@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'settings_screen.dart';
 import 'subjects/daily_life_screen.dart';
 import 'subjects/home_screen.dart' as subject;
 import 'subjects/school_screen.dart';
@@ -25,11 +26,7 @@ class SubjectCard {
   final IconData icon;
   final Color color;
 
-  SubjectCard({
-    required this.title,
-    required this.icon,
-    required this.color,
-  });
+  SubjectCard({required this.title, required this.icon, required this.color});
 }
 
 class MyHomePage extends StatelessWidget {
@@ -43,11 +40,7 @@ class MyHomePage extends StatelessWidget {
       icon: Icons.home_outlined,
       color: Colors.blue.shade300,
     ),
-    SubjectCard(
-      title: 'Home',
-      icon: Icons.house,
-      color: Colors.green.shade300,
-    ),
+    SubjectCard(title: 'Home', icon: Icons.house, color: Colors.green.shade300),
     SubjectCard(
       title: 'School',
       icon: Icons.school,
@@ -134,23 +127,6 @@ class MyHomePage extends StatelessWidget {
       color: Colors.blue.shade300,
     ),
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     SubjectCard(
       title: 'Others',
       icon: Icons.more_horiz,
@@ -222,10 +198,7 @@ class MyHomePage extends StatelessWidget {
         return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => screen),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
   }
 
   @override
@@ -233,6 +206,17 @@ class MyHomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),
@@ -255,11 +239,12 @@ class MyHomePage extends StatelessWidget {
                               child: Card(
                                 color: subjects[j].color,
                                 child: InkWell(
-                                  onTap: () => _navigateToScreen(
-                                    context,
-                                    subjects[j].title,
-                                    subjects[j].color,
-                                  ),
+                                  onTap:
+                                      () => _navigateToScreen(
+                                        context,
+                                        subjects[j].title,
+                                        subjects[j].color,
+                                      ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Row(

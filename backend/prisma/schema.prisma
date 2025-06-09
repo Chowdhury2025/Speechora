@@ -24,6 +24,7 @@ model User {
   emailVerificationToken String?
   bloodGroup             String?
   address                String?
+  premium                String? //json{expiry date , age group, accessto , number of devices macadresses list , }
   dateOfBirth            DateTime?
   gender                 String?
   emergencyContact       String?
