@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/video_service.dart';
-import 'video_player_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class VideoListScreen extends StatelessWidget {
@@ -27,10 +26,7 @@ class VideoListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: backgroundColor,
-      ),
+      appBar: AppBar(title: Text(title), backgroundColor: backgroundColor),
       body: ListView.builder(
         itemCount: videos.length,
         padding: const EdgeInsets.all(16),
@@ -61,12 +57,13 @@ class VideoListScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              subtitle: video.description != null
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(video.description!),
-                    )
-                  : null,
+              subtitle:
+                  video.description != null
+                      ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(video.description!),
+                      )
+                      : null,
               onTap: () => _launchUrl(video.linkyoutube_link),
             ),
           );

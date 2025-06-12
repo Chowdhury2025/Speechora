@@ -1,8 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
+import PaymentPopup from "../components/payments/PaymentPopup";
 
 const PremiumSalesPage = () => {
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+
+  const handlePaymentClick = (plan, amount) => {
+    setSelectedPlan({ name: plan, amount });
+    setIsPaymentOpen(true);
+  };
+
   return (
-    <div className="container mx-auto p-4">      <h1 className="text-2xl font-bold mb-4">Learning Plans</h1>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Learning Plans</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-2">child Plan</h2>
@@ -12,9 +22,11 @@ const PremiumSalesPage = () => {
             <li>Study materials & notes</li>
             <li>Practice exercises</li>
             <li>Basic progress tracking</li>
-          </ul>
-          <p className="text-2xl font-bold mb-4">K 99/month</p>
-          <button className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+          </ul>          <p className="text-2xl font-bold mb-4">K 99/month</p>
+          <button 
+            onClick={() => handlePaymentClick("Child Plan", 99)}
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
             Start Learning
           </button>
         </div>
@@ -31,9 +43,11 @@ const PremiumSalesPage = () => {
             <li>Interactive workshops</li>
             <li>Advanced assessments</li>
             <li>Study group access</li>
-          </ul>
-          <p className="text-2xl font-bold mb-4">K 199/month</p>
-          <button className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+          </ul>          <p className="text-2xl font-bold mb-4">K 199/month</p>
+          <button 
+            onClick={() => handlePaymentClick("Premium Child Plan", 199)}
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
             Upgrade Now
           </button>
         </div>
@@ -51,9 +65,16 @@ const PremiumSalesPage = () => {
           <p className="text-2xl font-bold mb-4">Contact us</p>
           <button className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
             Request Demo
-          </button>
-        </div>
+          </button>        </div>
       </div>
+
+      {/* Payment Popup */}
+      <PaymentPopup
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        amount={selectedPlan?.amount}
+        planName={selectedPlan?.name}
+      />
     </div>
   );
 };

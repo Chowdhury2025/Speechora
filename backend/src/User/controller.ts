@@ -305,7 +305,7 @@ export const updateUserProfileController = async (req: Request, res: Response) =
       frontendUrl
     } = req.body;
 
-    // Remove admin auth check for STOREMANAGER role
+    // Remove admin auth check for TEACHER role
     const id = Number(userId);
     console.log("Request Body:", req.body);
 

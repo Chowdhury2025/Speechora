@@ -24,11 +24,15 @@ model User {
   emailVerificationToken String?
   bloodGroup             String?
   address                String?
-  premium                String? //json{expiry date , age group, accessto , number of devices macadresses list , }
+  premium                String?
   dateOfBirth            DateTime?
   gender                 String?
   emergencyContact       String?
-  videos                 videos[]
+  videos                 videos[]  @relation("VideoUploader")
+  images                 images[]  @relation("ImageUploader")
+  userAnswers           UserAnswer[] @relation("UserAnswers")
+  testScores           UserTestScore[] @relation("UserTestScores")
+  createdQuestions     QuizQuestion[] @relation("QuestionCreator")
 }
 
 model SystemSettings {
@@ -54,7 +58,23 @@ model videos {
   userId           Int?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  userUploader     User?    @relation(fields: [userId], references: [id])
+  userUploader     User?    @relation(fields: [userId], references: [id], name: "VideoUploader")
+}
+
+model images {
+  id           Int      @id @default(autoincrement())
+  imageUrl     String   // URL where the image is stored
+  title        String
+  thumbnail    String?  // Optional thumbnail for preview
+  category     String?
+  position     Int?     // For ordering images in a sequence
+  description  String?
+  ageGroup     String?  // To match the content with age groups
+  name         String?
+  userId       Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userUploader User?    @relation(fields: [userId], references: [id], name: "ImageUploader")
 }
 
 enum UserRole {
@@ -62,8 +82,79 @@ enum UserRole {
   SUPERUSER
   INSPECTOR
   STAFF
-  STOREMANAGER
+  
   TEACHER
   GUARDIAN_PARENT
   FINANCE
+}
+
+enum QuestionType {
+  TEXT
+  IMAGE
+  VIDEO
+}
+
+enum ChoiceType {
+  TEXT
+  IMAGE
+  VIDEO
+}
+
+model QuizQuestion {
+  id                Int            @id @default(autoincrement())
+  questionType      QuestionType
+  questionText      String?
+  questionMediaUrl  String?
+  category         String
+  ageGroup         String
+  choices          QuizChoice[]
+  correctAnswerId  Int?           @unique
+  correctAnswer    QuizChoice?    @relation("CorrectAnswer", fields: [correctAnswerId], references: [id])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  userAnswers      UserAnswer[]   @relation("QuestionAnswers")
+  userTestScores   UserTestScore[] @relation("QuestionInTest")
+  createdBy        User           @relation("QuestionCreator", fields: [createdById], references: [id])
+  createdById      Int
+}
+
+model QuizChoice {
+  id                 Int         @id @default(autoincrement())
+  choiceType         ChoiceType
+  choiceText         String?
+  choiceMediaUrl     String?
+  question           QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId         Int
+  correctForQuestion QuizQuestion? @relation("CorrectAnswer")
+  userAnswers        UserAnswer[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+model UserAnswer {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation("UserAnswers", fields: [userId], references: [id], onDelete: Cascade)
+  questionId  Int
+  question    QuizQuestion @relation("QuestionAnswers", fields: [questionId], references: [id])
+  choiceId    Int
+  choice      QuizChoice   @relation(fields: [choiceId], references: [id], onDelete: Cascade)
+  isCorrect   Boolean
+  testScore   UserTestScore @relation(fields: [testScoreId], references: [id], onDelete: Cascade)
+  testScoreId Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model UserTestScore {
+  id           Int          @id @default(autoincrement())
+  userId       Int
+  user         User         @relation("UserTestScores", fields: [userId], references: [id], onDelete: Cascade)
+  score        Int
+  total        Int
+  quizDate     DateTime     @default(now())
+  questions    QuizQuestion[] @relation("QuestionInTest")
+  userAnswers  UserAnswer[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }

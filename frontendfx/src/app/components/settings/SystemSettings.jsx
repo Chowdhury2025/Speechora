@@ -93,7 +93,7 @@ const SystemSettings = () => {
   return (
     <SettingSection icon={Settings} title="System Settings">
       {error && (
-        <div className="mb-4 p-3 bg-red-600 text-white rounded-md">
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
           {error}
         </div>
       )}
@@ -102,14 +102,14 @@ const SystemSettings = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Boss Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Boss (Admin)
             </label>
             <select
               name="bossId"
               value={settings.bossId || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
             >
               <option value="">Select a boss</option>
               {users
@@ -123,7 +123,7 @@ const SystemSettings = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Business Name
             </label>
             <input
@@ -131,13 +131,13 @@ const SystemSettings = () => {
               name="businessName"
               value={settings.businessName || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Contact Email
             </label>
             <input
@@ -145,13 +145,13 @@ const SystemSettings = () => {
               name="emailEmail"
               value={settings.emailEmail || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Admin Email
             </label>
             <input
@@ -159,13 +159,13 @@ const SystemSettings = () => {
               name="adminEmail"
               value={settings.adminEmail || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Support Email
             </label>
             <input
@@ -173,13 +173,13 @@ const SystemSettings = () => {
               name="supportEmail"
               value={settings.supportEmail || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Notification Email
             </label>
             <input
@@ -187,13 +187,13 @@ const SystemSettings = () => {
               name="notificationEmail"
               value={settings.notificationEmail || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Auto Logout Time (minutes)
             </label>
             <input
@@ -203,13 +203,13 @@ const SystemSettings = () => {
               onChange={handleChange}
               min="1"
               max="99999"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Contact
             </label>  
             <input
@@ -217,12 +217,12 @@ const SystemSettings = () => {
               name="contact"
               value={settings.contact || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Tax Payer Number (TPN)
             </label>
             <input
@@ -230,12 +230,12 @@ const SystemSettings = () => {
               name="tpn"
               value={settings.tpn || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Address
             </label>
             <input
@@ -243,12 +243,12 @@ const SystemSettings = () => {
               name="address"
               value={settings.address || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Terms and Conditions
             </label>
             <textarea
@@ -256,17 +256,16 @@ const SystemSettings = () => {
               value={settings.Terms_and_conditions || ""}
               onChange={handleChange}
               rows="4"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
             />
           </div>
-
         </div>
 
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="px-4 py-2 bg-sky_blue-500 text-white rounded-md hover:bg-sky_blue-600 focus:outline-none focus:ring-2 focus:ring-sky_blue-500 disabled:opacity-50 transition-colors duration-200"
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>

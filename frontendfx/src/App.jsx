@@ -14,6 +14,8 @@ import DashboardPage from './app/pages/DashboardPage.jsx';
 import UsersPage from './app/pages/UsersPage.jsx';
 import TestsPage from './app/pages/TestsPage.jsx';
 import ImagesPage from './app/pages/ImagesPage.jsx';
+import ImageUploadPage from './components/Images/ImageUpload.jsx';
+
 import PremiumSalesPage from './app/pages/PremiumSalesPage.jsx';
 import AnalyticsPage from './app/pages/AnalyticsPage.jsx';
 import SettingsPage from './app/pages/SettingsPage.jsx';
@@ -44,9 +46,9 @@ const APP_ROUTES = [
   { name: 'Dashboard', path: '/',         element: DashboardPage },
   { name: 'Users',     path: 'users',     element: UsersPage },
   { name: 'Videos',    path: 'videos',    element: VideoListPage },
-  { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },
-  { name: 'Tests',     path: 'tests',     element: TestsPage },
+  { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },  { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
+  { name: 'Images',    path: 'images/upload',    element: ImageUploadPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
   { name: 'Analytics', path: 'analytics', element: AnalyticsPage },
   { name: 'Settings',  path: 'settings',  element: SettingsPage },

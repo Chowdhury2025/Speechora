@@ -8,6 +8,9 @@ import os from 'os';
 
 import userRouter from "./User/router";
 import videoRouter from "./Video/router";
+import imageRouter from "./Image/router";
+import dashboardRouter from "./Dashboard/router";
+import quizRouter from "./Quiz/router";
 
 const app: Express = express();
 
@@ -49,7 +52,9 @@ app.options('*', cors(corsOptions));  // Handle OPTIONS for all routes
 // routes 😂
 app.use("/api/user", userRouter);
 app.use("/api/videos", videoRouter);
-app.use("/api/video", videoRouter);
+app.use("/api/images", imageRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/quiz", quizRouter);
 
 // Add email configuration router
 

@@ -1,86 +1,189 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_URL } from '../../config';
+import ImageTabNavigator from '../components/Images/ImageTabNavigator';
+import { useRecoilValue } from 'recoil';
+import { userStates } from '../../atoms';
+import { useNavigate } from 'react-router-dom';
 
 const ImagesPage = () => {
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Images Management</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Image upload section */}
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-3">Upload New Image</h2>
-          <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              id="imageUpload"
-              onChange={(e) => {
-                // TODO: Handle image upload
-                console.log(e.target.files[0]);
-              }}
-            />
-            <label
-              htmlFor="imageUpload"
-              className="cursor-pointer block p-4 text-gray-600 hover:text-gray-800"
-            >
-              <div className="flex flex-col items-center">
-                <svg
-                  className="w-12 h-12 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                <span>Click to upload or drag and drop</span>
-                <span className="text-sm text-gray-500">PNG, JPG up to 10MB</span>
-              </div>
-            </label>
-          </div>
-        </div>
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [categories, setCategories] = useState([]);
+  const user = useRecoilValue(userStates);
+  const navigate = useNavigate();
 
-        {/* Image gallery section */}
-        <div className="bg-white p-4 rounded-lg shadow col-span-2">
-          <h2 className="text-xl font-semibold mb-3">Image Gallery</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* TODO: Replace with actual image data */}
-            {[1, 2, 3, 4].map((item) => (
-              <div
-                key={item}
-                className="relative group bg-gray-100 rounded-lg overflow-hidden aspect-square"
-              >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-gray-400">Image Placeholder</span>
-                </div>
-                <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                  <button className="text-white p-2 hover:text-red-500">
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/api/images`);
+      setImages(response.data);
+      
+      // Extract unique categories from image data
+      const uniqueCategories = [...new Set(response.data.map(image => image.category))].filter(Boolean);
+      setCategories(uniqueCategories);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch images');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredImages = selectedCategory
+    ? images.filter(image => image.category === selectedCategory)
+    : images;
+  
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+  };
+
+  const handleDelete = async (id) => {
+    if (!user) {
+      alert('Please login to delete images');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this image?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/api/images/${id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      // Remove the deleted image from the state
+      setImages(prevImages => prevImages.filter(image => image.id !== id));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete image');
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      <ImageTabNavigator />
+
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Educational Images</h1>
+        <div className="flex gap-4">
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Categories</option>
+            {categories.map(category => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+          {user && (
+            <button
+              onClick={() => navigate('/images/upload')}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+            >
+              Upload New Image
+            </button>
+          )}
+        </div>
+      </div>
+
+      {filteredImages.length === 0 ? (
+        <div className="text-center text-gray-500 mt-8">
+          {selectedCategory ? 'No images found in this category' : 'No images available'}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 justify-items-center">
+          {filteredImages.map(image => (
+            <div key={image.id} className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105 w-full max-w-sm">
+              <div className="relative">                <img
+                  src={image.imageUrl}
+                  alt={image.title}
+                  className="w-full h-48 object-cover bg-gray-100"
+                  onError={(e) => {
+                    e.target.parentElement.innerHTML = `
+                      <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
+                        <span class="text-gray-400">Image not available</span>
+                      </div>
+                    `;
+                  }}
+                />
+              </div>
+              
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-semibold text-lg line-clamp-2 flex-1 pr-2">{image.title}</h3>
+                </div>
+                
+                <div className="flex items-center text-sm text-gray-600 mb-2">
+                  <span className="mr-3 truncate">By: {image.name || 'Unknown'}</span>
+                  {image.category && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex-shrink-0">
+                      {image.category}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="text-sm text-gray-500 mb-3">
+                  Age Group: {image.ageGroup || 'All ages'}
+                </div>
+                
+                {image.description && (
+                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                    {image.description}
+                  </p>
+                )}
+                
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={image.imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                  >
+                    View Full Image
+                  </a>                  {user && (
+                    <button
+                      onClick={() => handleDelete(image.id)}
+                      className="inline-flex items-center justify-center w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

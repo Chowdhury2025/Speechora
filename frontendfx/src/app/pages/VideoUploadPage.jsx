@@ -110,6 +110,26 @@ const VideoUploadPage = () => {
       
       <h1 className="text-2xl font-bold mb-6">Upload Educational Video</h1>
       
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
+        <h2 className="text-lg font-semibold text-blue-800 mb-2">How to Upload a Video</h2>
+        <ol className="list-decimal list-inside space-y-2 text-blue-900">
+          <li>Find or create an educational video on YouTube that you want to share</li>
+          <li>Copy the YouTube video URL (e.g., https://youtube.com/watch?v=xxxxx)</li>
+          <li>Fill in the required fields marked with an asterisk (*):
+            <ul className="list-disc list-inside ml-6 mt-1 text-blue-800">
+              <li>Video Title - A clear, descriptive title</li>
+              <li>YouTube Link - Paste your copied YouTube URL</li>
+              <li>Category - Select the most relevant category</li>
+              <li>Age Group - Choose the appropriate age range</li>
+            </ul>
+          </li>
+          <li>Add an optional description to provide more context about the video</li>
+          <li>Set the position number to control where the video appears in lists (0 = first)</li>
+          <li>Click "Upload Video" to submit</li>
+        </ol>
+        <p className="mt-3 text-blue-800 text-sm">Note: The system will automatically generate a thumbnail from your YouTube video.</p>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (

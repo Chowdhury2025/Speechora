@@ -48,73 +48,74 @@ const Profile = () => {
 
   return (
     <>
-      <SettingSection icon={User} title={"Profile"}>
+      <SettingSection icon={User} title="Profile Information">
         <div className='flex flex-col sm:flex-row items-center mb-6'>
           {renderProfileImage()}
           <div>
-            <h3 className='text-lg font-semibold text-gray-100'>
+            <h3 className='text-lg font-semibold text-gray-800'>
               {userState.username || 'Username'}
             </h3>
-            <p className='text-gray-400'>
+            <p className='text-gray-600'>
               {userState.email || 'email@example.com'}
             </p>
             {!userState.isEmailVerified && (
-              <span className='text-xs text-yellow-400'>Email not verified</span>
+              <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium'>
+                Email not verified
+              </span>
             )}
           </div>
         </div>
 
-        {/* New section for additional fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Full Name</p>
-            <p className="text-gray-100">{fullName}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Full Name</p>
+            <p className="text-gray-900">{fullName}</p>
           </div>
           
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Phone</p>
-            <p className="text-gray-100">{userState.phoneNumber || 'Not specified'}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Phone</p>
+            <p className="text-gray-900">{userState.phoneNumber || 'Not specified'}</p>
           </div>
           
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Blood Group</p>
-            <p className="text-gray-100">{userState.bloodGroup || 'Not specified'}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Blood Group</p>
+            <p className="text-gray-900">{userState.bloodGroup || 'Not specified'}</p>
           </div>
           
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Date of Birth</p>
-            <p className="text-gray-100">{formattedDate}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Date of Birth</p>
+            <p className="text-gray-900">{formattedDate}</p>
           </div>
           
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Gender</p>
-            <p className="text-gray-100">{userState.gender || 'Not specified'}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Gender</p>
+            <p className="text-gray-900">{userState.gender || 'Not specified'}</p>
           </div>
           
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Address</p>
-            <p className="text-gray-100">{userState.address || 'Not specified'}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Address</p>
+            <p className="text-gray-900">{userState.address || 'Not specified'}</p>
           </div>
           
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Emergency Contact</p>
-            <p className="text-gray-100">{userState.emergencyContact || 'Not specified'}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Emergency Contact</p>
+            <p className="text-gray-900">{userState.emergencyContact || 'Not specified'}</p>
           </div>
 
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Bio</p>
-            <p className="text-gray-100">{userState.bio || 'Not specified'}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Bio</p>
+            <p className="text-gray-900">{userState.bio || 'Not specified'}</p>
           </div>
           
-          <div className="bg-gray-700 p-3 rounded">
-            <p className="text-sm text-gray-400">Location</p>
-            <p className="text-gray-100">{userState.location || 'Not specified'}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-gray-600 mb-1">Location</p>
+            <p className="text-gray-900">{userState.location || 'Not specified'}</p>
           </div>
         </div>
 
         <button 
           onClick={() => setIsModalOpen(true)}
-          className='bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-200 w-full sm:w-auto'
+          className='bg-sky_blue-500 hover:bg-sky_blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 w-full sm:w-auto'
         >
           Edit Profile
         </button>

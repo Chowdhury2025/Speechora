@@ -76,28 +76,27 @@ const UsersTable = () => {
     setIsEditModalOpen(false);
   };
 
-  return (
-    <motion.div
-      className="bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-lg rounded-xl p-6 border border-gray-700"
+  return (    <motion.div
+      className="bg-white shadow-lg rounded-xl p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-100">Users</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">Users</h2>
         <div className="flex items-center space-x-4">
           <div className="relative">
             <input
               type="text"
               placeholder="Search users..."
-              className="bg-gray-700 text-white placeholder-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-white text-gray-800 placeholder-gray-400 border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky_blue-500"
               value={searchTerm}
               onChange={handleSearch}
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+            className="bg-sky_blue-500 hover:bg-sky_blue-600 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200"
             onClick={() => setIsAddModalOpen(true)}
           >
             Add User
@@ -105,43 +104,43 @@ const UsersTable = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-700">
-          <thead>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 ID
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Username
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Role
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Verification
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Created At
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="bg-white divide-y divide-gray-200">
             {isLoading ? (
               <tr>
-                <td colSpan="7" className="px-6 py-4 text-center text-gray-300">
+                <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                   Loading...
                 </td>
               </tr>
             ) : filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan="7" className="px-6 py-4 text-center text-gray-300">
+                <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                   No users found
                 </td>
               </tr>
@@ -152,19 +151,19 @@ const UsersTable = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="hover:bg-gray-700"
+                  className="hover:bg-gray-50"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-900">
                     {user.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-100">
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">
                     {user.username}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                     {user.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-800 text-blue-100">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-sky_blue-100 text-sky_blue-800">
                       {user.role}
                     </span>
                   </td>
@@ -172,29 +171,31 @@ const UsersTable = () => {
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         user.isEmailVerified
-                          ? "bg-green-800 text-green-100"
-                          : "bg-red-800 text-red-100"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                     >
                       {user.isEmailVerified ? "Verified" : "Not Verified"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      className="text-indigo-400 hover:text-indigo-300 mr-2"
-                      onClick={() => handleEdit(user)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-400 hover:text-red-300"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      Delete
-                    </button>
+                    <div className="flex space-x-3">
+                      <button
+                        className="text-sky_blue-700 hover:text-sky_blue-900 transition-colors duration-200"
+                        onClick={() => handleEdit(user)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                        onClick={() => handleDelete(user.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </motion.tr>
               ))
