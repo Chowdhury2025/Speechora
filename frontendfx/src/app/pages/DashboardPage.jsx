@@ -32,32 +32,31 @@ const DashboardPage = () => {
         <StatCard
           title="Total Users"
           value={stats.totalUsers}
-          icon="👥"
-          color="bg-blue-500"
+          icon="👥"          color="bg-sky_blue-500"
         />
         <StatCard
           title="Premium Users"
           value={stats.premiumUsers}
           icon="⭐"
-          color="bg-yellow-500"
+          color="bg-azure-500"
         />
         <StatCard
           title="Total Tests"
           value={stats.totalTests}
           icon="📝"
-          color="bg-green-500"
+          color="bg-kelly-500"
         />
         <StatCard
           title="Active Users Today"
           value={stats.activeUsers}
           icon="📱"
-          color="bg-purple-500"
+          color="bg-sky_blue-400"
         />
         <StatCard
           title="Total Revenue"
           value={`K${stats.totalRevenue.toFixed(2)}`}
           icon="💰"
-          color="bg-indigo-500"
+          color="bg-azure-400"
         />
       </div>
 

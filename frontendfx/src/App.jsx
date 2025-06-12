@@ -30,7 +30,7 @@ import EmailVerification from './auth/EmailVerification.jsx';
 import NotFound from './auth/NotFound.jsx';
 import NoRoleAssigned from './auth/NoRoleAssigned.jsx';
 import ProfileUpdateModal from './app/modals/ProfileUpdateModal.jsx';
-import LandingPage from './app/pages/LandingPage.jsx'; // Added import
+import LandingPage from './app/pages/'; // Added import
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
