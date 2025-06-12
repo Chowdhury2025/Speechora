@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
 import { API_URL } from '../../config';
-import ImageTabNavigator from '../../app/components/Images/ImageTabNavigator';
+import ImageTabNavigator from '../../app/components/images/ImageTabNavigator';
 
 const ImageUpload = () => {
   const user = useRecoilValue(userStates);
