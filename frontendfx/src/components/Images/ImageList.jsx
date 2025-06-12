@@ -77,13 +77,13 @@ const ImageList = () => {
     <div className="container mx-auto p-4">
       <TabNavigator />
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Educational Images</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold text-[#3C3C3C]">Educational Images</h1>
         <div className="flex gap-4">
           <select
             value={selectedAgeGroup}
             onChange={(e) => setSelectedAgeGroup(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium text-[#4b4b4b] bg-white"
           >
             <option value="">All Age Groups</option>
             {ageGroups.map(age => (
@@ -92,8 +92,8 @@ const ImageList = () => {
           </select>
           {user && (
             <button
-              onClick={() => navigate('/images/upload')}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+              onClick={() => navigate('/app/images/upload')}
+              className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-8 rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
             >
               Upload New Image
             </button>
@@ -102,80 +102,44 @@ const ImageList = () => {
       </div>
 
       {images.length === 0 ? (
-        <div className="text-center text-gray-500 mt-8">
-          {selectedAgeGroup ? 'No images found in this age group' : 'No images available'}
+        <div className="text-center py-12">
+          <p className="text-lg text-[#4b4b4b]">No images found.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 justify-items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {images.map((image) => (
-            <div key={image.id} className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105 w-full max-w-sm">
-              <div className="relative">
+            <div
+              key={image._id}
+              className="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-slate-100 hover:border-[#58cc02] transition-colors duration-200"
+            >
+              <div className="relative aspect-video">
                 <img
-                  src={image.imageUrl}
+                  src={image.url}
                   alt={image.title}
-                  className="w-full h-48 object-cover bg-gray-100"
-                  onClick={() => navigate(`/images/${image.id}`)}
+                  className="w-full h-full object-cover"
                 />
               </div>
-              
               <div className="p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-lg line-clamp-2 flex-1 pr-2">{image.title}</h3>
-                </div>
-                
-                <div className="flex items-center text-sm text-gray-600 mb-2">
-                  <span className="mr-3 truncate">By: {image.name || 'Unknown'}</span>
-                  {image.category && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex-shrink-0">
-                      {image.category}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="text-sm text-gray-500 mb-3">
-                  Age Group: {image.ageGroup || 'All ages'}
-                </div>
-                
-                {image.description && (
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                    {image.description}
-                  </p>
-                )}
-                
-                <div className="flex flex-col gap-2">
-                  <a
-                    href={image.imageUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                    </svg>
-                    View Full Image
-                  </a>
-                  {user && (
-                    <>
-                      <button
-                        onClick={() => navigate(`/images/edit/${image.id}`)}
-                        className="inline-flex items-center justify-center w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(image.id)}
-                        className="inline-flex items-center justify-center w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        Delete
-                      </button>
-                    </>
-                  )}
+                <h3 className="text-lg font-bold text-[#3C3C3C] mb-2">{image.title}</h3>
+                <p className="text-[#4b4b4b] mb-4">{image.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="inline-block bg-[#e5e5e5] text-[#4b4b4b] rounded-full px-3 py-1 text-sm font-medium">
+                    {image.ageGroup}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditImage(image._id)}
+                      className="text-[#1cb0f6] hover:text-[#0095e0] font-bold py-1 px-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#1cb0f6] focus:ring-offset-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteImage(image._id)}
+                      className="text-[#ff4b4b] hover:text-[#e03232] font-bold py-1 px-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#ff4b4b] focus:ring-offset-2"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

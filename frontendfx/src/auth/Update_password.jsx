@@ -2,12 +2,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { Input } from '../components/Input';
-import { AuthButton } from '../components/Authbuttonx';
 import { API_URL } from '../config';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
+import { colorGuide, componentStyles } from '../theme/colors';
 
- const UpdatePassword = () => {
+const UpdatePassword = () => {
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
@@ -48,17 +47,17 @@ import axios from 'axios'; // Import axios
   };
 
   return (
-    <div className="min-h-screen bg-duo-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <div className={`min-h-screen ${colorGuide.neutral.bgPage} flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans`}>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-duo-green-600">
+        <h2 className={`mt-6 text-center text-3xl font-extrabold ${colorGuide.neutral.textPrimary}`}>
           Update your password
         </h2>
       </div>
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-duo-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className={`${colorGuide.neutral.bgCard} py-8 px-4 ${componentStyles.card.base} sm:px-10`}>
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-duo-gray-700">
+              <label className={`block text-sm font-medium ${colorGuide.neutral.textSecondary}`}>
                 Email
               </label>
               <div className="mt-1">
@@ -70,27 +69,30 @@ import axios from 'axios'; // Import axios
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Enter your email"
+                  className={componentStyles.input.base}
                 />
               </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-duo-gray-700">
-                OTP
+              <label className={`block text-sm font-medium ${colorGuide.neutral.textSecondary}`}>
+                OTP Code
               </label>
               <div className="mt-1">
                 <Input
-                  icon={Lock}
                   type="text"
                   name="otp"
                   required
                   value={formData.otp}
                   onChange={handleChange}
-                  placeholder="Enter OTP"
+                  placeholder="Enter OTP code"
+                  className={componentStyles.input.base}
                 />
               </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-duo-gray-700">
+              <label className={`block text-sm font-medium ${colorGuide.neutral.textSecondary}`}>
                 New Password
               </label>
               <div className="mt-1 relative">
@@ -101,32 +103,39 @@ import axios from 'axios'; // Import axios
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter your new password"
+                  placeholder="Enter new password"
+                  className={componentStyles.input.base}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className={`absolute inset-y-0 right-0 pr-3 flex items-center ${colorGuide.neutral.textTertiary}`}
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5 text-duo-gray-400" /> : <Eye className="h-5 w-5 text-duo-gray-400" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
+
             {error && (
-              <div className="text-duo-yellow-600 text-sm">{error}</div>
-            )}
-            <AuthButton loading={loading} className="bg-duo-green-500 hover:bg-duo-green-600 text-duo-white">
-              {loading ? 'Updating...' : 'Update Password'}
-            </AuthButton>
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a
-                  href="/login"
-                  className="font-medium text-duo-blue-500 hover:text-duo-blue-700"
-                >
-                  Remember your password? Login now
-                </a>
+              <div className={`${colorGuide.status.error.text} text-sm mt-2`}>
+                {error}
               </div>
+            )}
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full ${componentStyles.button.primary}`}
+              >
+                {loading ? 'Updating password...' : 'Update Password'}
+              </button>
+            </div>
+
+            <div className="text-center mt-4">
+              <a href="/login" className={`text-sm font-medium ${colorGuide.primary.text} ${colorGuide.primary.hover}`}>
+                Back to login
+              </a>
             </div>
           </form>
         </div>

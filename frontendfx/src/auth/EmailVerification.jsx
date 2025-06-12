@@ -14,7 +14,6 @@ const EmailVerification = () => {
   const [status, setStatus] = useState('pending'); 
   const [isLoading, setIsLoading] = useState(false);
 
-  
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const emailParam = params.get('email');
@@ -97,106 +96,105 @@ const EmailVerification = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Email Verification
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Please verify your email to continue
-          </p>
-        </div>
-
-        {status === 'success' ? (
-          <div className="rounded-md bg-green-50 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    <div className="min-h-screen bg-duo-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-duo-gray-700">
+          Email Verification
+        </h2>
+      </div>
+      
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          {status === 'success' && (
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center mb-4">
+                <svg className="h-12 w-12 text-duo-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-green-800">{message}</p>
-              </div>
-            </div>
-          </div>
-        ) : status === 'error' ? (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-red-800">{message}</p>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        <form className="mt-8 space-y-6" onSubmit={(e) => { e.preventDefault(); handleVerifyEmail(); }}>
-          <input type="hidden" name="remember" value="true" />
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">Email address</label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading || status === 'success'}
-              />
-            </div>
-            <div>
-              <label htmlFor="verification-code" className="sr-only">Verification Code</label>
-              <input
-                id="verification-code"
-                name="verification-code"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Verification Code"
-                value={verificationToken}
-                onChange={(e) => setVerificationToken(e.target.value)}
-                disabled={isLoading || status === 'success'}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
+              <p className="text-duo-gray-700 font-bold">{message}</p>
               <button
-                type="button"
-                onClick={handleResendVerification}
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-                disabled={isLoading || status === 'success'}
+                onClick={() => navigate('/login')}
+                className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
               >
-                Resend verification email
+                Go to Login
               </button>
             </div>
-          </div>
+          )}
 
-          <div>
-            <button
-              type="submit"
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                isLoading || status === 'success' 
-                  ? 'bg-indigo-400 cursor-not-allowed' 
-                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-              }`}
-              disabled={isLoading || status === 'success'}
-            >
-              {isLoading ? 'Verifying...' : 'Verify Email'}
-            </button>
-          </div>
-        </form>
+          {status === 'error' && (
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center mb-4">
+                <svg className="h-12 w-12 text-duo-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <p className="text-duo-red-500 font-bold">{message}</p>
+              <button
+                onClick={handleVerifyEmail}
+                disabled={isLoading}
+                className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
+              >
+                {isLoading ? 'Verifying...' : 'Try Again'}
+              </button>
+            </div>
+          )}
+
+          {status === 'pending' && (
+            <form onSubmit={handleVerifyEmail} className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-duo-gray-600">
+                  Email
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border-2 border-duo-gray-200 focus:border-duo-green-500 focus:ring-1 focus:ring-duo-green-500 font-medium text-duo-gray-700 placeholder-duo-gray-400"
+                    placeholder="Enter your email"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-duo-gray-600">
+                  Verification Code
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    value={verificationToken}
+                    onChange={(e) => setVerificationToken(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border-2 border-duo-gray-200 focus:border-duo-green-500 focus:ring-1 focus:ring-duo-green-500 font-medium text-duo-gray-700 placeholder-duo-gray-400"
+                    placeholder="Enter verification code"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
+              >
+                {isLoading ? 'Verifying...' : 'Verify Email'}
+              </button>
+
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isLoading}
+                  className="w-full text-duo-green-500 hover:text-duo-green-600 font-bold text-sm"
+                >
+                  Resend verification email
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

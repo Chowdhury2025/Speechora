@@ -12,7 +12,7 @@ export const TabNavigator = () => {
   return (
     <div className="flex border-b border-gray-200 mb-6">
       <button
-        onClick={() => navigate('/videos')}
+        onClick={() => navigate('/app/videos')}
         className={`px-6 py-3 font-medium text-sm mr-2 focus:outline-none rounded-t-lg transition-colors ${
           isListView
             ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
@@ -22,7 +22,7 @@ export const TabNavigator = () => {
         Video List
       </button>
       <button
-        onClick={() => navigate('/videos/upload')}
+        onClick={() => navigate('/app/videos-upload')}
         className={`px-6 py-3 font-medium text-sm focus:outline-none rounded-t-lg transition-colors ${
           !isListView
             ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'

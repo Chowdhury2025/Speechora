@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useRecoilValue, useResetRecoilState } from 'recoil';
 import { userStates } from '../atoms';
 import { useNavigate } from 'react-router-dom';
+import { colorGuide, componentStyles } from '../theme/colors';
 
 function NoRoleAssigned() {
   const user = useRecoilValue(userStates);
@@ -17,18 +18,17 @@ function NoRoleAssigned() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 px-4">
+    <div className={`flex flex-col items-center justify-center min-h-screen ${colorGuide.neutral.bgPage} px-4`}>
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-gray-800 rounded-lg shadow-xl p-8 text-center"
+        className={`max-w-md w-full ${colorGuide.neutral.bgCard} rounded-lg shadow-xl p-8 text-center ${componentStyles.card.base}`}
       >
-        <h1 className="text-2xl font-bold text-gray-100 mb-4">
-          Welcome FREIND YOU ARE NOT AUTHORIZED 
+        <h1 className={`text-2xl font-bold ${colorGuide.neutral.textPrimary} mb-4`}>
+          Access Restricted
         </h1>
-        <p className="text-gray-400 mb-4">
+        <p className={`${colorGuide.neutral.textSecondary} mb-4`}>
           Your account is not authorized to access this system. Please contact the administrator for assistance.
-          MOST LIKLY YOU ARE A THIEF... YEAH YOU ARE A THIEF
         </p>
         
         <div className="w-64 h-64 mx-auto mb-6">
@@ -39,7 +39,7 @@ function NoRoleAssigned() {
           />
         </div>
 
-        <p className="text-gray-300 mb-6">
+        <p className={`${colorGuide.neutral.textSecondary} mb-6`}>
           {isStaff ? (
             <>
               Your account is currently set as STAFF role. To access the system, you need to be assigned
@@ -52,18 +52,12 @@ function NoRoleAssigned() {
             </>
           )}
         </p>
-          <p className="text-gray-400 text-sm mb-6">
-          For assistance, contact: <br />
-          <a href="mailto:admin@sstore.com" className="text-blue-400 hover:text-blue-300">
-            admin
-          </a>
-        </p>
-        
+
         <button
           onClick={handleLogout}
-          className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-300"
+          className={`w-full ${componentStyles.button.primary}`}
         >
-          Logout
+          Return to Login
         </button>
       </motion.div>
     </div>

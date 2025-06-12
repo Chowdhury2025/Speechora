@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { Input } from '../components/Input';
-import { AuthButton } from '../components/Authbuttonx';
 import { API_URL } from '../config';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
 import { userStates, authState } from '../atoms';
@@ -20,7 +18,7 @@ export const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/app/');
     }
   }, [isAuthenticated, navigate]);
 
@@ -75,74 +73,100 @@ export const Login = () => {
   };
   
   return (
-    <div className="min-h-screen bg-duo-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-duo-green-600">
+        <h2 className="mt-6 text-center text-3xl font-bold text-primary">
           Sign in to your account
         </h2>
       </div>
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-duo-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-white rounded-2xl shadow-sm p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-duo-gray-700">
+              <label className="block text-sm font-bold text-slate-600">
                 Email
               </label>
-              <div className="mt-1">
-                <Input
-                  icon={Mail}
+              <div className="mt-1 relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <Mail className="h-5 w-5" />
+                </span>
+                <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Enter your email"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-duo-gray-700">
+              <label className="block text-sm font-bold text-slate-600">
                 Password
               </label>
               <div className="mt-1 relative">
-                <Input
-                  icon={Lock}
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <Lock className="h-5 w-5" />
+                </span>
+                <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Enter your password"
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a href="/forgot-password" className="font-medium text-duo-blue-500 hover:text-duo-blue-700">
-                  Forgot your password?
-                </a>
-              </div>
+            <div>
+              <a href="/forgot-password" className="text-sm font-bold text-secondary hover:text-secondary-hover">
+                Forgot your password?
+              </a>
             </div>
 
             {error && (
-              <div className="text-duo-yellow-600 text-sm">{error}</div>
+              <div className="bg-error-bg text-error-text text-sm p-4 rounded-xl">
+                {error}
+              </div>
             )}
 
-            <AuthButton loading={loading} className="bg-duo-green-500 hover:bg-duo-green-600 text-duo-white">
-              Sign in
-            </AuthButton>
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-xl border-b-4 border-primary-dark hover:border-primary-pressed disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 transition-all duration-200"
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a href="/register" className="font-medium text-duo-blue-500 hover:text-duo-blue-700">
-                  Don&apos;t have an account? Register now
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-slate-600 font-bold">
+                    New user?
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <a
+                  href="/register"
+                  className="w-full inline-flex justify-center py-3 px-4 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary-light transition-colors duration-200"
+                >
+                  Create an account
                 </a>
               </div>
             </div>

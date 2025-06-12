@@ -1,7 +1,8 @@
 /* eslint-disable react/prop-types */
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
+import { colorGuide, componentStyles } from '../theme/colors';
 
 const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
   const [formData, setFormData] = useState({
@@ -70,126 +71,120 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
     }
   };
 
-  if (!isOpen || !user) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Edit User</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity">
+          <div className={`absolute inset-0 ${colorGuide.neutral.bgPage} opacity-75`}></div>
         </div>
-        
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="USER">USER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
-          </div>
-          
-          <div className="mb-6">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="isEmailVerified"
-                checked={formData.isEmailVerified}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              <span className="text-gray-700 text-sm font-bold">Email Verified</span>
-            </label>
-          </div>
-          
-          {!formData.isEmailVerified && (
-            <div className="mb-6">
+
+        <div className={`inline-block align-bottom ${colorGuide.neutral.bgCard} rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full ${componentStyles.card.base}`}>
+          <form onSubmit={handleSubmit}>
+            <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <h3 className={`text-lg leading-6 font-medium ${colorGuide.neutral.textPrimary} mb-4`}>
+                Edit User
+              </h3>
+
+              {error && (
+                <div className={`p-4 mb-4 rounded-md ${colorGuide.status.error.bg} ${colorGuide.status.error.text}`}>
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label 
+                    htmlFor="username" 
+                    className={`block text-sm font-medium ${colorGuide.neutral.textSecondary}`}
+                  >
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    className={componentStyles.input.base}
+                  />
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="email" 
+                    className={`block text-sm font-medium ${colorGuide.neutral.textSecondary}`}
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={componentStyles.input.base}
+                  />
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="role" 
+                    className={`block text-sm font-medium ${colorGuide.neutral.textSecondary}`}
+                  >
+                    Role
+                  </label>
+                  <select
+                    name="role"
+                    id="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className={componentStyles.input.base}
+                  >
+                    <option value="USER">User</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="STAFF">Staff</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="isEmailVerified"
+                    id="isEmailVerified"
+                    checked={formData.isEmailVerified}
+                    onChange={handleChange}
+                    className={`mr-2 ${componentStyles.input.base}`}
+                  />
+                  <label 
+                    htmlFor="isEmailVerified" 
+                    className={`text-sm ${colorGuide.neutral.textSecondary}`}
+                  >
+                    Email Verified
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className={`px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse ${colorGuide.neutral.bgCard}`}>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full inline-flex justify-center rounded-md sm:ml-3 sm:w-auto sm:text-sm ${componentStyles.button.primary}`}
+              >
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </button>
               <button
                 type="button"
-                onClick={resendVerificationEmail}
-                className="text-blue-600 hover:text-blue-800 text-sm"
-                disabled={isLoading}
+                onClick={onClose}
+                className={`mt-3 w-full inline-flex justify-center rounded-md sm:mt-0 sm:w-auto sm:text-sm ${componentStyles.button.outline}`}
               >
-                Resend verification email
+                Cancel
               </button>
             </div>
-          )}
-          
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 mr-2"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processing...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

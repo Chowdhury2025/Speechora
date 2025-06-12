@@ -34,22 +34,22 @@ const MobileWarningPopup = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6 border border-gray-700">
+      <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-6 border-2 border-slate-100">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-white">Desktop Recommended</h3>
+          <h3 className="text-xl font-bold text-[#3C3C3C]">Desktop Recommended</h3>
           <button 
             onClick={closePopup}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-[#4b4b4b] hover:text-[#3C3C3C] transition-colors p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
           >
             <X size={24} />
           </button>
         </div>
         
         <div className="mb-6">
-          <p className="text-gray-300 mb-4">
+          <p className="text-[#4b4b4b] mb-4">
             This application is designed for desktop screens. Some features and layout elements may not work correctly on mobile devices.
           </p>
-          <p className="text-gray-300">
+          <p className="text-[#4b4b4b]">
             For the best experience, please access this application from a desktop or laptop computer.
           </p>
         </div>
@@ -57,7 +57,7 @@ const MobileWarningPopup = () => {
         <div className="flex justify-end">
           <button
             onClick={closePopup}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors"
+            className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-8 rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
           >
             I Understand
           </button>
