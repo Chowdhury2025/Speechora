@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../../config';
-import ImageTabNavigator from '../components/Images/ImageTabNavigator';
+import ImageTabNavigator from '../components/images/ImageTabNavigator';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
 import { useNavigate } from 'react-router-dom';
