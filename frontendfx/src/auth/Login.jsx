@@ -17,10 +17,9 @@ export const Login = () => {
   const setAuthStatus = useSetRecoilState(authState);
   const isAuthenticated = useRecoilValue(authState);
   const navigate = useNavigate();
-
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/app');
     }
   }, [isAuthenticated, navigate]);
 
