@@ -44,7 +44,7 @@ const ROLE_PERMISSIONS = {
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
 const APP_ROUTES = [
-  { name: 'Dashboard', path: '/',         element: DashboardPage }, // Path here is relative to the parent /app
+  { name: 'Dashboard', path: 'Dashboard',         element: DashboardPage }, // Path here is relative to the parent /app
   { name: 'Users',     path: 'users',     element: UsersPage },
   { name: 'Videos',    path: 'videos',    element: VideoListPage },
   { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },
