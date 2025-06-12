@@ -21,6 +21,7 @@ import AnalyticsPage from './app/pages/AnalyticsPage.jsx';
 import SettingsPage from './app/pages/SettingsPage.jsx';
 import VideoUploadPage from './app/pages/VideoUploadPage.jsx';
 import VideoListPage from './app/pages/VideoListPage.jsx';
+import UserManagementScreen from './auth/UserManagementScreen.jsx';
 
 import Register from './auth/Register.jsx';
 import { ForgotPassword } from './auth/Forgot_password.jsx';
@@ -44,7 +45,7 @@ const ROLE_PERMISSIONS = {
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
 const APP_ROUTES = [
-  { name: 'Dashboard', path: '/',         element: DashboardPage }, // Path here is relative to the parent /app
+  { name: 'Dashboard', path: 'Dashboard',         element: DashboardPage }, // Path here is relative to the parent /app
   { name: 'Users',     path: 'users',     element: UsersPage },
   { name: 'Videos',    path: 'videos',    element: VideoListPage },
   { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },
@@ -63,7 +64,7 @@ function getFirstAllowedRoute(role) {
   const firstAllowedPage = APP_ROUTES.find(route => allowedPages.includes(route.name));
   // Ensure the root path for dashboard is correctly formed as /app if it's the first allowed page.
   if (firstAllowedPage) {
-    return firstAllowedPage.path === '/' ? '/app' : `/app/${firstAllowedPage.path}`;
+    return firstAllowedPage.path === '${firstAllowedPage.path}';
   }
   return '/no-role'; // Fallback if no route is allowed or found
 }
@@ -166,7 +167,16 @@ function Layout() {
   if (!isAuthenticated) {
     return <Navigate to='/login' replace />;
   }
+  const setAuth = useSetRecoilState(authState);
+  const setUser = useSetRecoilState(userStates);
+  const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    setAuth(false);
+    navigate("/login");
+  };
   return (    <div className='flex h-screen bg-gradient-to-br from-azure-500 to-azure-400 overflow-hidden'>
       {/* Sidebar */}
       <Sidebar />
@@ -223,6 +233,8 @@ function App() {
           <Route path='/update/password' element={<UpdatePassword />} />
           <Route path='/verify/email/:token' element={<EmailVerification />} />
           <Route path='/no-role' element={<NoRoleAssigned />} />
+          <Route path='/test' element={<UserManagementScreen />} />
+          
 
           {/* Authenticated app routes under /app */}
           <Route path='/app' element={<Layout />}>
