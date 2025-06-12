@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path stroke="currentColor" stroke-width="8" fill="none" d="M20,80 L20,30 Q20,10 40,10 L60,10 Q80,10 80,30 L80,80 M10,80 L90,80 M40,10 L40,20 M60,10 L60,20 M50,50 L30,70 M50,50 L70,70" />
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="currentColor">
+    📜
+  </text>
+</svg>

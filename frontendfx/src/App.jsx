@@ -30,6 +30,7 @@ import EmailVerification from './auth/EmailVerification.jsx';
 import NotFound from './auth/NotFound.jsx';
 import NoRoleAssigned from './auth/NoRoleAssigned.jsx';
 import ProfileUpdateModal from './app/modals/ProfileUpdateModal.jsx';
+import LandingPage from './app/pages/LandingPage.jsx'; // Added import
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
@@ -43,10 +44,11 @@ const ROLE_PERMISSIONS = {
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
 const APP_ROUTES = [
-  { name: 'Dashboard', path: '/',         element: DashboardPage },
+  { name: 'Dashboard', path: '/',         element: DashboardPage }, // Path here is relative to the parent /app
   { name: 'Users',     path: 'users',     element: UsersPage },
   { name: 'Videos',    path: 'videos',    element: VideoListPage },
-  { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },  { name: 'Tests',     path: 'tests',     element: TestsPage },
+  { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },
+  { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
   { name: 'Images',    path: 'images/upload',    element: ImageUploadPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
@@ -59,7 +61,11 @@ const APP_ROUTES = [
 function getFirstAllowedRoute(role) {
   const allowedPages = ROLE_PERMISSIONS[role?.toUpperCase()] || [];
   const firstAllowedPage = APP_ROUTES.find(route => allowedPages.includes(route.name));
-  return firstAllowedPage ? `/${firstAllowedPage.path}` : '/no-role'; 
+  // Ensure the root path for dashboard is correctly formed as /app if it's the first allowed page.
+  if (firstAllowedPage) {
+    return firstAllowedPage.path === '/' ? '/app' : `/app/${firstAllowedPage.path}`;
+  }
+  return '/no-role'; // Fallback if no route is allowed or found
 }
 
 // Protects a route based on `permission` string
@@ -78,13 +84,14 @@ function ProtectedRoute({ permission, children }) {
 
   const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
   if (!allowed.includes(permission)) {
+    // getFirstAllowedRoute already includes /app prefix
     return <Navigate to={getFirstAllowedRoute(user.role)} replace />;
   }
 
   return children;
 }
 
-// Handle the special case for the index route
+// Handle the special case for the index route (now for /app)
 function IndexRouteHandler() {
   const isAuthenticated = useRecoilValue(authState);
   const user = useRecoilValue(userStates);
@@ -98,7 +105,9 @@ function IndexRouteHandler() {
     return <Navigate to='/no-role' replace />;
   }
 
-  const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];  if (!allowed.includes('Dashboard')) {
+  const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
+  if (!allowed.includes('Dashboard')) {
+    // getFirstAllowedRoute already includes /app prefix
     return <Navigate to={getFirstAllowedRoute(user.role)} replace />;
   }
 
@@ -153,7 +162,7 @@ function Layout() {
   const user = useRecoilValue(userStates);
   const [isSidebarOpen] = useRecoilState(sidebarState);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (this check is for /app/* routes)
   if (!isAuthenticated) {
     return <Navigate to='/login' replace />;
   }
@@ -205,7 +214,9 @@ function App() {
     <RecoilRoot>
       <DocumentTitle />
       <BrowserRouter>
-        <Routes>          {/* Public routes */}
+        <Routes>
+          {/* Public routes */}
+          <Route path='/' element={<LandingPage />} /> {/* Landing page is now the root */}
           <Route path='/register' element={<Register />} />
           <Route path='/login' element={<Login />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
@@ -213,16 +224,16 @@ function App() {
           <Route path='/verify/email/:token' element={<EmailVerification />} />
           <Route path='/no-role' element={<NoRoleAssigned />} />
 
-          {/* Dashboard with protected routes */}
-          <Route path='/' element={<Layout />}>
-            {/* Special case for index route */}
+          {/* Authenticated app routes under /app */}
+          <Route path='/app' element={<Layout />}>
+            {/* Special case for index route /app */}
             <Route index element={<IndexRouteHandler />} />
 
-            {/* All other routes */}
+            {/* All other app routes, paths are relative to /app */}
             {APP_ROUTES.filter(route => route.path !== '/').map(({ name, path, element: Component }) => (
               <Route
                 key={path}
-                path={path}
+                path={path} // These paths are now relative to /app
                 element={
                   <ProtectedRoute permission={name}>
                     <Component />
@@ -230,10 +241,12 @@ function App() {
                 }
               />
             ))}
-
-            {/* Fallback for unknown paths */}
+            {/* Fallback for unknown paths under /app */}
             <Route path='*' element={<NotFound />} />
           </Route>
+          
+          {/* Fallback for any other unknown top-level paths */}
+          <Route path='*' element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </RecoilRoot>

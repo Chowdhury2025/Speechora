@@ -48,18 +48,17 @@ import axios from 'axios'; // Import axios
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-duo-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-duo-green-600">
           Update your password
         </h2>
       </div>
-
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-duo-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-duo-gray-700">
                 Email
               </label>
               <div className="mt-1">
@@ -74,9 +73,8 @@ import axios from 'axios'; // Import axios
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-duo-gray-700">
                 OTP
               </label>
               <div className="mt-1">
@@ -91,9 +89,8 @@ import axios from 'axios'; // Import axios
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-duo-gray-700">
                 New Password
               </label>
               <div className="mt-1 relative">
@@ -111,24 +108,21 @@ import axios from 'axios'; // Import axios
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                  {showPassword ? <EyeOff className="h-5 w-5 text-duo-gray-400" /> : <Eye className="h-5 w-5 text-duo-gray-400" />}
                 </button>
               </div>
             </div>
-
             {error && (
-              <div className="text-red-600 text-sm">{error}</div>
+              <div className="text-duo-yellow-600 text-sm">{error}</div>
             )}
-
-            <AuthButton loading={loading}>
+            <AuthButton loading={loading} className="bg-duo-green-500 hover:bg-duo-green-600 text-duo-white">
               {loading ? 'Updating...' : 'Update Password'}
             </AuthButton>
-            
             <div className="flex items-center justify-between">
               <div className="text-sm">
                 <a
                   href="/login"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-duo-blue-500 hover:text-duo-blue-700"
                 >
                   Remember your password? Login now
                 </a>

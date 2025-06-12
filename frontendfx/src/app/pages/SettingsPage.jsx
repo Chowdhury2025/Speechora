@@ -1,8 +1,7 @@
 import Header from "../components/common/Header";
 import Profile from "../components/settings/Profile";
 
-import DatabaseBackup from "../components/settings/DatabaseBackup";
-// import Security from "../components/settings/Security";
+
 import SystemSettings from "../components/settings/SystemSettings";
 
 const SettingsPage = () => {
@@ -22,8 +21,7 @@ const SettingsPage = () => {
         <div className="bg-white rounded-lg shadow-sm">
           <SystemSettings />
         </div>
-        {/* <DatabaseBackup /> this is for the dektop offline version Rabbi */}
-        {/* <ConnectedAccounts /> */}
+
       </main>
     </div>
   );

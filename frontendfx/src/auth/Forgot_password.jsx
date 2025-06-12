@@ -37,23 +37,22 @@ export const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-duo-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-duo-green-600">
           Reset your password
         </h2>
       </div>
-
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-duo-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {success ? (
-            <div className="text-center text-green-600">
+            <div className="text-center text-duo-green-600">
               Check your email for the password reset instructions.
             </div>
           ) : (
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-duo-gray-700">
                   Email address
                 </label>
                 <div className="mt-1">
@@ -67,12 +66,10 @@ export const ForgotPassword = () => {
                   />
                 </div>
               </div>
-
               {error && (
-                <div className="text-red-600 text-sm">{error}</div>
+                <div className="text-duo-yellow-600 text-sm">{error}</div>
               )}
-
-              <AuthButton loading={loading}> {/* Pass the local loading state here */}
+              <AuthButton loading={loading} className="bg-duo-green-500 hover:bg-duo-green-600 text-duo-white">
                 Send reset instructions
               </AuthButton>
             </form>
