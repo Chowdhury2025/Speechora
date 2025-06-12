@@ -73,9 +73,34 @@ const Profile = () => {
             <p className="text-[#4b4b4b]">{userState.bloodGroup || 'Not specified'}</p>
           </div>
           
-          <div className="bg-[#f7ffec] p-4 rounded-xl border border-[#e5e5e5] hover:border-[#58cc02] transition-colors duration-200">
-            <p className="text-sm font-bold text-[#58cc02] mb-1">Date of Birth</p>
-            <p className="text-[#4b4b4b]">{formattedDate}</p>
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-[#58cc02] mb-1">Date of Birth</p>
+            <p className="text-gray-900">{formattedDate}</p>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-[#58cc02] mb-1">Gender</p>
+            <p className="text-gray-900">{userState.gender || 'Not specified'}</p>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-[#58cc02] mb-1">Address</p>
+            <p className="text-gray-900">{userState.address || 'Not specified'}</p>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-[#58cc02] mb-1">Emergency Contact</p>
+            <p className="text-gray-900">{userState.emergencyContact || 'Not specified'}</p>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-[#58cc02] mb-1">Bio</p>
+            <p className="text-gray-900">{userState.bio || 'Not specified'}</p>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+            <p className="text-sm font-medium text-[#58cc02] mb-1">Location</p>
+            <p className="text-gray-900">{userState.location || 'Not specified'}</p>
           </div>
         </div>
 
