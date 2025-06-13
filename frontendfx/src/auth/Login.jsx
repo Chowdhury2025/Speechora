@@ -70,7 +70,7 @@ export const Login = () => {
         setError('Error: ' + err.message);
       }
       setAuthStatus(false);
-    } finally {
+    } finally { 
       setLoading(false);
     }
   };
