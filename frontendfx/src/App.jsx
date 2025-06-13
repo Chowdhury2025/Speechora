@@ -2,12 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { RecoilRoot, useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
 import { authState, userStates, sidebarState } from './atoms';
-import { API_URL } from './config';
-import api from './utils/api';
+
 
 import Sidebar from './app/components/common/Sidebar.jsx';
-// import DocumentTitle from './components/DocumentTitle.jsx';
-// import IWantNeedsPage from './app/pages/IWantNeedsPage.jsx';
+
 
 // Dashboard Pages
 import DashboardPage from './app/pages/DashboardPage.jsx';
@@ -31,7 +29,7 @@ import EmailVerification from './auth/EmailVerification.jsx';
 import NotFound from './auth/NotFound.jsx';
 import NoRoleAssigned from './auth/NoRoleAssigned.jsx';
 import ProfileUpdateModal from './app/modals/ProfileUpdateModal.jsx';
-import LandingPage from './app/pages/'; // Added import
+import LandingPage from './app/pages/LandigPage.jsx'; // Added import
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
