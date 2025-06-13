@@ -15,15 +15,11 @@ export const Login = () => {
   const setAuthStatus = useSetRecoilState(authState);
   const isAuthenticated = useRecoilValue(authState);
   const navigate = useNavigate();
-  useEffect(() => {
-    if (isAuthenticated) {
-<<<<<<< HEAD
-      navigate('/app');
-=======
-      navigate('/app/');
->>>>>>> temp-updates
-    }
-  }, [isAuthenticated, navigate]);
+useEffect(() => {
+  if (isAuthenticated) {
+    navigate('/app/');
+  }
+}, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

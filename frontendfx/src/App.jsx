@@ -45,12 +45,8 @@ const ROLE_PERMISSIONS = {
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
 const APP_ROUTES = [
-<<<<<<< HEAD
-  { name: 'Dashboard', path: 'Dashboard',         element: DashboardPage }, // Path here is relative to the parent /app
-=======
   // Main routes
   { name: 'Dashboard', path: 'dashboard', element: DashboardPage },
->>>>>>> temp-updates
   { name: 'Users',     path: 'users',     element: UsersPage },
   { name: 'Videos',    path: 'videos',    element: VideoListPage },
   { name: 'Videos-Upload', path: 'videos-upload', element: VideoUploadPage },
