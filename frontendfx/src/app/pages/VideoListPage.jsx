@@ -93,19 +93,27 @@ const VideoListPage = () => {
       <TabNavigator />
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Educational Videos</h1>
-        <select
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <div className="flex items-center space-x-4">
+          <h1 className="text-2xl font-bold">Educational Videos</h1>
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Categories</option>
+            {categories.map(category => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+        <a
+          href="/app/videos-upload"
+          className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-2 px-6 rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
         >
-          <option value="">All Categories</option>
-          {categories.map(category => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+          Upload Video
+        </a>
       </div>
 
       {filteredVideos.length === 0 ? (

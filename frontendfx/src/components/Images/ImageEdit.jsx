@@ -121,7 +121,7 @@ const ImageEdit = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[#3C3C3C] text-sm font-bold mb-2">
               Image URL
             </label>
             <input
@@ -134,7 +134,7 @@ const ImageEdit = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[#3C3C3C] text-sm font-bold mb-2">
               Title
             </label>
             <input
@@ -147,25 +147,25 @@ const ImageEdit = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[#3C3C3C] text-sm font-bold mb-2">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
               rows="3"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[#3C3C3C] text-sm font-bold mb-2">
               Age Group
             </label>
             <select
               value={ageGroup}
               onChange={(e) => setAgeGroup(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium text-[#4b4b4b] bg-white"
             >
               <option value="">Select Age Group</option>
               {ageGroups.map((age) => (
@@ -177,49 +177,58 @@ const ImageEdit = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[#3C3C3C] text-sm font-bold mb-2">
               Category
             </label>
             <input
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[#3C3C3C] text-sm font-bold mb-2">
               Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
             />
           </div>
 
           {imageUrl && (
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[#3C3C3C] text-sm font-bold mb-2">
                 Preview
               </label>
               <img
                 src={imageUrl}
                 alt="Preview"
-                className="max-w-full h-auto max-h-[300px] object-contain"
+                className="max-w-full h-auto max-h-[300px] object-contain border-2 border-slate-200 rounded-xl"
               />
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          <div className="flex justify-end space-x-4 mt-6">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 border-2 border-slate-200 text-[#4b4b4b] font-bold rounded-xl hover:bg-slate-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-8 rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2 disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

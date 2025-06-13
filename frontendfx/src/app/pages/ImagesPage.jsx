@@ -90,13 +90,13 @@ const ImagesPage = () => {
     <div className="container mx-auto p-4">
       <ImageTabNavigator />
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Educational Images</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold text-[#3C3C3C]">Educational Images</h1>
         <div className="flex gap-4">
           <select
             value={selectedCategory}
             onChange={handleCategoryChange}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium text-[#4b4b4b] bg-white"
           >
             <option value="">All Categories</option>
             {categories.map(category => (
@@ -107,8 +107,8 @@ const ImagesPage = () => {
           </select>
           {user && (
             <button
-              onClick={() => navigate('/images/upload')}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+              onClick={() => navigate('/app/images/upload')}
+              className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-8 rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
             >
               Upload New Image
             </button>
@@ -117,63 +117,67 @@ const ImagesPage = () => {
       </div>
 
       {filteredImages.length === 0 ? (
-        <div className="text-center text-gray-500 mt-8">
-          {selectedCategory ? 'No images found in this category' : 'No images available'}
+        <div className="text-center py-12">
+          <p className="text-lg text-[#4b4b4b]">
+            {selectedCategory ? 'No images found in this category' : 'No images available'}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 justify-items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 justify-items-center">
           {filteredImages.map(image => (
-            <div key={image.id} className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105 w-full max-w-sm">
-              <div className="relative">                <img
+            <div key={image.id} className="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-slate-100 hover:border-[#58cc02] transition-all duration-200 w-full max-w-sm">
+              <div className="relative">
+                <img
                   src={image.imageUrl}
                   alt={image.title}
-                  className="w-full h-48 object-cover bg-gray-100"
+                  className="w-full h-48 object-cover"
                   onError={(e) => {
                     e.target.parentElement.innerHTML = `
-                      <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
-                        <span class="text-gray-400">Image not available</span>
+                      <div class="w-full h-48 bg-slate-100 flex items-center justify-center">
+                        <span className="text-[#4b4b4b]">Image not available</span>
                       </div>
                     `;
                   }}
                 />
               </div>
               
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-lg line-clamp-2 flex-1 pr-2">{image.title}</h3>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-bold text-lg text-[#3C3C3C] line-clamp-2 flex-1 pr-2">{image.title}</h3>
                 </div>
                 
-                <div className="flex items-center text-sm text-gray-600 mb-2">
-                  <span className="mr-3 truncate">By: {image.name || 'Unknown'}</span>
+                <div className="flex items-center text-sm text-[#4b4b4b] mb-3">
+                  <span className="mr-3 truncate font-medium">By: {image.name || 'Unknown'}</span>
                   {image.category && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex-shrink-0">
+                    <span className="bg-[#e5e5e5] text-[#4b4b4b] px-3 py-1 rounded-full text-sm font-medium">
                       {image.category}
                     </span>
                   )}
                 </div>
                 
-                <div className="text-sm text-gray-500 mb-3">
+                <div className="text-sm text-[#4b4b4b] mb-3 font-medium">
                   Age Group: {image.ageGroup || 'All ages'}
                 </div>
                 
                 {image.description && (
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                  <p className="text-[#4b4b4b] text-sm line-clamp-3 mb-4">
                     {image.description}
                   </p>
                 )}
                 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   <a
                     href={image.imageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                    className="inline-flex items-center justify-center w-full bg-[#1cb0f6] hover:bg-[#0095e0] text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 border-[#1899d6] hover:border-[#0076b8] focus:outline-none focus:ring-2 focus:ring-[#1cb0f6] focus:ring-offset-2"
                   >
                     View Full Image
-                  </a>                  {user && (
+                  </a>
+                  {user && (
                     <button
                       onClick={() => handleDelete(image.id)}
-                      className="inline-flex items-center justify-center w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200"
+                      className="inline-flex items-center justify-center w-full bg-[#ff4b4b] hover:bg-[#e03232] text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 border-[#dc3131] hover:border-[#c01f1f] focus:outline-none focus:ring-2 focus:ring-[#ff4b4b] focus:ring-offset-2"
                     >
                       Delete
                     </button>

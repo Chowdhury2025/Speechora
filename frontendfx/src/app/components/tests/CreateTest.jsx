@@ -87,16 +87,19 @@ const CreateTest = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Create New Test</h1>
+      <h1 className="text-2xl font-bold text-duo-gray-700 mb-6">Create New Test</h1>
 
       <div className="mb-8">
-        <div className="flex justify-between mb-4">
+        {/* Progress Steps */}
+        <div className="flex justify-between mb-6">
           {[1, 2].map((step) => (
             <button
               key={step}
               onClick={() => setCurrentStep(step)}
-              className={`flex-1 mx-2 py-2 px-4 rounded-lg ${
-                currentStep === step ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+              className={`flex-1 mx-2 py-3 px-4 rounded-xl font-bold transition-all duration-200 ${
+                currentStep === step 
+                ? 'bg-[#58cc02] text-white border-b-2 border-[#3c9202]' 
+                : 'bg-[#e5f6ff] text-[#1cb0f6] hover:bg-[#d1f2ff]'
               }`}
             >
               {step === 1 ? 'Test Details' : 'Add Questions'}
@@ -105,10 +108,10 @@ const CreateTest = () => {
         </div>
 
         {currentStep === 1 ? (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-duo-gray-600 mb-2">
                   Test Title
                 </label>
                 <input
@@ -116,33 +119,33 @@ const CreateTest = () => {
                   name="title"
                   value={testDetails.title}
                   onChange={handleTestDetailsChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-duo-gray-600 mb-2">
                   Description
                 </label>
                 <textarea
                   name="description"
                   value={testDetails.description}
                   onChange={handleTestDetailsChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
                   rows="3"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-duo-gray-600 mb-2">
                   Subject
                 </label>
                 <select
                   name="subject"
                   value={testDetails.subject}
                   onChange={handleTestDetailsChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
                   required
                 >
                   <option value="">Select Subject</option>
@@ -155,14 +158,14 @@ const CreateTest = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-duo-gray-600 mb-2">
                   Age Group
                 </label>
                 <select
                   name="ageGroup"
                   value={testDetails.ageGroup}
                   onChange={handleTestDetailsChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
                   required
                 >
                   <option value="">Select Age Group</option>
@@ -174,10 +177,13 @@ const CreateTest = () => {
                 </select>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-4">
                 <button
                   onClick={() => setCurrentStep(2)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                  className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-8 
+                    rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] 
+                    hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] 
+                    focus:ring-offset-2 disabled:opacity-50"
                   disabled={!testDetails.title || !testDetails.subject || !testDetails.ageGroup}
                 >
                   Next: Add Questions
@@ -190,26 +196,30 @@ const CreateTest = () => {
             <QuestionForm onSubmit={handleQuestionAdd} />
 
             {questions.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium mb-4">Added Questions</h3>
+              <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+                <h3 className="text-lg font-bold text-duo-gray-700 mb-4">Added Questions</h3>
                 {questions.map((question, index) => (
                   <div
                     key={index}
-                    className="p-4 border rounded-md mb-4 relative"
+                    className="p-4 border-2 border-slate-200 rounded-xl mb-4 relative hover:border-[#58cc02] transition-colors duration-200"
                   >
                     <button
                       onClick={() => handleRemoveQuestion(index)}
-                      className="absolute top-2 right-2 text-red-500"
+                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center 
+                        text-duo-gray-500 hover:text-[#ff4b4b] rounded-full hover:bg-[#ffd4d4] 
+                        transition-colors duration-200"
                     >
                       ×
                     </button>
-                    <p className="font-medium">{question.questionText}</p>
-                    <div className="mt-2 space-y-1">
+                    <p className="font-bold text-duo-gray-700">{question.questionText}</p>
+                    <div className="mt-3 space-y-2">
                       {question.choices.map((choice, i) => (
                         <div
                           key={i}
-                          className={`p-2 rounded ${
-                            choice.isCorrect ? 'bg-green-100 text-green-800' : 'bg-gray-50'
+                          className={`p-3 rounded-xl ${
+                            choice.isCorrect 
+                            ? 'bg-[#d7ffb8] text-[#58cc02] font-bold' 
+                            : 'bg-slate-50 text-duo-gray-600'
                           }`}
                         >
                           {choice.choiceText}
@@ -222,16 +232,21 @@ const CreateTest = () => {
               </div>
             )}
 
-            <div className="flex justify-between">
+            <div className="flex justify-between pt-4">
               <button
                 onClick={() => setCurrentStep(1)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 
+                  px-8 rounded-xl transition-colors duration-200 focus:outline-none 
+                  focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
               >
                 Back
               </button>
               <button
                 onClick={handleSubmit}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-8 
+                  rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] 
+                  hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] 
+                  focus:ring-offset-2 disabled:opacity-50"
                 disabled={questions.length === 0}
               >
                 Create Test

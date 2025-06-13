@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const ImageTabNavigator = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const baseUrl = '/app/images';
 
   // Determine active tab based on current path
   const isListView = !location.pathname.includes('/upload');
@@ -11,21 +12,21 @@ const ImageTabNavigator = () => {
   return (
     <div className="flex border-b border-gray-200 mb-6">
       <button
-        onClick={() => navigate('/images')}
-        className={`px-6 py-3 font-medium text-sm mr-2 focus:outline-none rounded-t-lg transition-colors ${
+        onClick={() => navigate('/app/images')}
+        className={`px-4 py-2 font-bold text-sm rounded-t-lg ${
           isListView
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            ? 'text-[#58cc02] border-b-2 border-[#58cc02] bg-[#f7ffec]'
+            : 'text-[#4b4b4b] hover:text-[#58cc02] hover:bg-[#f7ffec]'
         }`}
       >
         Image List
       </button>
       <button
-        onClick={() => navigate('/images/upload')}
-        className={`px-6 py-3 font-medium text-sm focus:outline-none rounded-t-lg transition-colors ${
-          !isListView
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+        onClick={() => navigate('/app/images/upload')}
+        className={`px-4 py-2 font-bold text-sm rounded-t-lg ${
+          location.pathname === `${baseUrl}/upload`
+            ? 'text-[#58cc02] border-b-2 border-[#58cc02] bg-[#f7ffec]'
+            : 'text-[#4b4b4b] hover:text-[#58cc02] hover:bg-[#f7ffec]'
         }`}
       >
         Upload Image

@@ -15,8 +15,6 @@ const UserManagementScreen = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [sortField, setSortField] = useState('username');
   const [sortDirection, setSortDirection] = useState('asc');
-  
-  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -106,236 +104,216 @@ const UserManagementScreen = () => {
   });
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
-        
-        <div className="flex space-x-2">
-          {/* Search Input */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search users"
-              className="pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button className="absolute right-3 top-2.5 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+    <div className="min-h-screen bg-white p-6">
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-200">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-primary">User Management</h1>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-primary hover:bg-primary-hover text-white font-bold py-2 px-4 rounded-xl border-b-4 border-primary-dark hover:border-primary-pressed active:border-b-0 active:mt-1 transition-all duration-200"
+            >
+              Add New User
             </button>
           </div>
-          
-          {/* Role Filter Dropdown */}
-          <div className="relative">
+        </div>
+
+        {/* Filters */}
+        <div className="p-6 border-b border-slate-200 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
+              />
+            </div>
             <select
-              className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
             >
               <option>All roles</option>
               <option>USER</option>
               <option>ADMIN</option>
+              <option>STAFF</option>
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
-          </div>
-          
-          {/* Verification Filter Dropdown */}
-          <div className="relative">
             <select
-              className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={verificationFilter}
               onChange={(e) => setVerificationFilter(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
             >
               <option>All</option>
               <option>Verified</option>
-              <option>Not Verified</option>
+              <option>Unverified</option>
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
           </div>
-          
-          {/* Create Button */}
-          <button 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            Add User
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-          </button>
         </div>
-      </div>
-      
-      {/* Table */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th 
-                scope="col" 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('username')}
-              >
-                <div className="flex items-center">
+
+        {/* Users Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
+              <tr>
+                <th 
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('username')}
+                >
                   Username {renderSortIcon('username')}
-                </div>
-              </th>
-              <th 
-                scope="col" 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('email')}
-              >
-                <div className="flex items-center">
+                </th>
+                <th 
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('email')}
+                >
                   Email {renderSortIcon('email')}
-                </div>
-              </th>
-              <th 
-                scope="col" 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('role')}
-              >
-                <div className="flex items-center">
+                </th>
+                <th 
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort('role')}
+                >
                   Role {renderSortIcon('role')}
-                </div>
-              </th>
-              <th 
-                scope="col" 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('isEmailVerified')}
-              >
-                <div className="flex items-center">
-                  Verification Status {renderSortIcon('isEmailVerified')}
-                </div>
-              </th>
-              <th 
-                scope="col" 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort('createdAt')}
-              >
-                <div className="flex items-center">
-                  Created At {renderSortIcon('createdAt')}
-                </div>
-              </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-4 text-center">
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                  </div>
-                </td>
+                </th>
+                <th 
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider"
+                >
+                  Status
+                </th>
+                <th 
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider"
+                >
+                  Actions
+                </th>
               </tr>
-            ) : filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                  No users found
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{user.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.isEmailVerified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {user.isEmailVerified ? 'Verified' : 'Not Verified'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button 
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                      onClick={() => handleEdit(user)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      Delete
-                    </button>
+            </thead>
+            <tbody className="bg-white divide-y divide-slate-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-slate-600">
+                    Loading...
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
-        <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">{users.length > 0 ? (page - 1) * limit + 1 : 0}</span> to <span className="font-medium">{Math.min(page * limit, users.length)}</span> of <span className="font-medium">{users.length}</span> results
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-slate-600">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                users.map(user => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                      {user.username}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      {user.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      {user.role}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {user.isEmailVerified ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success-bg text-success-text">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-error-bg text-error-text">
+                          Unverified
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="text-secondary hover:text-secondary-hover font-bold"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-        <div className="flex space-x-2">
-          <button 
-            onClick={() => setPage(page > 1 ? page - 1 : 1)} 
-            disabled={page === 1}
-            className={`px-3 py-1 rounded ${page === 1 ? 'bg-gray-200 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-          >
-            Previous
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-            <button 
-              key={pageNum}
-              onClick={() => setPage(pageNum)}
-              className={`px-3 py-1 rounded ${pageNum === page ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+
+        {/* Pagination */}
+        <div className="px-6 py-4 flex items-center justify-between border-t border-slate-200">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl border-2 border-slate-200 text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {pageNum}
+              Previous
             </button>
-          ))}
-          <button 
-            onClick={() => setPage(page < totalPages ? page + 1 : totalPages)} 
-            disabled={page === totalPages}
-            className={`px-3 py-1 rounded ${page === totalPages ? 'bg-gray-200 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-          >
-            Next
-          </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl border-2 border-slate-200 text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-slate-600">
+                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              </p>
+            </div>
+            <div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl border-2 border-slate-200 text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl border-2 border-slate-200 text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       </div>
-      
+
       {/* Modals */}
-      <AddUserModal 
+      <AddUserModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onUserAdded={handleUserAdded}
+        onUserAdded={() => {
+          fetchUsers();
+          setIsAddModalOpen(false);
+        }}
       />
-      
-      <EditUserModal 
+
+      <EditUserModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onUserUpdated={handleUserUpdated}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onUserUpdated={() => {
+          fetchUsers();
+          setIsEditModalOpen(false);
+          setSelectedUser(null);
+        }}
         user={selectedUser}
       />
     </div>

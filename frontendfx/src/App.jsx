@@ -6,7 +6,7 @@ import { API_URL } from './config';
 import api from './utils/api';
 
 import Sidebar from './app/components/common/Sidebar.jsx';
-import DocumentTitle from './components/DocumentTitle.jsx';
+// import DocumentTitle from './components/DocumentTitle.jsx';
 // import IWantNeedsPage from './app/pages/IWantNeedsPage.jsx';
 
 // Dashboard Pages
@@ -21,6 +21,7 @@ import AnalyticsPage from './app/pages/AnalyticsPage.jsx';
 import SettingsPage from './app/pages/SettingsPage.jsx';
 import VideoUploadPage from './app/pages/VideoUploadPage.jsx';
 import VideoListPage from './app/pages/VideoListPage.jsx';
+import UserManagementScreen from './auth/UserManagementScreen.jsx';
 
 import Register from './auth/Register.jsx';
 import { ForgotPassword } from './auth/Forgot_password.jsx';
@@ -34,7 +35,7 @@ import LandingPage from './app/pages/'; // Added import
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
-  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
   ADMIN: ['Dashboard', 'Users', 'Videos', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
   CONTENTMANAGER: ['Videos', 'Tests', 'Images', 'IWantNeeds'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds'],
@@ -44,26 +45,37 @@ const ROLE_PERMISSIONS = {
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
 const APP_ROUTES = [
+<<<<<<< HEAD
   { name: 'Dashboard', path: 'Dashboard',         element: DashboardPage }, // Path here is relative to the parent /app
+=======
+  // Main routes
+  { name: 'Dashboard', path: 'dashboard', element: DashboardPage },
+>>>>>>> temp-updates
   { name: 'Users',     path: 'users',     element: UsersPage },
   { name: 'Videos',    path: 'videos',    element: VideoListPage },
-  { name: 'Videos',    path: 'videos/upload',    element: VideoUploadPage },
+  { name: 'Videos-Upload', path: 'videos-upload', element: VideoUploadPage },
   { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
-  { name: 'Images',    path: 'images/upload',    element: ImageUploadPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
   { name: 'Analytics', path: 'analytics', element: AnalyticsPage },
   { name: 'Settings',  path: 'settings',  element: SettingsPage },
- 
+  
+  // Sub-routes
+  { name: 'Videos',    path: 'videos/upload', element: VideoUploadPage },
+  { name: 'Images',    path: 'images/upload', element: ImageUploadPage }
 ];
 
 // Find the first allowed route for a given user role
 function getFirstAllowedRoute(role) {
   const allowedPages = ROLE_PERMISSIONS[role?.toUpperCase()] || [];
-  const firstAllowedPage = APP_ROUTES.find(route => allowedPages.includes(route.name));
-  // Ensure the root path for dashboard is correctly formed as /app if it's the first allowed page.
+  // Only check main routes, not sub-routes
+  const mainRoutes = APP_ROUTES.filter(route => !route.path.includes('/upload'));
+  const firstAllowedPage = mainRoutes.find(route => allowedPages.includes(route.name));
+  
   if (firstAllowedPage) {
-    return firstAllowedPage.path === '/' ? '/app' : `/app/${firstAllowedPage.path}`;
+    // Remove leading slash and format path
+    const routePath = firstAllowedPage.path.replace(/^\//, '');
+    return `/app/${routePath}`;
   }
   return '/no-role'; // Fallback if no route is allowed or found
 }
@@ -72,20 +84,33 @@ function getFirstAllowedRoute(role) {
 function ProtectedRoute({ permission, children }) {
   const isAuthenticated = useRecoilValue(authState);
   const user = useRecoilValue(userStates);
+  const navigate = useNavigate();
 
-  if (!isAuthenticated) {
-    return <Navigate to='/login' replace />;
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true });
+      return;
+    }
 
-  // Redirect both no role and STAFF role to no-role screen
-  if (!user?.role || user.role === 'STAFF') {
-    return <Navigate to='/no-role' replace />;
+    if (!user?.role || user.role === 'STAFF') {
+      navigate('/no-role', { replace: true });
+      return;
+    }
+
+    const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
+    if (!allowed.includes(permission)) {
+      const firstRoute = getFirstAllowedRoute(user.role);
+      navigate(firstRoute, { replace: true });
+    }
+  }, [isAuthenticated, user, permission, navigate]);
+
+  if (!isAuthenticated || !user?.role || user.role === 'STAFF') {
+    return null;
   }
 
   const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
   if (!allowed.includes(permission)) {
-    // getFirstAllowedRoute already includes /app prefix
-    return <Navigate to={getFirstAllowedRoute(user.role)} replace />;
+    return null;
   }
 
   return children;
@@ -95,23 +120,29 @@ function ProtectedRoute({ permission, children }) {
 function IndexRouteHandler() {
   const isAuthenticated = useRecoilValue(authState);
   const user = useRecoilValue(userStates);
+  const navigate = useNavigate();
 
-  if (!isAuthenticated) {
-    return <Navigate to='/login' replace />;
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true });
+      return;
+    }
 
-  // Redirect both no role and STAFF role to no-role screen
-  if (!user?.role || user.role === 'STAFF') {
-    return <Navigate to='/no-role' replace />;
-  }
+    if (!user?.role || user.role === 'STAFF') {
+      navigate('/no-role', { replace: true });
+      return;
+    }
 
-  const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
-  if (!allowed.includes('Dashboard')) {
-    // getFirstAllowedRoute already includes /app prefix
-    return <Navigate to={getFirstAllowedRoute(user.role)} replace />;
-  }
+    const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
+    if (!allowed.includes('Dashboard')) {
+      const firstAllowedRoute = getFirstAllowedRoute(user.role);
+      navigate(firstAllowedRoute, { replace: true });
+    } else {
+      navigate('/app/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
-  return <DashboardPage />;
+  return null;
 }
 
 // AutoLogout component to handleLogout user after 3 minutes of inactivity
@@ -161,12 +192,37 @@ function Layout() {
   const isAuthenticated = useRecoilValue(authState);
   const user = useRecoilValue(userStates);
   const [isSidebarOpen] = useRecoilState(sidebarState);
+  const setAuth = useSetRecoilState(authState);
+  const setUser = useSetRecoilState(userStates);
+  const navigate = useNavigate();  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true });
+      return;
+    }
 
-  // Redirect to login if not authenticated (this check is for /app/* routes)
-  if (!isAuthenticated) {
-    return <Navigate to='/login' replace />;
-  }
+    if (!user?.role || user.role === 'STAFF') {
+      navigate('/no-role', { replace: true });
+      return;
+    }
 
+    // If we're at /app exactly, redirect to the proper route
+    if (window.location.pathname === '/app') {
+      const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
+      if (allowed.includes('Dashboard')) {
+        navigate('/app/dashboard', { replace: true });
+      } else {
+        const firstRoute = getFirstAllowedRoute(user.role);
+        navigate(firstRoute, { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    setAuth(false);
+    navigate("/login");
+  };
   return (    <div className='flex h-screen bg-gradient-to-br from-azure-500 to-azure-400 overflow-hidden'>
       {/* Sidebar */}
       <Sidebar />
@@ -212,7 +268,7 @@ function Layout() {
 function App() {
   return (
     <RecoilRoot>
-      <DocumentTitle />
+      {/* <DocumentTitle /> */}
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
@@ -223,17 +279,15 @@ function App() {
           <Route path='/update/password' element={<UpdatePassword />} />
           <Route path='/verify/email/:token' element={<EmailVerification />} />
           <Route path='/no-role' element={<NoRoleAssigned />} />
-
-          {/* Authenticated app routes under /app */}
-          <Route path='/app' element={<Layout />}>
-            {/* Special case for index route /app */}
+          <Route path='/test' element={<UserManagementScreen />} />              {/* Authenticated app routes under /app */}
+          <Route path="/app" element={<Layout />}>
             <Route index element={<IndexRouteHandler />} />
-
-            {/* All other app routes, paths are relative to /app */}
-            {APP_ROUTES.filter(route => route.path !== '/').map(({ name, path, element: Component }) => (
+            
+            {/* Map all protected routes */}
+            {APP_ROUTES.map(({ name, path, element: Component }) => (
               <Route
                 key={path}
-                path={path} // These paths are now relative to /app
+                path={path}
                 element={
                   <ProtectedRoute permission={name}>
                     <Component />

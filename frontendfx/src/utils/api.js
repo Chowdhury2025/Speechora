@@ -1,36 +1,43 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// Create a base axios instance
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // 10 seconds
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add a request interceptor
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Add request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+);
 
-// Add a response interceptor
-api.interceptors.response.use((response) => {
-  return response;
-}, (error) => {
-  if (error.response?.status === 401) {
-    // Handle unauthorized access
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+// Add response interceptor to handle common errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // Handle 401 Unauthorized
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      // Handle other error responses
+      return Promise.reject(error.response.data);
+    }
+    return Promise.reject(error);
   }
-  return Promise.reject(error);
-});
+);
 
 export default api;
