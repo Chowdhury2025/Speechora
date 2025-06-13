@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config';
+import AuthLayout from './AuthLayout';
 
 const EmailVerification = () => {
   const { token } = useParams();
@@ -96,107 +97,109 @@ const EmailVerification = () => {
   };
 
   return (
-    <div className="min-h-screen bg-duo-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-duo-gray-700">
-          Email Verification
-        </h2>
-      </div>
-      
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          {status === 'success' && (
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center mb-4">
-                <svg className="h-12 w-12 text-duo-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <p className="text-duo-gray-700 font-bold">{message}</p>
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
-              >
-                Go to Login
-              </button>
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center mb-4">
-                <svg className="h-12 w-12 text-duo-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <p className="text-duo-red-500 font-bold">{message}</p>
-              <button
-                onClick={handleVerifyEmail}
-                disabled={isLoading}
-                className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
-              >
-                {isLoading ? 'Verifying...' : 'Try Again'}
-              </button>
-            </div>
-          )}
-
-          {status === 'pending' && (
-            <form onSubmit={handleVerifyEmail} className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-duo-gray-600">
-                  Email
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-duo-gray-200 focus:border-duo-green-500 focus:ring-1 focus:ring-duo-green-500 font-medium text-duo-gray-700 placeholder-duo-gray-400"
-                    placeholder="Enter your email"
-                  />
+    <AuthLayout>
+      <div className="min-h-screen bg-duo-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-duo-gray-700">
+            Email Verification
+          </h2>
+        </div>
+        
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            {status === 'success' && (
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center mb-4">
+                  <svg className="h-12 w-12 text-duo-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-duo-gray-600">
-                  Verification Code
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    value={verificationToken}
-                    onChange={(e) => setVerificationToken(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-duo-gray-200 focus:border-duo-green-500 focus:ring-1 focus:ring-duo-green-500 font-medium text-duo-gray-700 placeholder-duo-gray-400"
-                    placeholder="Enter verification code"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
-              >
-                {isLoading ? 'Verifying...' : 'Verify Email'}
-              </button>
-
-              <div className="mt-4">
+                <p className="text-duo-gray-700 font-bold">{message}</p>
                 <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={isLoading}
-                  className="w-full text-duo-green-500 hover:text-duo-green-600 font-bold text-sm"
+                  onClick={() => navigate('/login')}
+                  className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
                 >
-                  Resend verification email
+                  Go to Login
                 </button>
               </div>
-            </form>
-          )}
+            )}
+
+            {status === 'error' && (
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center mb-4">
+                  <svg className="h-12 w-12 text-duo-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <p className="text-duo-red-500 font-bold">{message}</p>
+                <button
+                  onClick={handleVerifyEmail}
+                  disabled={isLoading}
+                  className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
+                >
+                  {isLoading ? 'Verifying...' : 'Try Again'}
+                </button>
+              </div>
+            )}
+
+            {status === 'pending' && (
+              <form onSubmit={handleVerifyEmail} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-duo-gray-600">
+                    Email
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 rounded-xl border-2 border-duo-gray-200 focus:border-duo-green-500 focus:ring-1 focus:ring-duo-green-500 font-medium text-duo-gray-700 placeholder-duo-gray-400"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-duo-gray-600">
+                    Verification Code
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      type="text"
+                      value={verificationToken}
+                      onChange={(e) => setVerificationToken(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 rounded-xl border-2 border-duo-gray-200 focus:border-duo-green-500 focus:ring-1 focus:ring-duo-green-500 font-medium text-duo-gray-700 placeholder-duo-gray-400"
+                      placeholder="Enter verification code"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-duo-green-500 hover:bg-duo-green-600 text-white font-bold py-3 px-4 rounded-xl border-b-4 border-duo-green-700 hover:border-duo-green-800 disabled:opacity-50 disabled:cursor-not-allowed active:border-b-0 active:mt-1 active:border-t-4 transition-all duration-200"
+                >
+                  {isLoading ? 'Verifying...' : 'Verify Email'}
+                </button>
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={isLoading}
+                    className="w-full text-duo-green-500 hover:text-duo-green-600 font-bold text-sm"
+                  >
+                    Resend verification email
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

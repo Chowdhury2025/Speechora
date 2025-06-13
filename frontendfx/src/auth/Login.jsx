@@ -6,6 +6,8 @@ import { useSetRecoilState, useRecoilValue } from 'recoil';
 import { userStates, authState } from '../atoms';
 import axios from 'axios';
 
+import AuthLayout from './AuthLayout';
+
 export const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -70,15 +72,12 @@ useEffect(() => {
       setLoading(false);
     }
   };
-  
-  return (
-    <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold text-primary">
-          Sign in to your account
-        </h2>
-      </div>
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    return (
+    <AuthLayout>
+      <h2 className="mt-6 text-center text-3xl font-bold text-primary">
+        Sign in to your account
+      </h2>
+      <div className="mt-8 w-full">
         <div className="bg-white rounded-2xl shadow-sm p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -167,11 +166,10 @@ useEffect(() => {
                 >
                   Create an account
                 </a>
-              </div>
-            </div>
+              </div>            </div>
           </form>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };

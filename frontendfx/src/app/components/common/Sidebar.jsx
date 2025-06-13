@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState, useResetRecoilState } from 'recoil';
 import { sidebarState, userStates, authState, companyNameState } from '../../../atoms';
+import appLogo from '../../../assets/appIcon-removebg-preview.png';
 import { 
   Home, 
   Users, 
@@ -61,6 +62,9 @@ const Sidebar = () => {
       flex flex-col shadow-lg transition-all duration-300 z-50
     `}>
       {/* Logo Section */}
+      <div className="flex items-center justify-center p-4 border-b border-gray-200">
+        <img src={appLogo} alt="App Logo" className={`${isOpen ? 'w-32' : 'w-12'} transition-all duration-300`} />
+      </div>
       <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
         <span className={`font-bold text-duo-gray-700 text-lg transition-all duration-300 ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>
           Book8 Admin
