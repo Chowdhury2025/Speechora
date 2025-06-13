@@ -53,12 +53,11 @@ const APP_ROUTES = [
   { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
-  { name: 'Analytics', path: 'analytics', element: AnalyticsPage },
-  { name: 'Settings',  path: 'settings',  element: SettingsPage },
+  { name: 'Settings',  path: 'settings',  element: SettingsPage }
   
   // Sub-routes
-  { name: 'Videos',    path: 'videos/upload', element: VideoUploadPage },
-  { name: 'Images',    path: 'images/upload', element: ImageUploadPage }
+  // { name: 'Videos',    path: 'videos/upload', element: VideoUploadPage },
+  // { name: 'Images',    path: 'images/upload', element: ImageUploadPage }
 ];
 
 // Find the first allowed route for a given user role
