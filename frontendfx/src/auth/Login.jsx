@@ -17,7 +17,7 @@ export const Login = () => {
   const navigate = useNavigate();
 useEffect(() => {
   if (isAuthenticated) {
-    navigate('/app/');
+    navigate('/app/dashboard');
   }
 }, [isAuthenticated, navigate]);
 
