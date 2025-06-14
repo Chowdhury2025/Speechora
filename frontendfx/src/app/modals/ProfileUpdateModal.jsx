@@ -351,11 +351,18 @@ const ProfileUpdateModal = ({ isOpen, onClose }) => {
           {successMessage && <div className="text-green-500 text-sm py-2">{successMessage}</div>}
 
           {/* Submit Button */}
-          <div className="flex justify-end pt-4">
-            <button type="button" onClick={onClose} className="mr-2 px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700">
+          <div className="flex justify-end pt-4">            <button 
+              type="button" 
+              onClick={onClose} 
+              className="mr-2 px-4 py-2 border-2 border-[#58cc02] rounded-xl text-[#58cc02] hover:bg-[#e5f5d5] font-bold transition-colors"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={isLoading} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white disabled:opacity-50">
+            <button 
+              type="submit" 
+              disabled={isLoading} 
+              className="px-4 py-2 bg-[#58cc02] hover:bg-[#47b102] active:bg-[#3c9202] text-white rounded-xl font-bold transition-colors border-b-2 border-[#3c9202] hover:border-[#2e7502] disabled:opacity-50"
+            >
               {isLoading ? 'Updating...' : 'Update Profile'}
             </button>
           </div>

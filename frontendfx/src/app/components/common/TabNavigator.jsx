@@ -9,24 +9,23 @@ export const TabNavigator = () => {
   // Determine active tab based on current path
   const isListView = !location.pathname.includes('/upload');
 
-  return (
-    <div className="flex border-b border-gray-200 mb-6">
+  return (    <div className="flex mb-6">
       <button
         onClick={() => navigate('/app/videos')}
-        className={`px-6 py-3 font-medium text-sm mr-2 focus:outline-none rounded-t-lg transition-colors ${
+        className={`px-6 py-3 font-bold text-sm mr-2 focus:outline-none rounded-t-xl transition-all ${
           isListView
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            ? 'text-[#58cc02] border-b-4 border-[#58cc02] bg-[#e5f5d5]'
+            : 'text-gray-500 hover:text-[#58cc02] hover:bg-[#e5f5d5] border-b-4 border-transparent'
         }`}
       >
         Video List
       </button>
       <button
         onClick={() => navigate('/app/videos-upload')}
-        className={`px-6 py-3 font-medium text-sm focus:outline-none rounded-t-lg transition-colors ${
+        className={`px-6 py-3 font-bold text-sm focus:outline-none rounded-t-xl transition-all ${
           !isListView
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            ? 'text-[#58cc02] border-b-4 border-[#58cc02] bg-[#e5f5d5]'
+            : 'text-gray-500 hover:text-[#58cc02] hover:bg-[#e5f5d5] border-b-4 border-transparent'
         }`}
       >
         Upload Video

@@ -122,18 +122,17 @@ const DamageReportModal = ({ isOpen, onClose, storeId, productId, productName, o
                 ></textarea>
               </div>
 
-              <div className="flex justify-end space-x-3">
-                <button
+              <div className="flex justify-end space-x-3">                <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                  className="px-4 py-2 border-2 border-[#58cc02] rounded-xl text-[#58cc02] hover:bg-[#e5f5d5] font-bold transition-colors"
                   disabled={loading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  className="px-4 py-2 bg-[#58cc02] hover:bg-[#47b102] active:bg-[#3c9202] text-white rounded-xl font-bold transition-colors border-b-2 border-[#3c9202] hover:border-[#2e7502] disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? 'Reporting...' : 'Report Damage'}

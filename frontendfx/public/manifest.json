@@ -1,0 +1,21 @@
+{
+  "name": "Book8 Learning Platform",
+  "short_name": "Book8",
+  "description": "Educational platform for interactive learning",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#58cc02",
+  "icons": [
+    {
+      "src": "/appIcon-removebg-preview.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/appIcon-removebg-preview.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

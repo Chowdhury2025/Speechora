@@ -161,7 +161,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                   <button
                     type="button"
                     onClick={resendVerificationEmail}
-                    className="text-blue-400 hover:text-blue-500 text-sm"
+                    className="text-[#58cc02] hover:text-[#47b102] text-sm font-bold"
                     disabled={isLoading}
                   >
                     Resend Verification Email
@@ -175,19 +175,18 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                 </div>
               )}
 
-              <div className="flex justify-end space-x-2">
-                <button
+              <div className="flex justify-end space-x-2">                <button
                   type="button"
                   onClick={onClose}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-gray-600 text-gray-300 rounded hover:bg-gray-500"
+                  className="px-4 py-2 border-2 border-[#58cc02] rounded-xl text-[#58cc02] hover:bg-[#e5f5d5] font-bold transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-4 py-2 bg-[#58cc02] hover:bg-[#47b102] active:bg-[#3c9202] text-white rounded-xl font-bold transition-colors border-b-2 border-[#3c9202] hover:border-[#2e7502] disabled:opacity-50"
                 >
                   Save Changes
                 </button>

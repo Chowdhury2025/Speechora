@@ -94,12 +94,14 @@ const ImageDetail = () => {
               >
                 Edit Image
               </button>
-              <button
-                onClick={handleDelete}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-              >
-                Delete Image
-              </button>
+              {user.role === 'ADMIN' && (
+                <button
+                  onClick={handleDelete}
+                  className="bg-[#58cc02] hover:bg-[#47b102] active:bg-[#3c9202] text-white px-4 py-2 rounded-xl font-bold transition-colors border-b-2 border-[#3c9202] hover:border-[#2e7502]"
+                >
+                  Delete Image
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -224,30 +224,30 @@ function Layout() {
       {/* Main Content */}
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
         {/* Top Navigation Bar */}
-        <header className='bg-white border-b border-azure-300'>
+        <header className='bg-white border-b-2 border-[#e5f5d5] shadow-sm'>
           <div className='px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between'>
-            <h1 className='text-xl font-semibold text-sky_blue-400 transition-all duration-300'>
+            <h1 className='text-xl font-bold text-[#3c9202] transition-all duration-300'>
               Kids Learning Platform Admin
             </h1>
             <div className='flex items-center space-x-4'>
               <div className='flex items-center space-x-3'>
-                <div className='h-8 w-8 rounded-full bg-sky_blue-500 flex items-center justify-center'>
-                  <span className='text-white text-sm font-medium'>
+                <div className='h-9 w-9 rounded-xl bg-[#58cc02] border-b-2 border-[#3c9202] flex items-center justify-center shadow-sm'>
+                  <span className='text-white text-sm font-bold'>
                     {user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
                   </span>
                 </div>
                 <div className='flex flex-col'>
-                  <span className='text-sm font-medium text-gray-700'>
+                  <span className='text-sm font-bold text-[#3c9202]'>
                     {user?.email}
                   </span>
-                  <span className='text-xs text-gray-500'>
+                  <span className='text-xs font-medium text-[#58cc02]'>
                     {user?.role}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        </header>        {/* Main Content Area */}
+        </header>{/* Main Content Area */}
         <main className='flex-1 overflow-auto bg-azure-500 bg-opacity-20'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
             <AutoLogout />

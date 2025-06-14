@@ -108,15 +108,14 @@ const VideoUploadPage = () => {
     <div className="container mx-auto p-4">
       <TabNavigator />
       
-      <h1 className="text-2xl font-bold mb-6">Upload Educational Video</h1>
-      
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
-        <h2 className="text-lg font-semibold text-blue-800 mb-2">How to Upload a Video</h2>
-        <ol className="list-decimal list-inside space-y-2 text-blue-900">
+      <h1 className="text-2xl font-bold mb-6 text-[#3c9202]">Upload Educational Video</h1>
+        <div className="bg-[#e5f5d5] border-l-4 border-[#58cc02] p-4 mb-6 rounded-xl">
+        <h2 className="text-lg font-bold text-[#3c9202] mb-2">How to Upload a Video</h2>
+        <ol className="list-decimal list-inside space-y-2 text-[#2e7502]">
           <li>Find or create an educational video on YouTube that you want to share</li>
           <li>Copy the YouTube video URL (e.g., https://youtube.com/watch?v=xxxxx)</li>
           <li>Fill in the required fields marked with an asterisk (*):
-            <ul className="list-disc list-inside ml-6 mt-1 text-blue-800">
+            <ul className="list-disc list-inside ml-6 mt-1 text-[#3c9202]">
               <li>Video Title - A clear, descriptive title</li>
               <li>YouTube Link - Paste your copied YouTube URL</li>
               <li>Category - Select the most relevant category</li>
@@ -127,25 +126,25 @@ const VideoUploadPage = () => {
           <li>Set the position number to control where the video appears in lists (0 = first)</li>
           <li>Click "Upload Video" to submit</li>
         </ol>
-        <p className="mt-3 text-blue-800 text-sm">Note: The system will automatically generate a thumbnail from your YouTube video.</p>
+        <p className="mt-3 text-[#3c9202] text-sm">Note: The system will automatically generate a thumbnail from your YouTube video.</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-md p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl">
               {error}
             </div>
           )}
-            {success && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          {success && (
+            <div className="bg-[#e5f5d5] border-l-4 border-[#58cc02] text-[#3c9202] p-4 rounded-xl">
               <p>Video successfully uploaded by {videoData.name}!</p>
               <p className="text-sm mt-1">You can upload another video or return to the dashboard.</p>
             </div>
           )}
 
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Video Title *
             </label>
             <input
@@ -153,57 +152,29 @@ const VideoUploadPage = () => {
               name="title"
               value={videoData.title}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
+              placeholder="Enter video title"
             />
-          </div>          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          </div>
+
+          <div>
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
               YouTube Link *
             </label>
             <input
               type="url"
               name="linkyoutube_link"
-              value={videoData.linkyoutube_link}              onChange={handleYoutubeUrlChange}
-              placeholder="https://youtube.com/watch?v=..."
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={videoData.linkyoutube_link}
+              onChange={handleYoutubeUrlChange}
               required
+              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
+              placeholder="https://youtube.com/watch?v=xxxxx"
             />
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Thumbnail Preview
-            </label>
-            <div className="relative">
-              <input
-                type="url"
-                name="thumbnail"
-                value={videoData.thumbnail}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                readOnly
-              />              {videoData.thumbnail && (
-                <div className="mt-2 relative w-[640px] h-[360px] mx-auto">
-                  <img
-                    src={videoData.thumbnail}
-                    alt="Video thumbnail"
-                    className="w-full h-full object-contain bg-gray-100 rounded-lg shadow-md"
-                    style={{ maxWidth: '640px', maxHeight: '360px' }}
-                    onError={(e) => {
-                      // If maxresdefault fails, try hqdefault
-                      if (e.target.src.includes('maxresdefault')) {
-                        const videoId = extractVideoId(videoData.linkyoutube_link);
-                        e.target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Position in List
             </label>
             <input
@@ -212,22 +183,22 @@ const VideoUploadPage = () => {
               value={videoData.position}
               onChange={handleChange}
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
             />
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#3c9202]">
               Position determines the order in which videos appear (0 = first)
             </p>
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Category *
             </label>
             <select
               name="category"
               value={videoData.category}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
               required
             >
               <option value="">Select a category</option>
@@ -240,17 +211,17 @@ const VideoUploadPage = () => {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Age Group *
             </label>
             <select
               name="ageGroup"
               value={videoData.ageGroup}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
               required
             >
-              <option value="">Select age group</option>
+              <option value="">Select an age group</option>
               {ageGroups.map(age => (
                 <option key={age} value={age}>
                   {age}
@@ -260,21 +231,34 @@ const VideoUploadPage = () => {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Description
             </label>
             <textarea
               name="description"
               value={videoData.description}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows="4"
-              placeholder="Enter video description..."
-            />
+              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
+              placeholder="Provide a description of the video content"
+            ></textarea>
           </div>
 
+          {videoData.thumbnail && (
+            <div>
+              <label className="block text-[#3c9202] text-sm font-bold mb-2">
+                Thumbnail Preview
+              </label>
+              <img 
+                src={videoData.thumbnail} 
+                alt="Video thumbnail" 
+                className="w-full max-w-md rounded-xl border-2 border-[#e5f5d5]" 
+              />
+            </div>
+          )}
+
           <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Teacher's Name
             </label>
             <input
@@ -284,12 +268,10 @@ const VideoUploadPage = () => {
               disabled
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
             />
-          </div>
-
-          <button
+          </div>          <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200 ${
+            className={`w-full bg-[#58cc02] hover:bg-[#47b102] active:bg-[#3c9202] text-white py-3 px-4 rounded-xl font-bold transition-colors border-b-2 border-[#3c9202] hover:border-[#2e7502] ${
               loading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >

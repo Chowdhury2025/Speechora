@@ -102,7 +102,7 @@ const Sidebar = () => {
                   focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2
                 `}
               >
-                <div className="relative group">
+                <div className="relative group flex items-center">
                   <Icon 
                     size={24} 
                     className={`
@@ -120,7 +120,7 @@ const Sidebar = () => {
                   </span>
                   {/* Tooltip */}
                   {!isOpen && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                    <div className="absolute left-full   ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
                       {item.label}
                     </div>
                   )}
