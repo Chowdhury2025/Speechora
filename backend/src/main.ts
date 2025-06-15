@@ -75,8 +75,7 @@ app.listen(8000, '0.0.0.0', () => {
   const ipAddresses = getLocalIpAddresses();
   console.log(`Server up and running on port 8000`);
   console.log('Server can be accessed at:');
-  console.log('- Local: http://localhost:8000');
-  ipAddresses.forEach(ip => {
+  console.log('- Local: http://localhost:8000');  ipAddresses.forEach(ip => {
     console.log(`- Network: http://${ip}:8000`);
   });
 });
