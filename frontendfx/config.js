@@ -1,11 +1,6 @@
-// Environment detection
-const isDevelopment = import.meta.env.MODE === 'development';
-const productionApiUrl = 'https://book8-backend-k3yhiwqx2-jamadracs-projects.vercel.app';
-const developmentApiUrl = 'http://localhost:8000';
-
 // API URLs
-export const API_URL = isDevelopment ? developmentApiUrl : productionApiUrl;
-export const APP_URL = isDevelopment ? 'http://localhost:5173' : 'https://book8-nkn5jbgio-jamadracs-projects.vercel.app';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// export const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8800';
 
 // Cloudflare R2 Configuration
 export const R2_CONFIG = {

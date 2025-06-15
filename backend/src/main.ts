@@ -34,21 +34,11 @@ function getLocalIpAddresses() {
 
 // middleware
 const corsOptions: cors.CorsOptions = {
-  origin: [
-    'http://localhost:5173',  // Local development
-    'https://book8-nkn5jbgio-jamadracs-projects.vercel.app',  // Production frontend
-    'http://localhost:3000',  // Alternative local port
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'Origin',
-    'X-Requested-With',
-    'Accept'
-  ],
-  credentials: true,
-  optionsSuccessStatus: 200
+  origin: "*", 
+ 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"], // Allow these headers
+  credentials: true, // Allow credentials if needed
 };
  
 app.use(cors(corsOptions));
