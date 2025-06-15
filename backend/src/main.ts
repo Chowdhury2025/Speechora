@@ -34,7 +34,11 @@ function getLocalIpAddresses() {
 
 // middleware
 const corsOptions: cors.CorsOptions = {
-  origin: ["https://book8.vercel.app", "http://localhost:5173"], // Allow your production and development domains
+  origin: [
+    "https://book8.vercel.app", 
+    "http://localhost:5173",
+    "http://localhost:8800"  // Add your current development port
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type', 

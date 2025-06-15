@@ -4,45 +4,28 @@
 @tailwind utilities;
 
 @layer base {
-  @font-face {
-    font-family: 'din-round';
-    src: url('/fonts/din-round-bold.woff2') format('woff2'),
-         url('/fonts/din-round-bold.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
+  body {
+    @apply font-sans text-slate-700 bg-[#fff];
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
-  @font-face {
-    font-family: 'din-round';
-    src: url('/fonts/din-round-regular.woff2') format('woff2'),
-         url('/fonts/din-round-regular.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold;
   }
 }
 
-/* Apply Duolingo styling defaults */
-body {
-  @apply font-din-round text-slate-700 bg-[#fff];
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer components {
+  /* Duolingo-style button focus states */
+  button:focus, 
+  a:focus {
+    @apply outline-none ring-2 ring-[#58cc02] ring-offset-2;
+  }
 
-h1, h2, h3, h4, h5, h6 {
-  @apply font-din-round font-bold;
-}
-
-/* Duolingo-style button focus states */
-button:focus, 
-a:focus {
-  @apply outline-none ring-2 ring-[#58cc02] ring-offset-2;
-}
-
-/* Duolingo-style input focus states */
-input:focus,
-select:focus,
-textarea:focus {
-  @apply outline-none ring-1 ring-[#58cc02] border-[#58cc02];
+  /* Duolingo-style input focus states */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply outline-none ring-1 ring-[#58cc02] border-[#58cc02];
+  }
 }

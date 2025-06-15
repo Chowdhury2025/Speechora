@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 
 class CloudflareR2Service {
   constructor() {
@@ -15,6 +16,7 @@ class CloudflareR2Service {
         accessKeyId: this.R2_ACCESS_KEY_ID,
         secretAccessKey: this.R2_SECRET_ACCESS_KEY,
       },
+      forcePathStyle: true,
     });
   }
 
@@ -24,21 +26,25 @@ class CloudflareR2Service {
       const ext = file.name.split('.').pop();
       const uniqueName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
 
-      // Upload to R2
-      const command = new PutObjectCommand({
-        Bucket: this.R2_BUCKET_NAME,
-        Key: uniqueName,
-        Body: file,
-        ContentType: file.type,
+      // Create a new upload
+      const upload = new Upload({
+        client: this.s3Client,
+        params: {
+          Bucket: this.R2_BUCKET_NAME,
+          Key: uniqueName,
+          Body: file,
+          ContentType: file.type,
+        },
       });
 
-      await this.s3Client.send(command);
+      // Execute the upload
+      await upload.done();
 
       // Return the public URL
       return `${this.R2_PUBLIC_URL}/${uniqueName}`;
     } catch (error) {
       console.error('Error uploading to R2:', error);
-      throw new Error('Failed to upload file');
+      throw error;
     }
   }
 

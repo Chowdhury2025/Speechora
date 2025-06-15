@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'din-round': ['din-round', 'system-ui', '-apple-system', 'sans-serif'],
+        'sans': ['Nunito', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
         // Duolingo's Main Brand Colors
