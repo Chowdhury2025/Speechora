@@ -34,11 +34,17 @@ function getLocalIpAddresses() {
 
 // middleware
 const corsOptions: cors.CorsOptions = {
-  origin: "*", 
- 
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"], // Allow these headers
-  credentials: true, // Allow credentials if needed
+  origin: ["https://book8.vercel.app", "http://localhost:5173"], // Allow your production and development domains
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  credentials: true,
+  maxAge: 86400, // Cache preflight request results for 24 hours
 };
  
 app.use(cors(corsOptions));
