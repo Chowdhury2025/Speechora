@@ -3,95 +3,95 @@ import { Link } from 'react-router-dom';
 import LandingPageNavbar from '../components/home/LandingPageNavbar';
 import { ChevronRight, Target, Smile, Users, Gamepad2, Brain, Flame } from 'lucide-react';
 import DownloadButtons from '../components/home/DownloadButtons';
-import appIcon from '../../assets/appIcon-removebg-preview.png'; // Import the image
+import appIcon from '../../assets/appIcon-removebg-preview.png';
 
 // Helper component for language buttons
 const LanguageButton = ({ lang, flagSrc, altText, href = '/register' }) => (
   <Link
-    to={href} // Link to registration or a language-specific page
-    className="flex items-center justify-between w-full sm:w-auto text-left px-6 py-4 border-2 border-duo-gray-300 hover:border-duo-green-500 rounded-xl transition-all duration-200 hover:bg-duo-green-500/10 shadow-sm hover:shadow-md group" // Added group for group-hover
+    to={href}
+    className="flex items-center justify-between w-full sm:w-auto text-left px-6 py-4 border-2 border-slate-400 hover:border-primary rounded-2xl transition-all duration-200 hover:bg-primary-light shadow-button hover:shadow-md group bg-white"
   >
     <div className="flex items-center">
       {flagSrc && <img src={flagSrc} alt={altText} className="w-8 h-8 mr-4 rounded-sm" />}
-      <span className="text-lg font-bold text-duo-gray-700 group-hover:text-duo-green-600">{lang}</span> {/* Changed text-sky_blue-700 to text-gray-700 */}
+      <span className="text-lg font-bold text-slate-700 group-hover:text-primary">{lang}</span>
     </div>
-    <ChevronRight size={24} className="text-duo-gray-400 group-hover:text-duo-green-500" />
+    <ChevronRight size={24} className="text-slate-400 group-hover:text-primary" />
   </Link>
+);
+
+const FeatureCard = ({ icon: Icon, title, description }) => (
+  <div className="flex flex-col items-center text-center p-6 bg-white rounded-2xl shadow-button border-2 border-slate-400 hover:border-primary transition-all duration-200 hover:bg-primary-light group">
+    <div className="bg-primary-light p-4 rounded-full mb-4 group-hover:bg-white">
+      <Icon size={32} className="text-primary" />
+    </div>
+    <h3 className="text-xl font-bold text-slate-700 mb-2">{title}</h3>
+    <p className="text-slate-600">{description}</p>
+  </div>
 );
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <LandingPageNavbar /> {/* Restoring Navbar */}
+    <div className="min-h-screen bg-slate-100 flex flex-col">
+      <LandingPageNavbar />
 
       <main className="flex-grow flex flex-col items-center justify-center px-4 text-center pt-10 md:pt-16">
-      
-        {/* Hero Section - Duolingo Style */}
+        {/* Hero Section */}
         <section className="py-12 md:py-16 max-w-4xl mx-auto">
-          <img 
-            src={appIcon} // Use the imported image variable
-            alt="book8 Mascot" 
-            className="w-32 h-auto mx-auto mb-6 md:w-40" 
-          />
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-800 mb-8 leading-tight">
-            The free, fun, and effective way to learn!
+          <div className="relative mb-8">
+            <img 
+              src={appIcon}
+              alt="book8 Mascot" 
+              className="w-32 h-auto mx-auto md:w-40 animate-bounce" 
+            />
+            <div className="absolute -right-4 top-0 bg-secondary text-white px-3 py-1 rounded-full text-sm font-bold transform rotate-12">
+              Fun & Free!
+            </div>
+          </div>
+          
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-slate-700 mb-8 leading-tight">
+            Learn anything, <span className="text-primary">have fun</span>, repeat!
           </h1>
           
-          <div className="mt-8 mb-6 flex justify-center">
+          <div className="mt-8 mb-6 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               to="/register" 
-              className="bg-duo-green-500 hover:bg-duo-green-600 text-white text-lg font-bold py-4 px-12 rounded-2xl shadow-lg hover:shadow-xl transition-transform duration-150 ease-in-out transform hover:scale-105 uppercase tracking-wider"
+              className="bg-primary hover:bg-primary-hover text-white text-lg font-bold py-4 px-12 rounded-2xl shadow-button hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 uppercase tracking-wider w-full sm:w-auto"
             >
               Get started
             </Link>
-          </div>
-          <div className="flex justify-center">
             <Link
               to="/login" 
-              className="text-duo-green-500 hover:text-duo-green-600 font-bold py-3 px-8 border-2 border-duo-gray-300 hover:border-duo-green-400 rounded-xl transition-all duration-200 uppercase tracking-wider text-sm hover:bg-duo-green-500/10"
+              className="text-primary hover:text-primary-hover font-bold py-3 px-8 border-2 border-slate-400 hover:border-primary rounded-2xl transition-all duration-200 uppercase tracking-wider text-sm hover:bg-primary-light w-full sm:w-auto"
             >
               I already have an account
             </Link>
           </div>
         </section>
 
-     
+        {/* Subject Selection */}
         <section className="w-full max-w-xl mx-auto mb-16 pt-8">
-          <h2 className="text-xl font-semibold text-gray-700 mb-6">I want to learn...</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-           
+          <h2 className="text-2xl font-bold text-slate-700 mb-6">Choose what to learn:</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <LanguageButton lang="Mathematics" flagSrc="/images/icons/math.svg" altText="Math Icon" />
             <LanguageButton lang="English Language" flagSrc="/images/icons/english.svg" altText="English Icon" />
             <LanguageButton lang="Science" flagSrc="/images/icons/science.svg" altText="Science Icon" />
             <LanguageButton lang="History" flagSrc="/images/icons/history.svg" altText="History Icon" />
-       
           </div>
         </section>
 
-        {/* Why you'll love book8 Section - Updated to 2x2 grid */}
-        <section className="py-16 md:py-20 bg-duo-gray-200 w-full">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-duo-gray-900 text-center mb-12">
-              Why you'll love learning with book8
+        {/* Features Section */}
+        <section className="py-16 md:py-20 bg-white w-full">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-700 text-center mb-12">
+              Why you'll love learning with <span className="text-primary">book8</span>
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-duo-green-100 p-4 rounded-full mb-4">
-                  <Target size={32} className="text-duo-green-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-duo-gray-700 mb-2">Effective and efficient</h3>
-                <p className="text-duo-gray-600 text-sm">
-                  Our courses are designed to help you learn quickly and retain information effectively.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-duo-green-100 p-4 rounded-full mb-4">
-                  <Smile size={32} className="text-duo-green-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-duo-gray-700 mb-2">Fun and engaging</h3>
-                <p className="text-duo-gray-600 text-sm">
-                  Learning doesn't have to be boring! Enjoy interactive lessons and gamified experiences.
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <FeatureCard 
+                icon={Target}
+                title="Learn Effectively"
+                description="Our bite-sized lessons and proven methods help you learn and retain information better."
+              />
+              <FeatureCard 
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="bg-duo-green-100 p-4 rounded-full mb-4">

@@ -69,25 +69,46 @@ export const updateImage = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Image not found' });
     }
 
-    
+    // Validate required fields
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    if (!imageUrl) {
+      return res.status(400).json({ error: 'Image URL is required' });
+    }
+
+    // Prepare update data with only provided fields
+    const updateData: any = {};
+    if (imageUrl) updateData.imageUrl = imageUrl;
+    if (title) updateData.title = title;
+    if (thumbnail !== undefined) updateData.thumbnail = thumbnail;
+    if (category !== undefined) updateData.category = category;
+    if (position !== undefined) updateData.position = position;
+    if (description !== undefined) updateData.description = description;
+    if (ageGroup !== undefined) updateData.ageGroup = ageGroup;
+    if (name !== undefined) updateData.name = name;
+
+    // Add automatic updatedAt timestamp
+    updateData.updatedAt = new Date();
 
     const updatedImage = await prisma.images.update({
       where: { id: Number(id) },
-      data: {
-        imageUrl,
-        title,
-        thumbnail,
-        category,
-        position,
-        description,
-        ageGroup,
-        name,
-      },
+      data: updateData,
     });
-    res.json(updatedImage);
+
+    res.json({
+      success: true,
+      message: 'Image updated successfully',
+      data: updatedImage
+    });
   } catch (error) {
     console.error('Error updating image:', error);
-    res.status(500).json({ error: 'Failed to update image' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update image',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 

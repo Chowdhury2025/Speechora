@@ -78,7 +78,7 @@ const ImageList = () => {
       <TabNavigator />
 
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-[#3C3C3C]">Educational Images</h1>
+        <h1 className="text-2xl font-bold text-[#3C3C3C]">Educational  ZZZ Images</h1>
         <div className="flex gap-4">
           <select
             value={selectedAgeGroup}

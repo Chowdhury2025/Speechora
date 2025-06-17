@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../../config';
+import { r2Service } from '../../config/cloudflare';
 import ImageTabNavigator from '../components/images/ImageTabNavigator';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
@@ -54,16 +55,41 @@ const ImagesPage = () => {
     }
 
     try {
+      // First, get the image details to get the URL
+      const imageToDelete = images.find(image => image.id === id);
+      if (!imageToDelete) {
+        throw new Error('Image not found');
+      }
+
+      // Check if it's an R2 image
+      if (imageToDelete.imageUrl && imageToDelete.imageUrl.includes('r2.dev')) {
+        try {
+          // Try to delete from R2 first
+          await r2Service.deleteFile(imageToDelete.imageUrl);
+        } catch (r2Error) {
+          // If R2 deletion fails, show error and don't proceed with backend deletion
+          setError('Failed to delete image from storage. Please try again.');
+          setTimeout(() => setError(null), 3000);
+          return;
+        }
+      }
+
+      // At this point, either:
+      // 1. It's a non-R2 image, or
+      // 2. It's an R2 image and R2 deletion was successful
+      
+      // Delete from backend
       await axios.delete(`${API_URL}/api/images/${id}`, {
         headers: {
           Authorization: `Bearer ${user.token}`
         }
       });
-      // Remove the deleted image from the state
+
+      // If we got here, both deletions were successful
       setImages(prevImages => prevImages.filter(image => image.id !== id));
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete image');
-      // Clear error after 3 seconds
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete image';
+      setError(errorMessage);
       setTimeout(() => setError(null), 3000);
     }
   };
@@ -91,7 +117,7 @@ const ImagesPage = () => {
       <ImageTabNavigator />
 
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-[#3C3C3C]">Educational Images</h1>
+        <h1 className="text-2xl font-bold text-[#3C3C3C]">Educational CCC Images</h1>
         <div className="flex gap-4">
           <select
             value={selectedCategory}
