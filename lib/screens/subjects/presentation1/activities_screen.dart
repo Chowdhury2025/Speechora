@@ -192,7 +192,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   }
 }
 
-class FullScreenImageView extends StatelessWidget {
+class FullScreenImageView extends StatefulWidget {
   final String imageUrl;
   final String description;
   final Function(String) onSpeak;
@@ -205,6 +205,20 @@ class FullScreenImageView extends StatelessWidget {
   });
 
   @override
+  State<FullScreenImageView> createState() => _FullScreenImageViewState();
+}
+
+class _FullScreenImageViewState extends State<FullScreenImageView> {
+  @override
+  void initState() {
+    super.initState();
+    // Play text-to-speech automatically when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onSpeak(widget.description);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
@@ -215,13 +229,13 @@ class FullScreenImageView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.volume_up),
             onPressed: () {
-              onSpeak(description);
+              widget.onSpeak(widget.description);
             },
           ),
         ],
       ),
       body: PhotoView(
-        imageProvider: NetworkImage(imageUrl),
+        imageProvider: NetworkImage(widget.imageUrl),
         minScale: PhotoViewComputedScale.contained,
         maxScale: PhotoViewComputedScale.covered * 2,
         backgroundDecoration: const BoxDecoration(color: Colors.black),

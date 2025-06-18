@@ -208,7 +208,7 @@ class _TherapyScreenState extends State<TherapyScreen> {
   }
 }
 
-class FullScreenImageView extends StatelessWidget {
+class FullScreenImageView extends StatefulWidget {
   final String imageUrl;
   final String description;
   final Function(String) onSpeak;
@@ -219,6 +219,20 @@ class FullScreenImageView extends StatelessWidget {
     required this.description,
     required this.onSpeak,
   }) : super(key: key);
+
+  @override
+  State<FullScreenImageView> createState() => _FullScreenImageViewState();
+}
+
+class _FullScreenImageViewState extends State<FullScreenImageView> {
+  @override
+  void initState() {
+    super.initState();
+    // Play text-to-speech automatically when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onSpeak(widget.description);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +249,7 @@ class FullScreenImageView extends StatelessWidget {
       body: Stack(
         children: [
           PhotoView(
-            imageProvider: NetworkImage(imageUrl),
+            imageProvider: NetworkImage(widget.imageUrl),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 2,
             errorBuilder: (context, error, stackTrace) {
@@ -265,7 +279,7 @@ class FullScreenImageView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    description,
+                    widget.description,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -283,7 +297,7 @@ class FullScreenImageView extends StatelessWidget {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            onSpeak(description);
+                            widget.onSpeak(widget.description);
                           },
                         ),
                       ],

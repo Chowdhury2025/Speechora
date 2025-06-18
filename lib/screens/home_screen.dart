@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'settings_screen.dart';
-import 'subjects/daily_life_screen.dart';
+import 'subjects/presentation1/daily_life_screen.dart';
 import 'subjects/presentation1/home_screen.dart' as subject;
 import 'subjects/presentation1/school_screen.dart';
 import 'subjects/presentation1/therapy_screen.dart';

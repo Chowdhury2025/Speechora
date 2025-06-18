@@ -169,7 +169,7 @@ class _SchoolScreenState extends State<SchoolScreen> {
   }
 }
 
-class FullScreenImageView extends StatelessWidget {
+class FullScreenImageView extends StatefulWidget {
   final Map<String, dynamic> image;
   final Function(String) onSpeak;
 
@@ -178,6 +178,22 @@ class FullScreenImageView extends StatelessWidget {
     required this.image,
     required this.onSpeak,
   });
+
+  @override
+  State<FullScreenImageView> createState() => _FullScreenImageViewState();
+}
+
+class _FullScreenImageViewState extends State<FullScreenImageView> {
+  @override
+  void initState() {
+    super.initState();
+    // Play text-to-speech automatically when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final description =
+          widget.image['description'] ?? 'No description available';
+      widget.onSpeak(description);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -191,14 +207,14 @@ class FullScreenImageView extends StatelessWidget {
             icon: const Icon(Icons.volume_up),
             onPressed: () {
               final description =
-                  image['description'] ?? 'No description available';
-              onSpeak(description);
+                  widget.image['description'] ?? 'No description available';
+              widget.onSpeak(description);
             },
           ),
         ],
       ),
       body: PhotoView(
-        imageProvider: NetworkImage(image['imageUrl'] ?? ''),
+        imageProvider: NetworkImage(widget.image['imageUrl'] ?? ''),
         minScale: PhotoViewComputedScale.contained,
         maxScale: PhotoViewComputedScale.covered * 2,
         backgroundDecoration: const BoxDecoration(color: Colors.black),

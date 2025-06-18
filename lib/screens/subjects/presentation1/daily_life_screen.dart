@@ -346,7 +346,7 @@ class _DailyLifeScreenState extends State<DailyLifeScreen> {
   }
 }
 
-class FullScreenImageView extends StatelessWidget {
+class FullScreenImageView extends StatefulWidget {
   final Map<String, dynamic> image;
   final Function(String) onSpeak;
 
@@ -355,6 +355,22 @@ class FullScreenImageView extends StatelessWidget {
     required this.image,
     required this.onSpeak,
   }) : super(key: key);
+
+  @override
+  State<FullScreenImageView> createState() => _FullScreenImageViewState();
+}
+
+class _FullScreenImageViewState extends State<FullScreenImageView> {
+  @override
+  void initState() {
+    super.initState();
+    // Play text-to-speech automatically when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final textToSpeak =
+          '${widget.image['title'] ?? 'Image'}. ${widget.image['description'] ?? ''}';
+      widget.onSpeak(textToSpeak);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -388,7 +404,7 @@ class FullScreenImageView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            image['title'] ?? 'Untitled',
+                            widget.image['title'] ?? 'Untitled',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
@@ -396,10 +412,10 @@ class FullScreenImageView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          if (image['description'] != null &&
-                              image['description'].toString().isNotEmpty)
+                          if (widget.image['description'] != null &&
+                              widget.image['description'].toString().isNotEmpty)
                             Text(
-                              image['description'],
+                              widget.image['description'],
                               style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 16,
@@ -416,7 +432,7 @@ class FullScreenImageView extends StatelessWidget {
       body: Stack(
         children: [
           PhotoView(
-            imageProvider: NetworkImage(image['imageUrl']),
+            imageProvider: NetworkImage(widget.image['imageUrl']),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 3,
             backgroundDecoration: const BoxDecoration(color: Colors.black),
@@ -457,19 +473,19 @@ class FullScreenImageView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    image['title'] ?? 'Untitled',
+                    widget.image['title'] ?? 'Untitled',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (image['description'] != null &&
-                      image['description'].toString().isNotEmpty)
+                  if (widget.image['description'] != null &&
+                      widget.image['description'].toString().isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
-                        image['description'],
+                        widget.image['description'],
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
@@ -486,8 +502,8 @@ class FullScreenImageView extends StatelessWidget {
                           backgroundColor: Colors.white.withOpacity(0.2),
                           onPressed: () {
                             final textToSpeak =
-                                '${image['title'] ?? 'Image'}. ${image['description'] ?? ''}';
-                            onSpeak(textToSpeak);
+                                '${widget.image['title'] ?? 'Image'}. ${widget.image['description'] ?? ''}';
+                            widget.onSpeak(textToSpeak);
                           },
                           child: const Icon(
                             Icons.volume_up,
