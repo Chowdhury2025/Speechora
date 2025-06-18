@@ -4,10 +4,15 @@ import { Request, Response } from 'express';
 const prisma = new PrismaClient();
 
 export const getAllImages = async (req: Request, res: Response) => {
-  try {
-    const { ageGroup } = req.query;
+  try {    const { ageGroup } = req.query;
+    const category = req.params.category || req.query.category;
     const images = await prisma.images.findMany({
-      where: ageGroup ? { ageGroup: String(ageGroup) } : undefined,
+      where: {
+        AND: [
+          ageGroup ? { ageGroup: String(ageGroup) } : {},
+          category ? { category: String(category) } : {}
+        ]
+      },
       orderBy: { position: 'asc' },
     });
     res.json(images);

@@ -42,7 +42,16 @@ const ImageList = () => {
     }
   };
 
-  const handleDelete = async (id) => {    if (!user) {
+  const handleEditImage = (id) => {
+    if (!user) {
+      alert('Please login to edit images');
+      return;
+    }
+    navigate(`/app/images/edit/${id}`);
+  };
+
+  const handleDeleteImage = async (id) => {    
+    if (!user) {
       alert('Please login to delete images');
       return;
     }
@@ -56,7 +65,8 @@ const ImageList = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.token}`,
         },
-      });      if (!response.ok) throw new Error('Failed to delete image');
+      });      
+      if (!response.ok) throw new Error('Failed to delete image');
       
       alert('Image deleted successfully');
       fetchImages(); // Refresh the list

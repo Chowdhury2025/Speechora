@@ -4,6 +4,7 @@ import { getAllImages, getImageById, createImage, updateImage, deleteImage } fro
 const router = express.Router();
 
 router.get('/', getAllImages);
+router.get('/category/:category', getAllImages); // This will use the same controller but with category parameter
 router.get('/:id', getImageById);
 router.post('/', createImage);
 router.put('/:id', updateImage);
