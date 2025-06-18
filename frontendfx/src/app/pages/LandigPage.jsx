@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import LandingPageNavbar from '../components/home/LandingPageNavbar';
-import { ChevronRight, Target, Smile, Users, Gamepad2, Brain, Flame } from 'lucide-react';
-import DownloadButtons from '../components/home/DownloadButtons';
+import { ChevronRight, Target, Smile, Users, Gamepad2, Brain, Flame, Smartphone, Apple, Download, Globe } from 'lucide-react';
 import appIcon from '../../assets/appIcon-removebg-preview.png';
 
 // Helper component for language buttons
@@ -19,6 +18,9 @@ const LanguageButton = ({ lang, flagSrc, altText, href = '/register' }) => (
   </Link>
 );
 
+
+// vidoe/
+
 const FeatureCard = ({ icon: Icon, title, description }) => (
   <div className="flex flex-col items-center text-center p-6 bg-white rounded-2xl shadow-button border-2 border-slate-400 hover:border-primary transition-all duration-200 hover:bg-primary-light group">
     <div className="bg-primary-light p-4 rounded-full mb-4 group-hover:bg-white">
@@ -27,6 +29,42 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
     <h3 className="text-xl font-bold text-slate-700 mb-2">{title}</h3>
     <p className="text-slate-600">{description}</p>
   </div>
+);
+
+const DownloadButton = ({ icon: Icon, text, href, primary = false }) => (
+  <a
+    href={href}
+    className={`inline-flex items-center justify-center px-6 py-3 border-2 text-base font-bold rounded-2xl transition-all duration-200 w-full sm:w-auto shadow-button hover:shadow-xl transform hover:-translate-y-1 ${
+      primary 
+        ? 'border-primary bg-primary hover:bg-primary-hover text-white' 
+        : 'border-slate-400 bg-white hover:border-primary hover:bg-primary-light text-slate-700'
+    }`}
+  >
+    <Icon className={`mr-3 -ml-1 h-6 w-6 ${primary ? 'text-white' : 'text-primary'}`} />
+    {text}
+  </a>
+);
+
+const FooterLink = ({ href, children }) => (
+  <a
+    href={href}
+    className="text-slate-600 hover:text-primary transition-colors duration-200 text-sm"
+  >
+    {children}
+  </a>
+);
+
+const LanguageLink = ({ lang, native }) => (
+  <a
+    href="#"
+    className="text-slate-600 hover:text-primary transition-colors duration-200 text-sm block py-1"
+    onClick={(e) => {
+      e.preventDefault();
+      // Add language change logic here
+    }}
+  >
+    <span className="block">{native}</span>
+  </a>
 );
 
 const LandingPage = () => {
@@ -92,92 +130,158 @@ const LandingPage = () => {
                 description="Our bite-sized lessons and proven methods help you learn and retain information better."
               />
               <FeatureCard 
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-duo-green-100 p-4 rounded-full mb-4">
-                  <Users size={32} className="text-duo-green-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-duo-gray-700 mb-2">Personalized for you</h3>
-                <p className="text-duo-gray-600 text-sm">
-                  Tailor your learning path to your own pace and preferences for a customized education.
-                </p>
-              </div>
-              {/* New items */}
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-duo-green-100 p-4 rounded-full mb-4">
-                  <Gamepad2 size={32} className="text-duo-green-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-duo-gray-700 mb-2">Stay motivated</h3>
-                <p className="text-duo-gray-600 text-sm">
-                  Gamified features, points, and virtual rewards make learning addictive and fun.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-duo-green-100 p-4 rounded-full mb-4">
-                  <Brain size={32} className="text-duo-green-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-duo-gray-700 mb-2">Boost your knowledge</h3>
-                <p className="text-duo-gray-600 text-sm">
-                  Expand your understanding with expertly crafted content across various subjects.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-duo-green-100 p-4 rounded-full mb-4">
-                  <Flame size={32} className="text-duo-green-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-duo-gray-700 mb-2">Build a habit</h3>
-                <p className="text-duo-gray-600 text-sm">
-                  Track your progress and maintain streaks to make learning a daily part of your life.
-                </p>
+                icon={Gamepad2}
+                title="Game-like Experience"
+                description="Learn through fun challenges, earn points, and track your progress."
+              />
+              <FeatureCard 
+                icon={Brain}
+                title="Smart Learning"
+                description="Personalized learning path adapts to your style and pace."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Download Section */}
+        <section className="py-16 bg-white w-full">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="bg-primary-light rounded-2xl p-8 sm:p-12">
+              <h2 className="text-3xl font-extrabold text-slate-700 mb-4">
+                Take your learning anywhere
+              </h2>
+              <p className="text-xl text-slate-600 mb-8">
+                Download our mobile app for a seamless learning experience on the go
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <DownloadButton
+                  icon={Smartphone}
+                  text="Get it on Google Play"
+                  href="#"
+                  primary
+                />
+                <DownloadButton
+                  icon={Apple}
+                  text="Download on App Store"
+                  href="https://raw.githubusercontent.com/Jamadrac/book8app/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk"
+                />
+                <DownloadButton
+                  icon={Download}
+                  text="Download APK"
+                  href="https://raw.githubusercontent.com/Jamadrac/book8app/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk"
+                />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Learn on the Go Section */}
-        <section className="py-16 md:py-20 w-full">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-duo-gray-900 mb-6">
-              Learn with book8 on the go!
+        {/* Start Learning CTA */}
+        <section className="py-16 bg-primary-light w-full">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <div className="relative">
+              <img 
+                src={appIcon}
+                alt="book8 Mascot" 
+                className="w-24 h-auto mx-auto mb-6 md:absolute md:-top-20 md:right-0 md:w-32"
+              />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-700 mb-8">
+              Ready to start your learning journey?
             </h2>
-            <p className="text-duo-gray-600 text-lg mb-8 max-w-2xl mx-auto">
-              Take your learning anywhere with our mobile apps. Download now and make progress even when you're offline.
-            </p>
-            {/* Placeholder for a phone mockup image if you have one */}
-            {/* <img src="/images/phone-mockup.png" alt="book8 on Mobile" className="max-w-xs mx-auto mb-8" /> */}
-            <DownloadButtons /> {/* Restoring DownloadButtons */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <Link
+                to="/register"
+                className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white text-lg font-bold py-4 px-12 rounded-2xl shadow-button hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 uppercase tracking-wider"
+              >
+                Start Learning Now
+              </Link>
+              <Link
+                to="/login"
+                className="w-full sm:w-auto text-primary hover:text-primary-hover font-bold py-3 px-8 border-2 border-slate-400 hover:border-primary rounded-2xl transition-all duration-200 uppercase tracking-wider text-sm hover:bg-primary-light"
+              >
+                I have an account
+              </Link>
+            </div>
           </div>
         </section>
-
       </main>
 
-      <footer className="py-8 text-center border-t border-duo-gray-300 bg-duo-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h3 className="text-lg font-semibold text-duo-gray-700 mb-4">Site Languages</h3>
-            <div className="flex flex-wrap justify-center space-x-2 sm:space-x-3 text-sm text-duo-gray-500 mb-8">
-              {/* Placeholder languages - make these actual links or buttons if implementing language switching */}
-              <span className="hover:text-duo-green-600 cursor-pointer">English</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">Español</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">Français</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">Deutsch</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">Português</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">Italiano</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">日本語</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">한국어</span>
-              <span className="hover:text-duo-green-600 cursor-pointer">中文</span>
-              {/* Add more languages as needed */}
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+            {/* Languages Column 1 */}
+            <div className="col-span-1">
+              <h3 className="flex items-center text-slate-700 font-bold mb-4">
+                <Globe className="w-4 h-4 mr-2" />
+                Site Languages
+              </h3>
+              <div className="space-y-1">
+                <LanguageLink lang="en" native="English" />
+                <LanguageLink lang="es" native="Español" />
+                <LanguageLink lang="fr" native="Français" />
+              </div>
             </div>
-            <div className="flex flex-wrap justify-center space-x-4 sm:space-x-6 mb-6">
-                <Link to="/about" className="text-sm text-duo-gray-500 hover:text-duo-green-600">About</Link>
-                <Link to="/careers" className="text-sm text-duo-gray-500 hover:text-duo-green-600">Careers</Link>
-                <Link to="/investors" className="text-sm text-duo-gray-500 hover:text-duo-green-600">Investors</Link>
-                <Link to="/terms" className="text-sm text-duo-gray-500 hover:text-duo-green-600">Terms</Link>
-                <Link to="/privacy" className="text-sm text-duo-gray-500 hover:text-duo-green-600">Privacy</Link>
-                <Link to="/help" className="text-sm text-duo-gray-500 hover:text-duo-green-600">Help Center</Link>
+
+            {/* Languages Column 2 */}
+            <div className="col-span-1">
+              <h3 className="text-transparent mb-4 select-none">.</h3>
+              <div className="space-y-1">
+                <LanguageLink lang="de" native="Deutsch" />
+                <LanguageLink lang="pt" native="Português" />
+                <LanguageLink lang="it" native="Italiano" />
+              </div>
             </div>
-            <p className="text-duo-gray-400 text-xs">
-            &copy; {new Date().getFullYear()} book8. All rights reserved.
-            </p>
+
+            {/* Languages Column 3 */}
+            <div className="col-span-1">
+              <h3 className="text-transparent mb-4 select-none">.</h3>
+              <div className="space-y-1">
+                <LanguageLink lang="ja" native="日本語" />
+                <LanguageLink lang="ko" native="한국어" />
+                <LanguageLink lang="zh" native="中文" />
+              </div>
+            </div>
+
+            {/* Company Links */}
+            <div className="col-span-2 lg:col-span-1">
+              <h3 className="text-slate-700 font-bold mb-4">Company</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <FooterLink href="/about">About</FooterLink>
+                <FooterLink href="/careers">Careers</FooterLink>
+                <FooterLink href="/investors">Investors</FooterLink>
+                <FooterLink href="/terms">Terms</FooterLink>
+                <FooterLink href="/privacy">Privacy</FooterLink>
+                <FooterLink href="/help">Help Center</FooterLink>
+              </div>
+            </div>
+
+            {/* Logo and Copyright */}
+            <div className="col-span-2 lg:col-span-1 flex flex-col items-start justify-between">
+              <div className="flex items-center space-x-2 mb-4">
+                <img src={appIcon} alt="book8 Logo" className="h-8 w-8" />
+                <span className="text-xl font-bold text-primary">book8</span>
+              </div>
+              <div className="text-slate-600 text-sm">
+                © {new Date().getFullYear()} book8. All rights reserved.
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile View - Grid Layout */}
+          <div className="mt-8 pt-8 border-t border-slate-200 md:hidden">
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <FooterLink href="/about">About</FooterLink>
+              <FooterLink href="/careers">Careers</FooterLink>
+              <FooterLink href="/investors">Investors</FooterLink>
+              <FooterLink href="/terms">Terms</FooterLink>
+              <FooterLink href="/privacy">Privacy</FooterLink>
+              <FooterLink href="/help">Help Center</FooterLink>
+            </div>
+            <div className="mt-8 text-center text-slate-600 text-sm">
+              © {new Date().getFullYear()} book8. All rights reserved.
+            </div>
+          </div>
         </div>
       </footer>
     </div>
