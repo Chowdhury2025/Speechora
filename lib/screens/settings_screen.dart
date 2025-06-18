@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/user_model.dart';
 
+// import 'package:book8/constants/constants.dart';
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -14,6 +16,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   UserModel? currentUser;
   String selectedAgeGroup = '6-8 years';
+  String selectedVoiceAccent = 'American';
+
   final List<String> ageGroups = [
     '3-5 years',
     '6-8 years',
@@ -21,6 +25,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     '12-14 years',
     '15-17 years',
     '18+ years',
+  ];
+
+  final List<String> voiceAccents = [
+    'American',
+    'British',
+    'Australian',
+    'Indian',
+    'African',
+    'Canadian',
+    'Irish',
+    'Scottish',
   ];
 
   @override
@@ -44,6 +59,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       setState(() {
         currentUser = UserModel.fromJson(jsonDecode(userData));
+      });
+    }
+
+    // Load saved preferences
+    final savedAgeGroup = prefs.getString('ageGroup');
+    if (savedAgeGroup != null && mounted) {
+      setState(() {
+        selectedAgeGroup = savedAgeGroup;
       });
     }
   }
@@ -126,6 +149,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     onTap: () {
                                       setState(() {
                                         selectedAgeGroup = age;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Voice Accent Selection
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.record_voice_over),
+              title: const Text('Voice Accent'),
+              subtitle: Text(selectedVoiceAccent),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: const Text('Select Voice Accent'),
+                        content: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children:
+                                voiceAccents.map((accent) {
+                                  return ListTile(
+                                    title: Text(accent),
+                                    selected: accent == selectedVoiceAccent,
+                                    onTap: () {
+                                      setState(() {
+                                        selectedVoiceAccent = accent;
                                       });
                                       Navigator.pop(context);
                                     },

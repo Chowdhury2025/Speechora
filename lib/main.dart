@@ -1,5 +1,3 @@
-import 'package:book8/screens/image_detail_screen.dart';
-import 'package:book8/screens/image_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
@@ -34,11 +32,6 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/profile': (context) => ProfileScreen(),
-        '/images': (context) => const ImageListScreen(),
-        '/image-detail': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as int;
-          return ImageDetailScreen(imageId: args);
-        },
       },
       debugShowCheckedModeBanner: false,
     );
