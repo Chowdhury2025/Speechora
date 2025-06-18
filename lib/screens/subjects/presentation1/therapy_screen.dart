@@ -38,8 +38,10 @@ class _TherapyScreenState extends State<TherapyScreen> {
     await flutterTts.setVolume(1.0);
     await flutterTts.setPitch(1.0);
   }
+
   Future<void> fetchImages() async {
-    try {      final response = await http.get(
+    try {
+      final response = await http.get(
         Uri.parse('${Constants.baseUrl}/images?category=therapy'),
       );
 
@@ -76,17 +78,19 @@ class _TherapyScreenState extends State<TherapyScreen> {
   Future<void> speakText(String text) async {
     await flutterTts.speak(text);
   }
+
   void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
     final imageUrl = image['imageUrl'] ?? '';
     final description = image['description'] ?? 'No description available';
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => FullScreenImageView(
-          imageUrl: imageUrl,
-          description: description,
-          onSpeak: speakText,
-        ),
+        builder:
+            (context) => FullScreenImageView(
+              imageUrl: imageUrl,
+              description: description,
+              onSpeak: speakText,
+            ),
       ),
     );
   }
@@ -131,12 +135,17 @@ class _TherapyScreenState extends State<TherapyScreen> {
         mainAxisSpacing: 16,
       ),
       itemCount: images.length,
-      itemBuilder: (context, index) {        final image = images[index];
+      itemBuilder: (context, index) {
+        final image = images[index];
         final imageUrl = image['imageUrl'] ?? '';
         final description = image['description'] ?? 'No description available';
-        
+
         return GestureDetector(
-          onTap: () => _showFullScreenImage(context, {'imageUrl': imageUrl, 'description': description}),
+          onTap:
+              () => _showFullScreenImage(context, {
+                'imageUrl': imageUrl,
+                'description': description,
+              }),
           child: Card(
             elevation: 4,
             shape: RoundedRectangleBorder(
@@ -171,7 +180,8 @@ class _TherapyScreenState extends State<TherapyScreen> {
                             Colors.transparent,
                           ],
                         ),
-                      ),                      child: Text(
+                      ),
+                      child: Text(
                         description,
                         style: const TextStyle(
                           color: Colors.white,
@@ -223,7 +233,8 @@ class FullScreenImageView extends StatelessWidget {
         ),
       ),
       body: Stack(
-        children: [          PhotoView(
+        children: [
+          PhotoView(
             imageProvider: NetworkImage(imageUrl),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 2,
@@ -252,7 +263,8 @@ class FullScreenImageView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
-                children: [                  Text(
+                children: [
+                  Text(
                     description,
                     style: const TextStyle(
                       color: Colors.white,

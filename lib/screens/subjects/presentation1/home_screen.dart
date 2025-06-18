@@ -10,10 +10,7 @@ class HomeScreen extends StatefulWidget {
   static const routeName = '/home';
   final Color backgroundColor;
 
-  const HomeScreen({
-    super.key,
-    this.backgroundColor = const Color(0xFFB2DFDB),
-  });
+  const HomeScreen({super.key, this.backgroundColor = const Color(0xFFB2DFDB)});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -73,7 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => FullScreenImageView(image: image, onSpeak: speakText),
+        builder:
+            (context) => FullScreenImageView(image: image, onSpeak: speakText),
       ),
     );
   }
@@ -101,57 +99,61 @@ class _HomeScreenState extends State<HomeScreen> {
         color: widget.backgroundColor.withOpacity(0.1),
         child: RefreshIndicator(
           onRefresh: _refreshImages,
-          child: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : error != null
+          child:
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : error != null
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Error: $error'),
-                          ElevatedButton(
-                            onPressed: _refreshImages,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : images.isEmpty
-                      ? const Center(child: Text('No images available'))
-                      : GridView.builder(
-                          padding: const EdgeInsets.all(8),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 1.0,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
-                          itemCount: images.length,
-                          itemBuilder: (context, index) {
-                            final image = images[index];
-                            return GestureDetector(
-                              onTap: () => _showFullScreenImage(context, image),
-                              child: Card(
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: CachedNetworkImage(
-                                    imageUrl: image['imageUrl'] ?? '',
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(Icons.error),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Error: $error'),
+                        ElevatedButton(
+                          onPressed: _refreshImages,
+                          child: const Text('Retry'),
                         ),
+                      ],
+                    ),
+                  )
+                  : images.isEmpty
+                  ? const Center(child: Text('No images available'))
+                  : GridView.builder(
+                    padding: const EdgeInsets.all(8),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.0,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      final image = images[index];
+                      return GestureDetector(
+                        onTap: () => _showFullScreenImage(context, image),
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: CachedNetworkImage(
+                              imageUrl: image['imageUrl'] ?? '',
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) =>
+                                      const Icon(Icons.error),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
         ),
       ),
     );
@@ -185,7 +187,8 @@ class FullScreenImageView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.volume_up),
             onPressed: () {
-              final description = image['description'] ?? 'No description available';
+              final description =
+                  image['description'] ?? 'No description available';
               onSpeak(description);
             },
           ),

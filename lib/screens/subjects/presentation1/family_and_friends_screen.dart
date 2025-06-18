@@ -10,10 +10,7 @@ class FamilyAndFriendsScreen extends StatefulWidget {
   static const routeName = '/family-and-friends';
   final Color backgroundColor;
 
-  const FamilyAndFriendsScreen({
-    super.key,
-    required this.backgroundColor,
-  });
+  const FamilyAndFriendsScreen({super.key, required this.backgroundColor});
 
   @override
   State<FamilyAndFriendsScreen> createState() => _FamilyAndFriendsScreenState();
@@ -38,8 +35,10 @@ class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
     await flutterTts.setVolume(1.0);
     await flutterTts.setPitch(1.0);
   }
+
   Future<void> fetchImages() async {
-    try {      final response = await http.get(
+    try {
+      final response = await http.get(
         Uri.parse('${Constants.baseUrl}/images?category=family'),
       );
 
@@ -76,14 +75,20 @@ class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
   Future<void> speakText(String text) async {
     await flutterTts.speak(text);
   }
-  void _showFullScreenImage(BuildContext context, String imageUrl, String description) {
+
+  void _showFullScreenImage(
+    BuildContext context,
+    String imageUrl,
+    String description,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => FullScreenImageView(
-          imageUrl: imageUrl,
-          description: description,
-          onSpeak: speakText,
-        ),
+        builder:
+            (context) => FullScreenImageView(
+              imageUrl: imageUrl,
+              description: description,
+              onSpeak: speakText,
+            ),
       ),
     );
   }
@@ -111,57 +116,69 @@ class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
         color: widget.backgroundColor.withOpacity(0.1),
         child: RefreshIndicator(
           onRefresh: _refreshImages,
-          child: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : error != null
+          child:
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : error != null
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Error: $error'),
-                          ElevatedButton(
-                            onPressed: _refreshImages,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : images.isEmpty
-                      ? const Center(child: Text('No images available'))
-                      : GridView.builder(
-                          padding: const EdgeInsets.all(8),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 1.0,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
-                          itemCount: images.length,
-                          itemBuilder: (context, index) {                            final image = images[index];
-                            final imageUrl = image['imageUrl'] ?? '';
-                            final description = image['description'] ?? 'No description available';
-                            return GestureDetector(
-                              onTap: () => _showFullScreenImage(context, imageUrl, description),
-                              child: Card(
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),                                  child: CachedNetworkImage(
-                                    imageUrl: imageUrl,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(Icons.error),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Error: $error'),
+                        ElevatedButton(
+                          onPressed: _refreshImages,
+                          child: const Text('Retry'),
                         ),
+                      ],
+                    ),
+                  )
+                  : images.isEmpty
+                  ? const Center(child: Text('No images available'))
+                  : GridView.builder(
+                    padding: const EdgeInsets.all(8),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.0,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      final image = images[index];
+                      final imageUrl = image['imageUrl'] ?? '';
+                      final description =
+                          image['description'] ?? 'No description available';
+                      return GestureDetector(
+                        onTap:
+                            () => _showFullScreenImage(
+                              context,
+                              imageUrl,
+                              description,
+                            ),
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) =>
+                                      const Icon(Icons.error),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
         ),
       ),
     );
@@ -192,7 +209,8 @@ class FullScreenImageView extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),        actions: [
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
           IconButton(
             icon: const Icon(Icons.volume_up),
             onPressed: () => onSpeak(description),
