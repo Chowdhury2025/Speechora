@@ -49,7 +49,7 @@ const TestsPage = () => {
             transition-colors duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502] 
             focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
         >
-          Create New Test
+          Create New Testcc
         </button>
       </div>
 

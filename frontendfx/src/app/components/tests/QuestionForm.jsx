@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 
+const isValidUrl = (urlString) => {
+  try {
+    new URL(urlString);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const QuestionForm = ({ onSubmit }) => {
   const [question, setQuestion] = useState({
     questionType: 'TEXT',
@@ -62,21 +71,41 @@ export const QuestionForm = ({ onSubmit }) => {
       ]
     });
   };
-
   const isValid = () => {
+    // Check if we have valid question content based on type
     const hasQuestionContent = question.questionType === 'TEXT' 
       ? question.questionText.trim() !== ''
-      : question.questionMediaUrl.trim() !== '';
+      : question.questionMediaUrl?.trim() !== '';
 
-    const hasValidChoices = question.choices.every(choice => 
-      choice.choiceType === 'TEXT' 
-        ? choice.choiceText.trim() !== ''
-        : choice.choiceMediaUrl.trim() !== ''
-    );
+    // Check if all choices are properly filled out based on their type
+    const hasValidChoices = question.choices.every(choice => {
+      if (choice.choiceType === 'TEXT') {
+        return choice.choiceText?.trim() !== '';
+      } else if (choice.choiceType === 'IMAGE') {
+        return choice.choiceMediaUrl?.trim() !== '' && 
+          (choice.choiceMediaUrl.endsWith('.jpg') || 
+           choice.choiceMediaUrl.endsWith('.png') || 
+           choice.choiceMediaUrl.endsWith('.gif') ||
+           choice.choiceMediaUrl.endsWith('.jpeg'));
+      } else if (choice.choiceType === 'VIDEO') {
+        return choice.choiceMediaUrl?.trim() !== '' &&
+          (choice.choiceMediaUrl.includes('youtube.com/') || 
+           choice.choiceMediaUrl.includes('youtu.be/') ||
+           choice.choiceMediaUrl.endsWith('.mp4'));
+      }
+      return false;
+    });
 
-    const hasCorrectAnswer = question.choices.some(choice => choice.isCorrect);
+    // Check if exactly one choice is marked as correct
+    const correctAnswers = question.choices.filter(choice => choice.isCorrect);
+    const hasOneCorrectAnswer = correctAnswers.length === 1;
 
-    return hasQuestionContent && hasValidChoices && hasCorrectAnswer;
+    // Check if all URLs are valid when required
+    const hasValidUrls = question.questionType !== 'TEXT' 
+      ? isValidUrl(question.questionMediaUrl)
+      : true;
+
+    return hasQuestionContent && hasValidChoices && hasOneCorrectAnswer && hasValidUrls;
   };
 
   return (

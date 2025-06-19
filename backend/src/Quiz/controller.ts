@@ -19,49 +19,77 @@ export const createQuestion = async (req: AuthRequest, res: Response) => {
       choices
     } = req.body;
 
-    // Create the question
-    const question = await prisma.quizQuestion.create({
-      data: {
-        questionType,
-        questionText,
-        questionMediaUrl,
-        category,
-        ageGroup,
-        createdById: req.user.id,
-        choices: {
-          create: choices.map((choice: { choiceType: ChoiceType; choiceText?: string; choiceMediaUrl?: string; isCorrect: boolean }) => ({
-            choiceType: choice.choiceType,
-            choiceText: choice.choiceText,
-            choiceMediaUrl: choice.choiceMediaUrl,
-          }))
-        }
-      },
-      include: {
-        choices: true
-      }
-    });
-
-    // Update the correct answer after all choices are created
-    const correctChoice = question.choices.find((_, index) => 
-      choices[index].isCorrect
-    );
-
-    if (correctChoice) {
-      await prisma.quizQuestion.update({
-        where: { id: question.id },
-        data: {
-          correctAnswerId: correctChoice.id
-        }
-      });
+    // Validate required fields
+    if (!questionType) {
+      return res.status(400).json({ error: 'questionType is required' });
+    }
+    if (!category) {
+      return res.status(400).json({ error: 'category is required' });
+    }
+    if (!ageGroup) {
+      return res.status(400).json({ error: 'ageGroup is required' });
+    }
+    if (!choices || !Array.isArray(choices) || choices.length === 0) {
+      return res.status(400).json({ error: 'At least one choice is required' });
     }
 
-    return res.status(201).json({
-      ...question,
-      correctAnswerId: correctChoice?.id
+    // Validate that at least one choice is marked as correct
+    const hasCorrectAnswer = choices.some(choice => choice.isCorrect);
+    if (!hasCorrectAnswer) {
+      return res.status(400).json({ error: 'At least one choice must be marked as correct' });
+    }
+
+    // Find the index of the correct choice
+    const correctChoiceIndex = choices.findIndex(choice => choice.isCorrect);
+
+    // Create the question and update correct answer in a transaction
+    const question = await prisma.$transaction(async (tx) => {
+      const createdQuestion = await tx.quizQuestion.create({
+        data: {
+          questionType,
+          questionText: questionText || undefined,
+          questionMediaUrl: questionMediaUrl || undefined,
+          category,
+          ageGroup,
+          createdById: req.user.id,
+          choices: {
+            create: choices.map((choice: { choiceType: ChoiceType; choiceText?: string; choiceMediaUrl?: string; isCorrect: boolean }) => ({
+              choiceType: choice.choiceType,
+              choiceText: choice.choiceText || undefined,
+              choiceMediaUrl: choice.choiceMediaUrl || undefined,
+            }))
+          }
+        },
+        include: {
+          choices: true
+        }
+      });
+
+      // Update the correct answer
+      const correctChoice = createdQuestion.choices[correctChoiceIndex];
+      if (correctChoice) {
+        const updatedQuestion = await tx.quizQuestion.update({
+          where: { id: createdQuestion.id },
+          data: {
+            correctAnswerId: correctChoice.id
+          },
+          include: {
+            choices: true,
+            correctAnswer: true
+          }
+        });
+        return updatedQuestion;
+      }
+      return createdQuestion;
     });
+
+    return res.status(201).json(question);
   } catch (error) {
     console.error('Error creating question:', error);
-    return res.status(500).json({ error: 'Failed to create question' });
+    return res.status(500).json({ 
+      error: 'Failed to create question',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
