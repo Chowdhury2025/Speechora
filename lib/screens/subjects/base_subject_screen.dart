@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-
 import '../../services/video_service.dart';
+import '../video_player_screen.dart';
 
 class BaseSubjectScreen extends StatefulWidget {
   final String title;
@@ -56,41 +55,15 @@ class _BaseSubjectScreenState extends State<BaseSubjectScreen> {
     }
   }
 
-  void _playVideo(BuildContext context, String youtubeUrl) {
-    final videoId = YoutubePlayer.convertUrlToId(youtubeUrl);
-    if (videoId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid YouTube URL')));
-      return;
-    }
-
+  void _playVideo(BuildContext context, Video video) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder:
-            (context) => Scaffold(
-              backgroundColor: Colors.black,
-              appBar: AppBar(
-                backgroundColor: Colors.black,
-                iconTheme: const IconThemeData(color: Colors.white),
-              ),
-              body: SafeArea(
-                child: Center(
-                  child: YoutubePlayer(
-                    controller: YoutubePlayerController(
-                      initialVideoId: videoId,
-                      flags: const YoutubePlayerFlags(
-                        autoPlay: true,
-                        mute: false,
-                        hideControls: false,
-                      ),
-                    ),
-                    showVideoProgressIndicator: true,
-                    progressIndicatorColor: widget.backgroundColor,
-                    width: double.infinity,
-                  ),
-                ),
-              ),
+            (context) => VideoPlayerScreen(
+              videoUrl: video.linkyoutube_link,
+              title: video.title,
+              description: video.description,
+              teacherName: video.name,
             ),
       ),
     );
@@ -166,7 +139,7 @@ class _BaseSubjectScreenState extends State<BaseSubjectScreen> {
                     elevation: 4,
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
-                      onTap: () => _playVideo(context, video.linkyoutube_link),
+                      onTap: () => _playVideo(context, video),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

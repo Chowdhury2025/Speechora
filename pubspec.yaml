@@ -44,13 +44,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
   url_launcher: ^6.2.5
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.2.2  
   http: ^1.1.0
-  cupertino_icons: ^1.0.8
+  youtube_player_iframe: ^5.2.1
   lottie: ^3.0.0
-  flutter_launcher_icons: ^0.13.1
-  youtube_player_flutter: ^9.1.0
   flutter_tts: ^3.8.5
   cached_network_image: ^3.3.1
   photo_view: ^0.14.0
@@ -62,13 +61,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  # flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -85,9 +85,9 @@ flutter:
     - assets/splash screen-lotties.json
     - assets/appbg.png
     - assets/appIcon.png
-    - assets/bathroom_bg.png
-    - assets/family.png
-    - assets/zoo.png
+    # - assets/bathroom_bg.png
+    # - assets/family.png
+    # - assets/zoo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
