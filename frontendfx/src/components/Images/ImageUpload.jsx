@@ -59,27 +59,18 @@ const ImageUpload = () => {
     alert('Please login to upload images');
     navigate('/login');
     return null;
-  }  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      // Validate file
-      r2Service.validateFile(
-        file, 
-        ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-        5 * 1024 * 1024
-      );
-
-      setSelectedFile(file);
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewUrl(previewUrl);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      setSelectedFile(null);
-      setPreviewUrl('');
+  }  
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+      } catch (error) {
+        console.error('File validation error:', error);
+        alert(error.message);
+      }
     }
   };
 
@@ -113,6 +104,7 @@ const ImageUpload = () => {
 
       // Upload image to R2
       const imageUrl = await r2Service.uploadFile(selectedFile, 'images');
+      setImageData(prev => ({ ...prev, imageUrl }));
       
       // Create image record with R2 URL
       await axios.post(`${API_URL}/api/images`, 

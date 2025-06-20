@@ -13,6 +13,8 @@ const ImagesPage = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
   const user = useRecoilValue(userStates);
   const navigate = useNavigate();
 
@@ -91,6 +93,41 @@ const ImagesPage = () => {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to delete image';
       setError(errorMessage);
       setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+      } catch (error) {
+        console.error('File validation error:', error);
+        setError(error.message);
+      }
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    try {
+      const imageUrl = await r2Service.uploadFile(selectedFile, 'images');
+      
+      const response = await axios.post(`${API_URL}/api/images`, {
+        imageUrl,
+        category: selectedCategory,
+        userId: user.userId
+      });
+
+      setImages(prev => [...prev, response.data]);
+      setSelectedFile(null);
+      setPreviewUrl('');
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError(error.message || 'Failed to upload image');
     }
   };
 

@@ -40,25 +40,25 @@ export const userRegisterController = async (req: Request, res: Response) => {
         email,
         password: hashedPassword,
         phoneNumber,
-        role: role || "STAFF",
+        role: role || "STUDENT",
         emailVerificationToken: verificationToken,
         isEmailVerified: false,
       },
     });
 
-    // If this is user ID 1, make them a SUPERUSER
+    // If this is user ID 1, make them a SUPERSUPERUSER
     if (user.id === 1) {
       await prisma.user.update({
         where: { id: user.id },
         data: { 
-          role: "SUPERUSER",
+          role: "SUPERUSER", // Use a valid role from your UserRole enum
           group: user.id 
         },
       });
       user.role = "SUPERUSER";
     }
-    // If user is an ADMIN, assign group ID
-    else if (role === "ADMIN") {
+    // If user is an SUPERUSER, assign group ID
+    else if (role === "SUPERUSER") {
       await prisma.user.update({
         where: { id: user.id },
         data: { group: user.id },
@@ -305,7 +305,7 @@ export const updateUserProfileController = async (req: Request, res: Response) =
       frontendUrl
     } = req.body;
 
-    // Remove admin auth check for TEACHER role
+    // Remove SUPERUSER auth check for TEACHER role
     const id = Number(userId);
     console.log("Request Body:", req.body);
 
@@ -457,14 +457,31 @@ export const updateUserProfileController = async (req: Request, res: Response) =
 export const verifyEmailController = async (req: Request, res: Response) => {
   try {
     const { email, token, frontendUrl } = req.body;
+
+    if (!email || !token) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Email and verification token are required"
+      });
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      return res.status(StatusCodes.NOT_FOUND).json("User not found");
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: "User not found"
+      });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Email is already verified"
+      });
     }
 
     if (user.emailVerificationToken !== token) {
-      return res.status(StatusCodes.BAD_REQUEST).json("Invalid verification token");
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Invalid verification token"
+      });
     }
 
     await prisma.user.update({
@@ -480,8 +497,8 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       <p class="text-gray-700 text-base mt-2">
         You can now access all the features of our application.
       </p>
-      <div class="text-center mt-4">        <a href="${frontendUrl}" 
-           class="bg-green-500 text-white px-4 py-2 rounded inline-block">
+      <div class="text-center mt-4">
+        <a href="${frontendUrl}" class="bg-green-500 text-white px-4 py-2 rounded inline-block">
           Go to Dashboard
         </a>
       </div>
@@ -497,9 +514,11 @@ export const verifyEmailController = async (req: Request, res: Response) => {
     };
 
     await sendMail(emailOptions);
-    return res.status(StatusCodes.OK).json("Email verified successfully");
+    return res.status(StatusCodes.OK).json({
+      message: "Email verified successfully"
+    });
   } catch (error: any) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: "Failed to verify email",
       error: error?.stack || error?.message || error,
     });

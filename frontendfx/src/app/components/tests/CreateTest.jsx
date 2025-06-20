@@ -1,8 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QuestionForm } from './QuestionForm';
 import api from '../../../utils/api';
+import { useRecoilValue } from 'recoil';
+import { userStates } from '../../../atoms';
+
+// Animation styles
+const fadeIn = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+const LoadingSpinner = () => (
+  <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent align-[-0.125em]" />
+);
 
 const CreateTest = () => {
+  const user = useRecoilValue(userStates);
   const [questions, setQuestions] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [testDetails, setTestDetails] = useState({
@@ -54,105 +69,129 @@ const CreateTest = () => {
     setSubmissionStatus({ loading: true, success: false, error: null });
 
     try {
-      // Validate test details
-      if (!testDetails.subject || !testDetails.ageGroup) {
+      // Validate user state
+      if (!user.userId) {
         setSubmissionStatus({
           loading: false,
           success: false,
-          error: 'Please select both subject and age group'
+          error: 'User not authenticated. Please log in.'
         });
         return;
       }
 
-      const questionData = questions.map(question => ({
-        ...question,
-        category: testDetails.subject,
-        ageGroup: testDetails.ageGroup
-      }));
-
-      // Log the request data for debugging
-      console.log('Creating questions with data:', questionData);
-
-      // Create questions sequentially to better handle errors
-      const createdQuestions = [];
-      for (let i = 0; i < questionData.length; i++) {
-        try {
-          const response = await api.post('/api/quiz/questions', questionData[i]);
-          console.log(`Question ${i + 1} created:`, response.data);
-          createdQuestions.push(response.data);
-        } catch (error) {
-          console.error(`Error creating question ${i + 1}:`, error);
-          
-          // Extract the error message
-          const errorMessage = error.details || error.error || error.message || 'Unknown error';
-          
-          setSubmissionStatus({
-            loading: false,
-            success: false,
-            error: `Error creating question ${i + 1}: ${errorMessage}`
-          });
-          return;
-        }
+      // Validate test details
+      if (!testDetails.title || !testDetails.subject || !testDetails.ageGroup) {
+        setSubmissionStatus({
+          loading: false,
+          success: false,
+          error: 'Please fill in all required test details: title, subject, and age group'
+        });
+        return;
       }
 
-      // Now create the test with created questions
+      // Validate questions
+      if (questions.length === 0) {
+        setSubmissionStatus({
+          loading: false,
+          success: false,
+          error: 'Please add at least one question'
+        });
+        return;
+      }
+
+      // First create the test
       const testData = {
-        questions: createdQuestions.map(q => q.id),
-        title: testDetails.title,
-        description: testDetails.description,
-        subject: testDetails.subject,
-        ageGroup: testDetails.ageGroup
+        title: testDetails.title.trim(),
+        description: testDetails.description.trim(),
+        subject: testDetails.subject.trim(),
+        ageGroup: testDetails.ageGroup.trim(),
+        userId: user.userId
       };
 
-      const response = await api.post('/api/quiz/create-test', testData);
+      console.log('Creating test with data:', testData);
 
-      // Reset form
-      setQuestions([]);
-      setTestDetails({
-        title: '',
-        description: '',
-        subject: '',
-        ageGroup: ''
-      });
-      setCurrentStep(1);
+      const testResponse = await api.post('/api/tests/tests', testData);
+
+      if (!testResponse.data?.id) {
+        throw new Error('Failed to create test: No test ID returned');
+      }
+
+      const testId = testResponse.data.id;
+      
+      // Then create all questions for this test
+      const questionPromises = questions.map(question =>
+        api.post('/api/tests/questions', {
+          ...question,
+          testId
+        })
+      );
+
+      await Promise.all(questionPromises);
+
       setSubmissionStatus({
         loading: false,
         success: true,
         error: null
       });
 
-      // Auto-hide success message after 3 seconds
-      setTimeout(() => {
-        setSubmissionStatus(prev => ({ ...prev, success: false }));
-      }, 3000);
+      // Reset form
+      setTestDetails({
+        title: '',
+        description: '',
+        subject: '',
+        ageGroup: ''
+      });
+      setQuestions([]);
+      setCurrentStep(1);
 
     } catch (error) {
       console.error('Error creating test:', error);
-      const errorMessage = error.details || error.error || error.message || 'Failed to create test';
       setSubmissionStatus({
         loading: false,
         success: false,
-        error: errorMessage
+        error: error.response?.data?.details || error.response?.data?.error || error.message || 'Failed to create test'
       });
     }
   };
-
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <style>{fadeIn}</style>
       <h1 className="text-2xl font-bold text-duo-gray-700 mb-6">Create New Test</h1>
+
+      {/* Loading Overlay */}
+      {submissionStatus.loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg flex flex-col items-center">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#58cc02] border-r-transparent" />
+            <p className="mt-4 text-lg font-semibold text-gray-700">Creating test...</p>
+          </div>
+        </div>
+      )}
 
       {/* Status Messages */}
       {submissionStatus.error && (
-        <div className="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
-          <p className="font-bold">Error</p>
-          <p>{submissionStatus.error}</p>
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm" 
+             style={{ animation: 'fadeIn 0.3s ease-out' }}>
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p className="font-semibold text-red-700">Error</p>
+          </div>
+          <p className="mt-2 text-red-600">{submissionStatus.error}</p>
         </div>
       )}
 
       {submissionStatus.success && (
-        <div className="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700">
-          <p className="font-bold">Success!</p>
-          <p>Test has been created successfully.</p>
+        <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg shadow-sm"
+             style={{ animation: 'fadeIn 0.3s ease-out' }}>
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <p className="font-semibold text-green-700">Success!</p>
+          </div>
+          <p className="mt-2 text-green-600">Test has been created successfully.</p>
         </div>
       )}
 
@@ -309,14 +348,28 @@ const CreateTest = () => {
                 Back
               </button>
               <button
+                type="submit"
+                disabled={submissionStatus.loading}
                 onClick={handleSubmit}
-                className={`bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-8 
-                  rounded-xl transition-colors duration-200 border-b-2 border-[#3c9202] 
-                  hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] 
-                  focus:ring-offset-2 disabled:opacity-50 ${submissionStatus.loading ? 'opacity-75 cursor-not-allowed' : ''}`}
-                disabled={questions.length === 0 || submissionStatus.loading}
+                className={`
+                  flex items-center justify-center
+                  min-w-[150px] py-3 px-6
+                  rounded-2xl font-bold
+                  transition-all duration-200
+                  ${submissionStatus.loading 
+                    ? 'bg-gray-300 border-b-2 border-gray-400 cursor-not-allowed text-gray-600'
+                    : 'bg-[#58cc02] hover:bg-[#4caf02] text-white border-b-2 border-[#3c9202] hover:shadow-lg'
+                  }
+                `}
               >
-                {submissionStatus.loading ? 'Creating Test...' : 'Create Test'}
+                {submissionStatus.loading ? (
+                  <>
+                    <LoadingSpinner />
+                    <span className="ml-2">Creating...</span>
+                  </>
+                ) : (
+                  'Create Test'
+                )}
               </button>
             </div>
           </div>

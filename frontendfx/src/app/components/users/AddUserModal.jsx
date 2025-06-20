@@ -10,7 +10,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
     username: "",
     email: "",
     password: "",
-    role: "STAFF",
+    role: "STUDENT",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,7 +27,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
       const response = await axios.post(`${API_URL}/api/user/register`, formData);
       onUserAdded(response.data);
       onClose();
-      setFormData({ username: "", email: "", password: "", role: "STAFF" });
+      setFormData({ username: "", email: "", password: "", role: "STUDENT" });
     } catch (err) {
       setError(err.response?.data?.message || "Failed to add user");
     } finally {
@@ -94,7 +94,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                   onChange={handleChange}
                   className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-gray-100"
                 >
-                  <option value="STAFF">STAFF</option>
+                  <option value="STUDENT">STUDENT</option>
                   <option value="ADMIN">ADMIN</option>
                 </select>
               </div>

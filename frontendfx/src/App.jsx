@@ -30,15 +30,18 @@ import NotFound from './auth/NotFound.jsx';
 import NoRoleAssigned from './auth/NoRoleAssigned.jsx';
 import ProfileUpdateModal from './app/modals/ProfileUpdateModal.jsx';
 import LandingPage from './app/pages/LandigPage.jsx'; // Added import
+import LessonsListPage from './app/pages/lessons/LessonsListPage.jsx';
+import CreateLessonPage from './app/pages/lessons/CreateLessonPage.jsx';
+import EditLessonPage from './app/pages/lessons/EditLessonPage.jsx';
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
-  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
-  ADMIN: ['Dashboard', 'Users', 'Videos', 'Tests', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
-  CONTENTMANAGER: ['Videos', 'Tests', 'Images', 'IWantNeeds'],
+  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
+  ADMIN: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  CONTENTMANAGER: ['Videos', 'Tests', 'Lessons', 'Images', 'IWantNeeds'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds'],
-  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Images', 'IWantNeeds'],
-  TEACHER: ['Videos', 'Tests'],
+  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Lessons', 'Images', 'IWantNeeds'],
+  TEACHER: ['Videos', 'Tests', 'Lessons'],
 };
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
@@ -47,7 +50,9 @@ const APP_ROUTES = [
   // Main routes
   { name: 'Dashboard', path: 'dashboard', element: DashboardPage },
   { name: 'Users',     path: 'users',     element: UsersPage },
-  { name: 'Videos',    path: 'videos',    element: VideoListPage },
+  { name: 'Videos',    path: 'videos',    element: VideoListPage },  { name: 'Lessons',   path: 'lessons',   element: LessonsListPage },
+  { name: 'Lessons',   path: 'lessons/create',   element: CreateLessonPage },
+  { name: 'Lessons',   path: 'lessons/edit/:id', element: EditLessonPage },
   { name: 'Videos-Upload', path: 'videos-upload', element: VideoUploadPage },
   { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
@@ -276,8 +281,7 @@ function App() {
           <Route path='/test' element={<UserManagementScreen />} />              {/* Authenticated app routes under /app */}
           <Route path="/app" element={<Layout />}>
             <Route index element={<IndexRouteHandler />} />
-            
-            {/* Map all protected routes */}
+                {/* Map all protected routes */}
             {APP_ROUTES.map(({ name, path, element: Component }) => (
               <Route
                 key={path}
@@ -289,6 +293,7 @@ function App() {
                 }
               />
             ))}
+            
             {/* Fallback for unknown paths under /app */}
             <Route path='*' element={<NotFound />} />
           </Route>

@@ -9,7 +9,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    role: "STAFF",
+    role: "STUDENT",
     isEmailVerified: false,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
       setFormData({
         username: user.username || "",
         email: user.email || "",
-        role: user.role || "STAFF",
+        role: user.role || "STUDENT",
         isEmailVerified: user.isEmailVerified || false,
       });
     }
@@ -138,7 +138,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                   onChange={handleChange}
                   className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-gray-100"
                 >
-                  <option value="STAFF">STAFF</option>
+                  <option value="STUDENT">STUDENT</option>
                   <option value="INSPECTOR">INSPECTOR</option>
                   <option value="TEACHER">TEACHER</option>
                   <option value="ADMIN">ADMIN</option>

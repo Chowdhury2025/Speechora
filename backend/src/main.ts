@@ -10,18 +10,20 @@ import userRouter from "./User/router";
 import videoRouter from "./Video/router";
 import imageRouter from "./Image/router";
 import dashboardRouter from "./Dashboard/router";
-import quizRouter from "./Quiz/router";
+import testRouter from "./Test/router";
+import lessonRouter from "./lesson/router";
+
 
 const app: Express = express();
 
 // Get local IP addresses
-function getLocalIpAddresses() {
+function getLocalIpAddresses(): string[] {
   const interfaces = os.networkInterfaces();
   const ipAddresses: string[] = [];
   
   Object.values(interfaces).forEach((iface) => {
     if (iface) {
-      iface.forEach((details) => {
+      iface.forEach((details: os.NetworkInterfaceInfo) => {
         if (details.family === 'IPv4' && !details.internal) {
           ipAddresses.push(details.address);
         }
@@ -64,7 +66,8 @@ app.use("/api/user", userRouter);
 app.use("/api/videos", videoRouter);
 app.use("/api/images", imageRouter);
 app.use("/api/dashboard", dashboardRouter);
-app.use("/api/quiz", quizRouter);
+app.use("/api/tests", testRouter);
+app.use("/api/lessons", lessonRouter);
 
 // Add email configuration router
 

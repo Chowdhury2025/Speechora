@@ -144,7 +144,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                   >
                     <option value="USER">User</option>
                     <option value="ADMIN">Admin</option>
-                    <option value="STAFF">Staff</option>
+                    <option value="STUDENT">STUDENT</option>
                   </select>
                 </div>
 

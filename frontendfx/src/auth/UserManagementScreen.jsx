@@ -139,7 +139,7 @@ const UserManagementScreen = () => {
               <option>All roles</option>
               <option>USER</option>
               <option>ADMIN</option>
-              <option>STAFF</option>
+              <option>STUDENT</option>
             </select>
             <select
               value={verificationFilter}

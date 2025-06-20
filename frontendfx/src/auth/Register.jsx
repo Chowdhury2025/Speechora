@@ -14,7 +14,7 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     phoneNumber: '',
-    role: 'STAFF' 
+    role: '' 
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');

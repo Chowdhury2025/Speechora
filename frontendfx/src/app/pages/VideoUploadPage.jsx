@@ -82,17 +82,7 @@ const VideoUploadPage = () => {
     { name: 'Toys & Games', slug: 'toys_games' },
     { name: 'Food & Drink', slug: 'food_drink' },
     { name: 'Places', slug: 'places' },
-    { name: 'I Want / Needs', slug: 'i_want_needs' },
-    { name: 'Actions / Verbs', slug: 'actions_verbs' },
-    { name: 'What Questions', slug: 'what_questions' },
-    { name: 'Where Questions', slug: 'where_questions' },
-    { name: 'Who Questions', slug: 'who_questions' },
-    { name: 'When Questions', slug: 'when_questions' },
-    { name: 'Why Questions', slug: 'why_questions' },
-    { name: 'How Questions', slug: 'how_questions' },
-    { name: 'Choice Questions', slug: 'choice_questions' },
-    { name: 'Question Starters', slug: 'question_starters' },
-    { name: 'Others', slug: 'others' }
+  
   ];
 
   const ageGroups = [

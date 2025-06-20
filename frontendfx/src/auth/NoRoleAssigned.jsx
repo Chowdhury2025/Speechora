@@ -11,7 +11,7 @@ function NoRoleAssigned() {
   const user = useRecoilValue(userStates);
   const resetUser = useResetRecoilState(userStates);
   const navigate = useNavigate();
-  const isStaff = user?.role === 'STAFF';
+  const isSTUDENT = user?.role === 'STUDENT';
   
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -43,9 +43,9 @@ function NoRoleAssigned() {
           </div>
 
           <p className={`${colorGuide.neutral.textSecondary} mb-6`}>
-            {isStaff ? (
+            {isSTUDENT ? (
               <>
-                Your account is currently set as STAFF role. To access the system, you need to be assigned
+                Your account is currently set as STUDENT role. To access the system, you need to be assigned
                 a different role like Store Manager or Admin. Please contact the administrator for role assignment.
               </>
             ) : (

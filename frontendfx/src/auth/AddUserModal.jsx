@@ -115,7 +115,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                 >
                   <option value="USER">User</option>
                   <option value="ADMIN">Admin</option>
-                  <option value="STAFF">Staff</option>
+                  <option value="STUDENT">STUDENT</option>
                 </select>
               </div>
 

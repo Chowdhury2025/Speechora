@@ -19,7 +19,7 @@ model User {
   group                  Int?
   createdAt              DateTime  @default(now())
   nrc_card_id            String?
-  role                   UserRole  @default(STAFF)
+  role                   UserRole  @default(STUDENT)
   isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
   bloodGroup             String?
@@ -30,9 +30,9 @@ model User {
   emergencyContact       String?
   videos                 videos[]  @relation("VideoUploader")
   images                 images[]  @relation("ImageUploader")
-  userAnswers           UserAnswer[] @relation("UserAnswers")
-  testScores           UserTestScore[] @relation("UserTestScores")
-  createdQuestions     QuizQuestion[] @relation("QuestionCreator")
+  tests                  Test[]    @relation("TestCreator")
+
+  Lesson Lesson[]
 }
 
 model SystemSettings {
@@ -77,11 +77,50 @@ model images {
   userUploader User?    @relation(fields: [userId], references: [id], name: "ImageUploader")
 }
 
+model Test {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  subject     String
+  ageGroup    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   User      @relation("TestCreator", fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  questions   Question[]
+}
+
+model Question {
+  id              Int          @id @default(autoincrement())
+  questionType    QuestionType @default(TEXT)
+  questionText    String
+  questionMediaUrl String?
+  explanation     String?
+  difficulty      String?      @default("easy")
+  test           Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  testId         Int
+  choices        Choice[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Choice {
+  id             Int        @id @default(autoincrement())
+  choiceType     ChoiceType @default(TEXT)
+  choiceText     String?
+  choiceMediaUrl String?
+  isCorrect      Boolean    @default(false)
+  question       Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId     Int
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
 enum UserRole {
   ADMIN
   SUPERUSER
   INSPECTOR
-  STAFF
+  STUDENT
   
   TEACHER
   GUARDIAN_PARENT
@@ -100,61 +139,21 @@ enum ChoiceType {
   VIDEO
 }
 
-model QuizQuestion {
-  id                Int            @id @default(autoincrement())
-  questionType      QuestionType
-  questionText      String?
-  questionMediaUrl  String?
-  category         String
-  ageGroup         String
-  choices          QuizChoice[]
-  correctAnswerId  Int?           @unique
-  correctAnswer    QuizChoice?    @relation("CorrectAnswer", fields: [correctAnswerId], references: [id])
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  userAnswers      UserAnswer[]   @relation("QuestionAnswers")
-  userTestScores   UserTestScore[] @relation("QuestionInTest")
-  createdBy        User           @relation("QuestionCreator", fields: [createdById], references: [id])
-  createdById      Int
-}
 
-model QuizChoice {
-  id                 Int         @id @default(autoincrement())
-  choiceType         ChoiceType
-  choiceText         String?
-  choiceMediaUrl     String?
-  question           QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId         Int
-  correctForQuestion QuizQuestion? @relation("CorrectAnswer")
-  userAnswers        UserAnswer[]
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-}
 
-model UserAnswer {
-  id          Int         @id @default(autoincrement())
+model Lesson {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String?
+  subject     String  //{wants_and_needs_expression ,action_words_and_verbs, what_questions, where_questions, who_questions, when_questions, why_questions}
+  ageGroup    String
+  statement   Json    // JSON object with structure: { type: "text" | "image_url" | "video_url", content: string }
+  options     Json    // Array of objects with structure: [{ type: "text" | "image_url" | "video_url", content: string }]
   userId      Int
-  user        User        @relation("UserAnswers", fields: [userId], references: [id], onDelete: Cascade)
-  questionId  Int
-  question    QuizQuestion @relation("QuestionAnswers", fields: [questionId], references: [id])
-  choiceId    Int
-  choice      QuizChoice   @relation(fields: [choiceId], references: [id], onDelete: Cascade)
-  isCorrect   Boolean
-  testScore   UserTestScore @relation(fields: [testScoreId], references: [id], onDelete: Cascade)
-  testScoreId Int
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
+  
+  createdBy User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-model UserTestScore {
-  id           Int          @id @default(autoincrement())
-  userId       Int
-  user         User         @relation("UserTestScores", fields: [userId], references: [id], onDelete: Cascade)
-  score        Int
-  total        Int
-  quizDate     DateTime     @default(now())
-  questions    QuizQuestion[] @relation("QuestionInTest")
-  userAnswers  UserAnswer[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
 }
