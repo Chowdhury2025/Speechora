@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
-import 'base_subject_screen.dart';
+import './lesson_base_subject_screen.dart';
 
 class WhatQuestionsScreen extends StatelessWidget {
   static const routeName = '/what-questions';
   final Color backgroundColor;
 
-  const WhatQuestionsScreen({
-    super.key,
-    required this.backgroundColor,
-  });
+  const WhatQuestionsScreen({super.key, required this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
-    return BaseSubjectScreen(
+    return LessonBaseSubjectScreen(
       title: 'What Questions',
       backgroundColor: backgroundColor,
-      category: 'what_questions',
+      subject: 'what_questions',
     );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'base_subject_screen.dart';
+import 'lesson_base_subject_screen.dart';
 
 class WantsAndNeedsScreen extends StatelessWidget {
   static const routeName = '/wants_and_needs';
@@ -9,10 +9,10 @@ class WantsAndNeedsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BaseSubjectScreen(
-      title: 'I Want / Needs',
+    return LessonBaseSubjectScreen(
+      title: 'Wants and Needs Expression',
       backgroundColor: backgroundColor,
-      category: 'i_want_needs',
+      subject: 'wants_and_needs_expression',
     );
   }
 }
