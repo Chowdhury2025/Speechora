@@ -44,10 +44,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    url_launcher: ^6.2.5
+  url_launcher: ^6.2.5
   shared_preferences: ^2.2.2  
   http: ^1.1.0
-  flutter_tts: ^3.8.5
   flutter_tts: ^3.8.5
   youtube_player_iframe: ^5.2.1
   lottie: ^3.0.0
