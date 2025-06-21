@@ -15,11 +15,11 @@ export default function LessonsPage() {
   useEffect(() => {
     fetchLessons();
   }, []);
-
   const fetchLessons = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/lessons`);
-      setLessons(response.data);
+      // Ensure we're using the lessons array from the response
+      setLessons(response.data.lessons || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching lessons:', error);
@@ -87,19 +87,28 @@ export default function LessonsPage() {
               <div className="space-y-2 mb-4">
                 <p className="text-sm text-gray-500">Age Group: {lesson.ageGroup}</p>
                 <p className="text-gray-600 line-clamp-2">{lesson.description}</p>
-              </div>
-
-              {lesson.contentType === 'image_url' && lesson.statement && (
+              </div>              {lesson.statement && (
                 <div className="mb-4">
-                  <img
-                    src={lesson.statement}
-                    alt="Lesson content"
-                    className="w-full h-32 object-cover rounded"
-                    onError={(e) => {
-                      e.target.src = '/placeholder-image.png';
-                      e.target.classList.add('error-image');
-                    }}
-                  />
+                  {lesson.statement.type === 'image_url' ? (
+                    <div>
+                      <img
+                        src={lesson.statement.content}
+                        alt={lesson.statement.description || "Lesson content"}
+                        className="w-full h-32 object-cover rounded mb-2"
+                        onError={(e) => {
+                          e.target.src = '/placeholder-image.png';
+                          e.target.classList.add('error-image');
+                        }}
+                      />
+                      {lesson.statement.description && (
+                        <p className="text-sm text-gray-600 italic">
+                          {lesson.statement.description}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-800">{lesson.statement.content}</p>
+                  )}
                 </div>
               )}
 
