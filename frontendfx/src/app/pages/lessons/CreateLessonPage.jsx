@@ -17,7 +17,8 @@ const ageGroups = [
   '18+ years'
 ];
 
-export default function CreateLesson() {  const navigate = useNavigate();
+export default function CreateLesson() {
+  const navigate = useNavigate();
   const user = useRecoilValue(userStates);
   
   // Log user state when component mounts and when it changes
@@ -38,10 +39,12 @@ export default function CreateLesson() {  const navigate = useNavigate();
     ageGroup: '',
     contentType: 'text', // 'text' or 'image_url'
     statement: '',
+    contentDescription: '', // Description for content image
     contentFile: null, // For image upload
     optionType: 'text', // 'text' or 'image_url'
     options: ['', ''], // Initialize with two empty options
-    optionFiles: [null, null], // For image uploads
+    optionDescriptions: ['', ''], // Descriptions for option images
+    optionFiles: [null, null], // For image uploads,
   });
 
   const [tempImagePreviews, setTempImagePreviews] = useState({
@@ -59,16 +62,30 @@ export default function CreateLesson() {  const navigate = useNavigate();
     setLessonData({ ...lessonData, options: newOptions });
   };
 
+  const handleOptionDescriptionChange = (index) => (event) => {
+    const newDescriptions = [...lessonData.optionDescriptions];
+    newDescriptions[index] = event.target.value;
+    setLessonData({ ...lessonData, optionDescriptions: newDescriptions });
+  };
+
+  const handleContentDescriptionChange = (event) => {
+    setLessonData({ ...lessonData, contentDescription: event.target.value });
+  };
   const addOption = () => {
     setLessonData({
       ...lessonData,
       options: [...lessonData.options, ''],
+      optionDescriptions: [...lessonData.optionDescriptions, ''],
     });
   };
-
   const removeOption = (index) => {
     const newOptions = lessonData.options.filter((_, i) => i !== index);
-    setLessonData({ ...lessonData, options: newOptions });
+    const newDescriptions = lessonData.optionDescriptions.filter((_, i) => i !== index);
+    setLessonData({ 
+      ...lessonData, 
+      options: newOptions,
+      optionDescriptions: newDescriptions 
+    });
   };
 
   const validateStep = async () => {
@@ -354,14 +371,27 @@ export default function CreateLesson() {  const navigate = useNavigate();
                         </div>
                       </div>
                     )}
-                  </div>
-                  {lessonData.statement && !uploading && (
-                    <img
-                      src={lessonData.statement}
-                      alt="Content preview"
-                      className="mt-2 max-w-md rounded border border-gray-200"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
+                  </div>                  {lessonData.statement && !uploading && (
+                    <div className="space-y-4">
+                      <img
+                        src={lessonData.statement}
+                        alt="Content preview"
+                        className="mt-2 max-w-md rounded border border-gray-200"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Image Description
+                        </label>
+                        <textarea
+                          value={lessonData.contentDescription}
+                          onChange={handleContentDescriptionChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          rows="3"
+                          placeholder="Describe what's in this image"
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -425,14 +455,27 @@ export default function CreateLesson() {  const navigate = useNavigate();
                             </div>
                           </div>
                         )}
-                      </div>
-                      {option && !uploading && (
-                        <img
-                          src={option}
-                          alt={`Option ${index + 1} preview`}
-                          className="mt-2 max-w-md h-24 object-contain rounded border border-gray-200"
-                          onError={(e) => e.target.style.display = 'none'}
-                        />
+                      </div>                      {option && !uploading && (
+                        <div className="space-y-4">
+                          <img
+                            src={option}
+                            alt={`Option ${index + 1} preview`}
+                            className="mt-2 max-w-md h-24 object-contain rounded border border-gray-200"
+                            onError={(e) => e.target.style.display = 'none'}
+                          />
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Image Description
+                            </label>
+                            <textarea
+                              value={lessonData.optionDescriptions[index]}
+                              onChange={handleOptionDescriptionChange(index)}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              rows="3"
+                              placeholder="Describe what's in this image"
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
@@ -471,12 +514,18 @@ export default function CreateLesson() {  const navigate = useNavigate();
                 {lessonData.contentType === 'text' ? (
                   <p className="ml-4 mt-1">{lessonData.statement}</p>
                 ) : (
-                  <div className="ml-4 mt-1">
-                    <img
-                      src={lessonData.statement}
-                      alt="Lesson content"
-                      className="max-w-md rounded border border-gray-200"
-                    />
+                  <div className="ml-4 mt-1">                      <div>
+                        <img
+                          src={lessonData.statement}
+                          alt="Lesson content"
+                          className="max-w-md rounded border border-gray-200"
+                        />
+                        {lessonData.contentDescription && (
+                          <p className="mt-2 text-sm text-gray-600">
+                            {lessonData.contentDescription}
+                          </p>
+                        )}
+                      </div>
                   </div>
                 )}
               </div>
@@ -488,12 +537,18 @@ export default function CreateLesson() {  const navigate = useNavigate();
                       <p className="font-medium">Option {index + 1}:</p>
                       {lessonData.optionType === 'text' ? (
                         <p className="ml-4">{option}</p>
-                      ) : (
-                        <img
-                          src={option}
-                          alt={`Option ${index + 1}`}
-                          className="ml-4 max-w-md h-24 object-contain rounded border border-gray-200"
-                        />
+                      ) : (                        <div className="ml-4">
+                          <img
+                            src={option}
+                            alt={`Option ${index + 1}`}
+                            className="max-w-md h-24 object-contain rounded border border-gray-200"
+                          />
+                          {lessonData.optionDescriptions[index] && (
+                            <p className="mt-2 text-sm text-gray-600">
+                              {lessonData.optionDescriptions[index]}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
