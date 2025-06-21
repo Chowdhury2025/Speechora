@@ -39,6 +39,7 @@ const corsOptions: cors.CorsOptions = {
   origin: [
     "https://book8.vercel.app", 
     "http://localhost:5173",
+    "http://192.168.0.101:8800",
     "http://localhost:8800"  // Add your current development port
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
