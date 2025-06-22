@@ -20,6 +20,7 @@ import 'subjects/how_questions_screen.dart';
 import 'subjects/choice_questions_screen.dart';
 import 'subjects/question_starters_screen.dart';
 import 'subjects/others_screen.dart';
+import 'subjects/presentation4/trueorfalse.dart';
 
 class SubjectCard {
   final String title;
@@ -35,6 +36,11 @@ class MyHomePage extends StatelessWidget {
   final String title;
 
   final List<SubjectCard> subjects = [
+    SubjectCard(
+      title: 'Image Quiz Game',
+      icon: Icons.image_search,
+      color: Colors.orange.shade300,
+    ),
     SubjectCard(
       title: 'My World & Daily Life',
       icon: Icons.home_outlined,
@@ -126,7 +132,11 @@ class MyHomePage extends StatelessWidget {
       icon: Icons.question_answer,
       color: Colors.blue.shade300,
     ),
-
+    SubjectCard(
+      title: 'True/False Quiz',
+      icon: Icons.quiz,
+      color: Colors.orange.shade400,
+    ),
     SubjectCard(
       title: 'Others',
       icon: Icons.more_horiz,
@@ -135,6 +145,11 @@ class MyHomePage extends StatelessWidget {
   ];
 
   void _navigateToScreen(BuildContext context, String title, Color color) {
+    if (title == 'Image Quiz Game') {
+      Navigator.pushNamed(context, '/image-quiz');
+      return;
+    }
+
     Widget screen;
     switch (title) {
       case 'My World & Daily Life':
@@ -190,6 +205,9 @@ class MyHomePage extends StatelessWidget {
         break;
       case 'Question Starters':
         screen = QuestionStartersScreen(backgroundColor: color);
+        break;
+      case 'True/False Quiz':
+        screen = FruitQuizScreen();
         break;
       case 'Others':
         screen = OthersScreen(backgroundColor: color);

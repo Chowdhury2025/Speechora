@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../services/lesson_service.dart';
 import '../../../services/tts_service.dart';
 
@@ -23,12 +24,14 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
   bool isLoading = false;
   String? error;
   List<Lesson> lessons = [];
-  final TTSService _tts = TTSService();
+  late final TTSService _tts;
   Lesson? selectedLesson;
+  LessonContent? selectedOption;
 
   @override
   void initState() {
     super.initState();
+    _tts = TTSService();
     _loadLessons();
   }
 
@@ -47,6 +50,10 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
           lessons = response;
           isLoading = false;
         });
+        // Read the statement aloud when lessons are loaded
+        if (lessons.isNotEmpty) {
+          await _tts.speak(lessons[0].statement.text);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -60,147 +67,119 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
 
   void _handleOptionSelected(
     BuildContext context,
-    Map<String, dynamic> option,
+    Lesson lesson,
+    LessonContent option,
   ) async {
-    // Read aloud if the content is text
-    if (option['type'] == 'text') {
-      await _tts.speak(option['content']);
-    }
-    // Handle image or video display
-    else if (option['type'] == 'image_url') {
-      // Show image in a dialog
+    setState(() {
+      selectedOption = option;
+    });
+
+    // When an option is selected, read both statement and option text as one sentence
+    final textToSpeak = '${lesson.statement.text}. ${option.text}';
+    await _tts.speak(textToSpeak);
+
+    // If there's an image, show it in a dialog
+    if (option.imageUrl != null) {
+      if (!context.mounted) return;
       showDialog(
         context: context,
         builder:
             (context) => Dialog(
-              child: Image.network(option['content'], fit: BoxFit.contain),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: option.imageUrl!,
+                    fit: BoxFit.contain,
+                    placeholder:
+                        (context, url) =>
+                            const Center(child: CircularProgressIndicator()),
+                    errorWidget:
+                        (context, url, error) => const Icon(Icons.error),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
             ),
       );
-    } else if (option['type'] == 'video_url') {
-      // Navigate to video player screen
-      // You'll need to implement video player navigation here
     }
   }
 
-  void _openLesson(BuildContext context, Lesson lesson) async {
-    // Read the title aloud
-    await _tts.speak(lesson.title);
+  Widget _buildOptionCard(
+    BuildContext context,
+    Lesson lesson,
+    LessonContent option,
+    int index,
+  ) {
+    final colors = [
+      const Color(0xFFFFF4B7), // Pale yellow
+      const Color(0xFFFFE4D6), // Pale orange
+      const Color(0xFFFFD4D4), // Pale red
+      const Color(0xFFE0F4F4), // Pale cyan
+    ];
 
-    // Show the lesson content in a bottom sheet
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    return Container(
+      decoration: BoxDecoration(
+        color: colors[index % colors.length],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      builder:
-          (context) => DraggableScrollableSheet(
-            initialChildSize: 0.9,
-            minChildSize: 0.5,
-            maxChildSize: 0.9,
-            expand: false,
-            builder:
-                (context, scrollController) => SingleChildScrollView(
-                  controller: scrollController,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          lesson.title,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _handleOptionSelected(context, lesson, option),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (option.imageUrl != null)
+              Expanded(
+                flex: 3,
+                child: CachedNetworkImage(
+                  imageUrl: option.imageUrl!,
+                  fit: BoxFit.cover,
+                  placeholder:
+                      (context, url) => Container(
+                        color: Colors.grey.withOpacity(0.1),
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        if (lesson.description != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            lesson.description!,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        // Display statement
-                        _buildContentWidget(
-                          lesson.statement,
-                          isStatement: true,
-                        ),
-                        const SizedBox(height: 24),
-                        // Display options in a grid
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 1,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                              ),
-                          itemCount: (lesson.options as List).length,
-                          itemBuilder: (context, index) {
-                            final option = (lesson.options as List)[index];
-                            return Card(
-                              elevation: 4,
-                              child: InkWell(
-                                onTap:
-                                    () =>
-                                        _handleOptionSelected(context, option),
-                                child: _buildContentWidget(option),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                  errorWidget:
+                      (context, url, error) => Container(
+                        color: Colors.grey.withOpacity(0.1),
+                        child: const Icon(Icons.image_not_supported),
+                      ),
                 ),
-          ),
-    );
-
-    setState(() {
-      selectedLesson = lesson;
-    });
-  }
-
-  Widget _buildContentWidget(
-    Map<String, dynamic> content, {
-    bool isStatement = false,
-  }) {
-    switch (content['type']) {
-      case 'text':
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            content['content'],
-            style: TextStyle(
-              fontSize: isStatement ? 20 : 16,
-              fontWeight: isStatement ? FontWeight.bold : FontWeight.normal,
+              ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  option.text,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        );
-      case 'image_url':
-        return Image.network(
-          content['content'],
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: Colors.grey[200],
-              child: const Icon(Icons.image_not_supported, size: 50),
-            );
-          },
-        );
-      case 'video_url':
-        return Container(
-          color: Colors.grey[200],
-          child: const Icon(Icons.play_circle_outline, size: 50),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -225,82 +204,85 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
       );
     }
 
+    if (lessons.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+          backgroundColor: widget.backgroundColor,
+        ),
+        body: const Center(child: Text('No lessons available')),
+      );
+    }
+
+    // Take the first lesson as active
+    final activeLesson = lessons[0];
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: widget.backgroundColor,
+        elevation: 0,
       ),
-      body:
-          lessons.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.school,
-                      size: 64,
-                      color: widget.backgroundColor.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No lessons available',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: widget.backgroundColor.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Check back later for new content',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              )
-              : GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: lessons.length,
-                itemBuilder: (context, index) {
-                  final lesson = lessons[index];
-                  return Card(
-                    elevation: 4,
-                    child: InkWell(
-                      onTap: () => _openLesson(context, lesson),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.school,
-                              size: 48,
-                              color: widget.backgroundColor,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              lesson.title,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Big statement/question at the top
+          Container(
+            padding: const EdgeInsets.all(24.0),
+            color: widget.backgroundColor.withOpacity(0.1),
+            child: Text(
+              activeLesson.statement.text,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C5F5F),
               ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          // Options grid
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.85,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: activeLesson.options.length,
+              itemBuilder:
+                  (context, index) => _buildOptionCard(
+                    context,
+                    activeLesson,
+                    activeLesson.options[index],
+                    index,
+                  ),
+            ),
+          ),
+          // Selected option description at the bottom          if (selectedOption != null)
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${activeLesson.statement.text}. ${selectedOption!.text}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C5F5F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/user_model.dart';
+import '../services/tts_service.dart';
 
 // import 'package:book8/constants/constants.dart';
 
@@ -17,6 +18,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   UserModel? currentUser;
   String selectedAgeGroup = '6-8 years';
   String selectedVoiceAccent = 'American';
+  final TTSService _ttsService = TTSService();
 
   final List<String> ageGroups = [
     '3-5 years',
@@ -60,13 +62,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         currentUser = UserModel.fromJson(jsonDecode(userData));
       });
-    }
-
-    // Load saved preferences
+    } // Load saved preferences
     final savedAgeGroup = prefs.getString('ageGroup');
-    if (savedAgeGroup != null && mounted) {
+    final savedVoiceAccent = prefs.getString('voiceAccent');
+
+    if (mounted) {
       setState(() {
-        selectedAgeGroup = savedAgeGroup;
+        if (savedAgeGroup != null) {
+          selectedAgeGroup = savedAgeGroup;
+        }
+        if (savedVoiceAccent != null) {
+          selectedVoiceAccent = savedVoiceAccent;
+        }
       });
     }
   }
@@ -146,10 +153,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   return ListTile(
                                     title: Text(age),
                                     selected: age == selectedAgeGroup,
-                                    onTap: () {
+                                    onTap: () async {
                                       setState(() {
                                         selectedAgeGroup = age;
                                       });
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      await prefs.setString('ageGroup', age);
                                       Navigator.pop(context);
                                     },
                                   );
@@ -184,10 +194,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   return ListTile(
                                     title: Text(accent),
                                     selected: accent == selectedVoiceAccent,
-                                    onTap: () {
+                                    onTap: () async {
                                       setState(() {
                                         selectedVoiceAccent = accent;
                                       });
+                                      // Save the accent preference
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      await prefs.setString(
+                                        'voiceAccent',
+                                        accent,
+                                      );
+                                      // Update TTS service with new accent
+                                      await _ttsService.setAccent(accent);
+                                      // Speak a test phrase with the new accent
+                                      await _ttsService.speak(
+                                        'This is a test of the $accent accent',
+                                      );
                                       Navigator.pop(context);
                                     },
                                   );
