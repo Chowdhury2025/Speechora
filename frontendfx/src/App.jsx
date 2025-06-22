@@ -3,9 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'rea
 import { RecoilRoot, useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
 import { authState, userStates, sidebarState } from './atoms';
 
-
 import Sidebar from './app/components/common/Sidebar.jsx';
-
 
 // Dashboard Pages
 import DashboardPage from './app/pages/DashboardPage.jsx';
@@ -13,6 +11,7 @@ import UsersPage from './app/pages/UsersPage.jsx';
 import TestsPage from './app/pages/TestsPage.jsx';
 import ImagesPage from './app/pages/ImagesPage.jsx';
 import ImageUploadPage from './components/Images/ImageUpload.jsx';
+import { QuizImagesPage, QuizImageUploadPage, QuizImageEditPage } from './app/pages/QuizImages/QuizImagesPage.jsx';
 
 import PremiumSalesPage from './app/pages/PremiumSalesPage.jsx';
 import AnalyticsPage from './app/pages/AnalyticsPage.jsx';
@@ -36,12 +35,12 @@ import EditLessonPage from './app/pages/lessons/EditLessonPage.jsx';
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
-  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
-  ADMIN: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
-  CONTENTMANAGER: ['Videos', 'Tests', 'Lessons', 'Images', 'IWantNeeds'],
+  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
+  ADMIN: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  CONTENTMANAGER: ['Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds'],
-  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Lessons', 'Images', 'IWantNeeds'],
-  TEACHER: ['Videos', 'Tests', 'Lessons'],
+  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
+  TEACHER: ['Videos', 'Tests', 'Lessons', 'Quiz Images'],
 };
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
@@ -56,6 +55,10 @@ const APP_ROUTES = [
   { name: 'Videos-Upload', path: 'videos-upload', element: VideoUploadPage },
   { name: 'Tests',     path: 'tests',     element: TestsPage },
   { name: 'Images',    path: 'images',    element: ImagesPage },
+  { name: 'Images',    path: 'images/upload', element: ImageUploadPage },
+  { name: 'Quiz Images', path: 'quiz-images', element: QuizImagesPage },
+  { name: 'Quiz Images', path: 'quiz-images/upload', element: QuizImageUploadPage },
+  { name: 'Quiz Images', path: 'quiz-images/edit/:id', element: QuizImageEditPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
   { name: 'Settings',  path: 'settings',  element: SettingsPage },
   

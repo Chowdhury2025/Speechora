@@ -12,6 +12,7 @@ import imageRouter from "./Image/router";
 import dashboardRouter from "./Dashboard/router";
 import testRouter from "./Test/router";
 import lessonRouter from "./lesson/router";
+import quizImageRouter from "./QuizImage/router";
 
 
 const app: Express = express();
@@ -68,6 +69,7 @@ app.use("/api/images", imageRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/tests", testRouter);
 app.use("/api/lessons", lessonRouter);
+app.use("/api/quiz-images", quizImageRouter);
 
 // Add email configuration router
 

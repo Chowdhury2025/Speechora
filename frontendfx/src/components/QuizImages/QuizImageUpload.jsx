@@ -1,66 +1,43 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
 import { API_URL } from '../../config';
 import { r2Service } from '../../config/cloudflare';
-import ImageTabNavigator from '../../app/components/images/ImageTabNavigator';
 
-const ImageUpload = () => {
+const QuizImageUpload = () => {
   const user = useRecoilValue(userStates);
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [imageData, setImageData] = useState({
-    imageUrl: '',
-    title: '',
-    category: '',
-    description: '',
-    ageGroup: '',
-    name: user?.username || ''
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const categoryOptions = [
-    { name: 'My World & Daily Life', slug: 'my_world_daily_life' },
-    { name: 'Home', slug: 'home' },
-    { name: 'School', slug: 'school' },
-    { name: 'Therapy', slug: 'therapy' },
-    { name: 'Activities', slug: 'activities' },
-    { name: 'Family & Friends', slug: 'family_friends' },
-    { name: 'Toys & Games', slug: 'toys_games' },
-    { name: 'Food & Drink', slug: 'food_drink' },
-    { name: 'Places', slug: 'places' },
- 
-    { name: 'Others', slug: 'others' }
-  ];
+  const [imageData, setImageData] = useState({
+    name: '',
+    category: '',
+    ageGroup: '',
+    quizType: 'image_quiz',
+    imageUrl: ''
+  });
 
-  const ageGroups = [
-    '3-5 years',
-    '6-8 years',
-    '9-11 years',
-    '12-14 years',
-    '15-17 years',
-    '18+ years'
-  ];
-  // Redirect if not logged in (required for uploading)
+  // Redirect if not logged in
   if (!user) {
-    alert('Please login to upload images');
     navigate('/login');
     return null;
-  }  
+  }
+
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
       try {
-        r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
+        r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 5 * 1024 * 1024);
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
       } catch (error) {
         console.error('File validation error:', error);
-        alert(error.message);
+        setError(error.message);
       }
     }
   };
@@ -72,15 +49,6 @@ const ImageUpload = () => {
       [name]: value
     }));
   };
-
-  // Cleanup preview URL when component unmounts
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,30 +62,23 @@ const ImageUpload = () => {
       }
 
       // Upload image to R2
-      const imageUrl = await r2Service.uploadFile(selectedFile, 'images');
-      setImageData(prev => ({ ...prev, imageUrl }));
+      const imageUrl = await r2Service.uploadFile(selectedFile, 'quiz-images');
       
-      // Create image record with R2 URL
-      await axios.post(`${API_URL}/api/images`, 
-        { ...imageData, imageUrl },
-        {
-          headers: {
-            'Authorization': `Bearer ${user.token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
+      // Create quiz image record
+      const response = await axios.post(`${API_URL}/api/quiz-images`, {
+        ...imageData,
+        imageUrl,
+        userId: user.userId
+      });
+
       setSuccess(true);
-      // Reset form
-      setImageData(prev => ({
-        imageUrl: '',
-        title: '',
+      setImageData({
+        name: '',
         category: '',
-        description: '',
         ageGroup: '',
-        name: prev.name
-      }));
+        quizType: 'image_quiz',
+        imageUrl: ''
+      });
       setSelectedFile(null);
       setPreviewUrl('');
       
@@ -127,12 +88,46 @@ const ImageUpload = () => {
       setLoading(false);
     }
   };
+
+  // Clean up preview URL when component unmounts
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const categories = [
+    'Animals',
+    'Plants',
+    'Food',
+    'Transportation',
+    'Objects',
+    'Colors',
+    'Shapes',
+    'Numbers',
+    'Letters',
+    'Emotions',
+    'Activities',
+    'Weather',
+    'Professions',
+    'Sports'
+  ];
+
+ const ageGroups = [
+    '3-5 years',
+    '6-8 years',
+    '9-11 years',
+    '12-14 years',
+    '15-17 years',
+    '18+ years'
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <ImageTabNavigator />
-      
       <div className="bg-white rounded-xl shadow-sm border-2 border-[#e5f5d5] p-6 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-[#3c9202]">Upload New Image</h2>
+        <h2 className="text-2xl font-bold mb-6 text-[#3c9202]">Upload New Quiz Image</h2>
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-xl">
@@ -143,17 +138,17 @@ const ImageUpload = () => {
         {success && (
           <div className="mb-6 p-4 bg-[#e5f5d5] border-l-4 border-[#58cc02] text-[#3c9202] rounded-xl">
             <p>Image successfully uploaded!</p>
-            <p className="text-sm mt-1">You can upload another image or return to the image list.</p>
+            <p className="text-sm mt-1">You can upload another image or return to the quiz images list.</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="mb-8 p-4 bg-[#e5f5d5] rounded-xl">
-            <h3 className="text-lg font-bold text-[#3c9202] mb-2">How to Upload Images:</h3>
+            <h3 className="text-lg font-bold text-[#3c9202] mb-2">How to Upload Quiz Images:</h3>
             <ol className="list-decimal list-inside space-y-2 text-[#58cc02]">
-              <li>Click the 'Choose File' button or drag & drop your image</li>
-              <li>Select a JPEG, PNG, GIF, or WebP image (max 5MB)</li>
-              <li>Fill in the image details</li>
+              <li>Select a clear, high-quality image</li>
+              <li>Choose appropriate category and age group</li>
+              <li>Provide a descriptive name for the image</li>
               <li>Click 'Upload Image' to submit</li>
             </ol>
           </div>
@@ -175,8 +170,7 @@ const ImageUpload = () => {
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="max-w-full h-auto max-h-[300px] object-contain border-2 border-[#e5f5d5] rounded-xl transition-opacity duration-300 ease-in-out opacity-0"
-                  onLoad={(e) => e.target.classList.remove('opacity-0')}
+                  className="max-w-full h-auto max-h-[300px] object-contain border-2 border-[#e5f5d5] rounded-xl"
                 />
               </div>
             )}
@@ -184,12 +178,12 @@ const ImageUpload = () => {
 
           <div>
             <label className="block text-[#3c9202] text-sm font-bold mb-2">
-              Title *
+              Name *
             </label>
             <input
               type="text"
-              name="title"
-              value={imageData.title}
+              name="name"
+              value={imageData.name}
               onChange={handleChange}
               className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
               required
@@ -208,9 +202,9 @@ const ImageUpload = () => {
               required
             >
               <option value="">Select a category</option>
-              {categoryOptions.map(category => (
-                <option key={category.slug} value={category.slug}>
-                  {category.name}
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category}
                 </option>
               ))}
             </select>
@@ -236,20 +230,6 @@ const ImageUpload = () => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-[#3c9202] text-sm font-bold mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={imageData.description}
-              onChange={handleChange}
-              rows="4"
-              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
-              placeholder="Add a description of the image..."
-            />
-          </div>
-
           <button
             type="submit"
             disabled={loading || !selectedFile}
@@ -265,4 +245,4 @@ const ImageUpload = () => {
   );
 };
 
-export default ImageUpload;
+export default QuizImageUpload;

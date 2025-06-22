@@ -31,6 +31,7 @@ model User {
   videos                 videos[]  @relation("VideoUploader")
   images                 images[]  @relation("ImageUploader")
   tests                  Test[]    @relation("TestCreator")
+  quizImages            QuizImage[] @relation("QuizImageUploader")
 
   Lesson Lesson[]
 }
@@ -116,6 +117,23 @@ model Choice {
   updatedAt      DateTime   @updatedAt
 }
 
+model QuizImage {
+  id          Int      @id @default(autoincrement())
+  imageUrl    String   // URL where the image is stored
+  name        String   // Name of the object/item in the image
+  category    String   // Category like animals, fruits, vehicles, etc.
+  ageGroup    String   // Age group this image is appropriate for
+  isActive    Boolean  @default(true)
+  quizType    String   // 'true_false' or 'image_quiz' or both 
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+    userId      Int?
+  uploader    User?    @relation("QuizImageUploader", fields: [userId], references: [id])
+
+  @@index([category, quizType])
+  @@index([ageGroup])
+}
+
 enum UserRole {
   ADMIN
   SUPERUSER
@@ -147,7 +165,7 @@ model Lesson {
   description String?
   subject     String  //{wants_and_needs_expression ,action_words_and_verbs, what_questions, where_questions, who_questions, when_questions, why_questions}
   ageGroup    String
-  statement   Json    // JSON object with structure: { type: "text" | "image_url" | "video_url", content: string }
+  statement   String  // JSON object with structure: { type: "text" | "image_url" | "video_url", content: string }
   options     Json    // Array of objects with structure: [{ type: "text" | "image_url" | "video_url", content: string }]
   userId      Int
   

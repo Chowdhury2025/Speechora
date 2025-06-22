@@ -33,6 +33,7 @@ const Sidebar = () => {
     { path: 'tests', label: 'Tests', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN', 'TEACHER'] },
     { path: 'lessons', label: 'Lessons', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN', 'TEACHER'] },
     { path: 'images', label: 'Images', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
+    { path: 'quiz-images', label: 'Quiz Images', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'premium', label: 'Premium', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
     { path: 'analytics', label: 'Analytics', icon: BarChart2, roles: ['SUPERUSER', 'ADMIN'] },
     { path: 'settings', label: 'Settings', icon: Settings, roles: ['SUPERUSER', 'ADMIN'] }
