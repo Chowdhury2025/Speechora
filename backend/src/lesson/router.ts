@@ -5,13 +5,15 @@ import {
   getLessonById,
   updateLesson,
   deleteLesson,
-  validateLessonState
+  validateLessonState,
+  getLessonsBySubject
 } from './controller';
 
 const router = express.Router();
 
 // Public routes - Students can view lessons
 router.get('/', getLessons);
+router.get('/subject/:subject', getLessonsBySubject); // New endpoint for getting lessons by subject
 router.get('/:id', getLessonById);
 
 // Protected routes - Teachers can manage lessons

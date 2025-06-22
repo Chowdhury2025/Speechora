@@ -153,29 +153,32 @@ export default function CreateLesson() {
     try {
       let finalLessonData = { ...lessonData };
 
-      // Upload content image if needed
-      if (lessonData.contentType === 'image_url' && lessonData.contentFile) {
-        try {
-          const imageUrl = await uploadToR2(lessonData.contentFile);
-          finalLessonData.statement = imageUrl;
-        } catch (error) {
-          throw new Error('Failed to upload content image: ' + error.message);
-        }
+      // Structure content with description if it's an image
+      if (lessonData.contentType === 'image_url' && lessonData.statement) {
+        finalLessonData.statement = {
+          type: 'image_url',
+          content: lessonData.statement,
+          description: lessonData.contentDescription || ''
+        };
+      } else {
+        finalLessonData.statement = {
+          type: 'text',
+          content: lessonData.statement
+        };
       }
 
-      // Upload option images if needed
+      // Structure options with descriptions if they're images
       if (lessonData.optionType === 'image_url') {
-        const uploadedOptions = await Promise.all(
-          lessonData.optionFiles.map(async (file, index) => {
-            if (!file) return lessonData.options[index];
-            try {
-              return await uploadToR2(file);
-            } catch (error) {
-              throw new Error(`Failed to upload option ${index + 1} image: ${error.message}`);
-            }
-          })
-        );
-        finalLessonData.options = uploadedOptions;
+        finalLessonData.options = lessonData.options.map((option, index) => ({
+          type: 'image_url',
+          content: option,
+          description: lessonData.optionDescriptions[index] || ''
+        }));
+      } else {
+        finalLessonData.options = lessonData.options.map(option => ({
+          type: 'text',
+          content: option
+        }));
       }
 
       console.log('Creating lesson with user:', user);
@@ -254,15 +257,14 @@ export default function CreateLesson() {
       case 0:
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div>              <label className="block text-sm font-bold text-slate-600 mb-1">
                 Title
               </label>
               <input
                 type="text"
                 value={lessonData.title}
                 onChange={handleInputChange('title')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-xl border-2 border-slate-200 shadow-sm p-2 focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] transition-colors duration-200"
                 required
               />
             </div>
@@ -483,18 +485,16 @@ export default function CreateLesson() {
                 {lessonData.options.length > 2 && (
                   <button
                     type="button"
-                    onClick={() => removeOption(index)}
-                    className="mt-7 px-3 py-1 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50"
+                    onClick={() => removeOption(index)}                    className="mt-7 px-4 py-2 text-sm border-2 border-[#ff4b4b] text-[#ff4b4b] rounded-xl hover:bg-[#ffd4d4] transition-colors duration-200 font-bold"
                   >
                     Remove
                   </button>
                 )}
               </div>
-            ))}
-            <button
+            ))}            <button
               type="button"
               onClick={addOption}
-              className="mt-2 px-4 py-2 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
+              className="mt-2 px-6 py-3 text-sm bg-[#1cb0f6] text-white font-bold rounded-xl hover:bg-[#0095d9] transition-colors duration-200 border-b-2 border-[#0080bc] hover:border-[#0076ad] focus:outline-none focus:ring-2 focus:ring-[#1cb0f6] focus:ring-offset-2"
             >
               Add Option
             </button>
@@ -561,10 +561,9 @@ export default function CreateLesson() {
       default:
         return null;
     }
-  };  return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h1 className="text-2xl font-bold mb-6">
-        Create New Lesson s
+  };  return (    <div className="max-w-4xl mx-auto bg-white rounded-2xl border-2 border-slate-200 p-6">
+      <h1 className="text-3xl font-bold mb-6 text-slate-700">
+        Create New Lesson
       </h1>
 
       <div className="mb-8">
@@ -574,23 +573,23 @@ export default function CreateLesson() {
               <li key={label} className={`relative ${index !== steps.length - 1 ? 'pr-20 sm:pr-24' : ''}`}>
                 <div className="flex items-center">
                   <div
-                    className={`transition-colors duration-200 ease-in-out rounded-full h-8 w-8 flex items-center justify-center border-2 
+                    className={`transition-colors duration-200 ease-in-out rounded-full h-9 w-9 flex items-center justify-center border-2 
                       ${index <= activeStep 
-                        ? 'border-blue-600 bg-blue-600 text-white' 
-                        : 'border-gray-300 text-gray-500'}`}
+                        ? 'border-[#58cc02] bg-[#58cc02] text-white' 
+                        : 'border-slate-200 text-slate-400'}`}
                     aria-current={activeStep === index ? "step" : undefined}
                   >
-                    <span className="text-sm">{index + 1}</span>
+                    <span className="text-sm font-bold">{index + 1}</span>
                   </div>
-                  <span className={`ml-2 text-sm font-medium transition-colors duration-200 ease-in-out
-                    ${index <= activeStep ? 'text-blue-600' : 'text-gray-500'}`}>
+                  <span className={`ml-2 text-sm font-bold transition-colors duration-200 ease-in-out
+                    ${index <= activeStep ? 'text-[#58cc02]' : 'text-slate-400'}`}>
                     {label}
                   </span>
                 </div>
                 {index < steps.length - 1 && (
                   <div
                     className={`absolute top-4 w-full h-0.5 transition-colors duration-200 ease-in-out
-                      ${index < activeStep ? 'bg-blue-600' : 'bg-gray-300'}`}
+                      ${index < activeStep ? 'bg-[#58cc02]' : 'bg-slate-200'}`}
                     aria-hidden="true"
                   />
                 )}
@@ -598,12 +597,10 @@ export default function CreateLesson() {
             ))}
           </ol>
         </nav>
-      </div>
-
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-6" noValidate>
+      </div>      <form onSubmit={(e) => e.preventDefault()} className="space-y-6" noValidate>
         {error && (
           <div 
-            className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg"
+            className="p-4 mb-6 bg-[#ffd4d4] border-2 border-[#ff4b4b] text-[#ff4b4b] rounded-xl font-medium"
             role="alert"
             aria-live="polite"
           >
@@ -611,19 +608,17 @@ export default function CreateLesson() {
           </div>
         )}
 
-        <div className="transition-all duration-200 ease-in-out">
+        <div className="transition-all duration-200 ease-in-out bg-white rounded-xl border-2 border-slate-200 p-6">
           {renderStepContent(activeStep)}
-        </div>
-
-        <div className="flex justify-between mt-8 pt-4 border-t border-gray-200">
+        </div>        <div className="flex justify-between mt-8 pt-6 border-t-2 border-slate-200">
           <button
             type="button"
             disabled={activeStep === 0}
             onClick={handleBack}
-            className={`inline-flex items-center px-4 py-2 rounded transition-colors duration-200 ease-in-out
+            className={`inline-flex items-center px-6 py-3 rounded-xl font-bold transition-colors duration-200
               ${activeStep === 0
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500'}`}
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'border-2 border-slate-200 text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200'}`}
           >
             <svg 
               className="-ml-1 mr-2 h-5 w-5" 
@@ -640,8 +635,8 @@ export default function CreateLesson() {
             type="button"
             onClick={handleNext}
             disabled={loading}
-            className={`inline-flex items-center px-4 py-2 rounded transition-all duration-200 ease-in-out
-              bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+            className={`inline-flex items-center px-6 py-3 rounded-xl font-bold transition-colors duration-200
+              bg-[#58cc02] text-white hover:bg-[#47b102] border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#58cc02]
               ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {loading ? (

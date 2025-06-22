@@ -31,21 +31,27 @@ export default function LessonReviewModal({ isOpen, onClose, lesson }) {
 
   // Render content based on type
   const renderContent = (content, type, label = '') => {
-    const contentType = getContentType(content, type);
+    const contentType = getContentType(content?.content || content, type);
+    const description = content?.description;
     
     if (contentType === 'image_url' && !imageLoadError[label]) {
       return (
         <div className="relative">
           <img
-            src={content}
+            src={content?.content || content}
             alt={`${label || 'Content'}`}
             className="max-w-full rounded-lg shadow-sm"
             onError={(e) => handleImageError(label, e)}
             loading="lazy"
           />
-          {content && (
+          {description && (
+            <div className="mt-2 text-sm text-gray-600 italic">
+              {description}
+            </div>
+          )}
+          {(content?.content || content) && (
             <a 
-              href={content} 
+              href={content?.content || content}
               target="_blank" 
               rel="noopener noreferrer"
               className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs hover:bg-opacity-75"
@@ -59,7 +65,7 @@ export default function LessonReviewModal({ isOpen, onClose, lesson }) {
     
     return (
       <div className="p-4 bg-gray-50 rounded-lg">
-        <p className="text-gray-600 whitespace-pre-wrap break-words">{content}</p>
+        <p className="text-gray-600 whitespace-pre-wrap break-words">{content?.content || content}</p>
       </div>
     );
   };
@@ -85,11 +91,10 @@ export default function LessonReviewModal({ isOpen, onClose, lesson }) {
                     {lesson.ageGroup}
                   </span>
                 </div>
-              </div>
-              <button
+              </div>              <button
                 type="button"
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 p-2 rounded-full hover:bg-gray-100"
+                className="text-slate-400 hover:text-primary p-2 rounded-full hover:bg-primary-light"
                 aria-label="Close"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

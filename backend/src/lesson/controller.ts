@@ -63,6 +63,23 @@ export const createLesson = async (req: Request, res: Response) => {
         details: `No user found with ID: ${userId}. Please ensure you are using a valid user ID.`,
         state: state || { currentScreen: 'basic-info' }
       });
+    }    // Validate statement structure
+    if (typeof statement !== 'object' || !statement.type || !statement.content) {
+      return res.status(400).json({
+        error: 'Invalid statement format',
+        details: 'Statement must be an object with type and content properties',
+        state: { ...state, currentScreen: 'content' }
+      });
+    }
+
+    // Validate options structure
+    if (!Array.isArray(options) || !options.every(opt => 
+      typeof opt === 'object' && opt.type && 'content' in opt)) {
+      return res.status(400).json({
+        error: 'Invalid options format',
+        details: 'Each option must be an object with type and content properties',
+        state: { ...state, currentScreen: 'options' }
+      });
     }
 
     // Create the lesson
@@ -72,8 +89,8 @@ export const createLesson = async (req: Request, res: Response) => {
         description: description ? String(description) : '',
         subject: String(subject),
         ageGroup: String(ageGroup),
-        statement: statement,
-        options: options,
+        statement: JSON.stringify(statement), // Convert statement object to JSON string
+        options: JSON.stringify(options),     // Convert options array to JSON string
         userId: userIdNum,
       },
       include: {
@@ -127,10 +144,56 @@ export const getLessons = async (req: Request, res: Response) => {
           },
         },
       },
+    });    // Parse JSON strings back into objects for each lesson
+    const parsedLessons = lessons.map(lesson => {
+      try {
+        let parsedStatement = null;
+        let parsedOptions = [];
+
+        // Safely parse statement
+        if (lesson.statement) {
+          try {
+            parsedStatement = JSON.parse(lesson.statement as string);
+          } catch (e) {
+            console.warn(`Failed to parse statement for lesson ${lesson.id}:`, e);
+            // If parsing fails, treat it as a plain text statement
+            parsedStatement = {
+              type: 'text',
+              content: lesson.statement,
+              description: ''
+            };
+          }
+        }
+
+        // Safely parse options
+        if (lesson.options) {
+          try {
+            parsedOptions = JSON.parse(lesson.options as string);
+          } catch (e) {
+            console.warn(`Failed to parse options for lesson ${lesson.id}:`, e);
+            // If parsing fails, treat it as a single text option
+            parsedOptions = [{
+              type: 'text',
+              content: lesson.options,
+              description: ''
+            }];
+          }
+        }
+
+        return {
+          ...lesson,
+          statement: parsedStatement,
+          options: parsedOptions
+        };
+      } catch (e) {
+        console.error(`Error processing lesson ${lesson.id}:`, e);
+        // Return the lesson with unparsed data as fallback
+        return lesson;
+      }
     });
 
     res.json({
-      lessons,
+      lessons: parsedLessons,
       state: { currentScreen: 'list' }
     });
   } catch (error) {
@@ -163,10 +226,48 @@ export const getLessonById = async (req: Request, res: Response) => {
         error: 'Lesson not found',
         state: { currentScreen: 'not-found' }
       });
+    }    // Parse JSON strings back into objects
+    let parsedStatement = null;
+    let parsedOptions = [];
+
+    // Safely parse statement
+    if (lesson.statement) {
+      try {
+        parsedStatement = JSON.parse(lesson.statement as string);
+      } catch (e) {
+        console.warn(`Failed to parse statement for lesson ${lesson.id}:`, e);
+        // If parsing fails, treat it as a plain text statement
+        parsedStatement = {
+          type: 'text',
+          content: lesson.statement,
+          description: ''
+        };
+      }
     }
 
-    res.json({
+    // Safely parse options
+    if (lesson.options) {
+      try {
+        parsedOptions = JSON.parse(lesson.options as string);
+      } catch (e) {
+        console.warn(`Failed to parse options for lesson ${lesson.id}:`, e);
+        // If parsing fails, treat it as a single text option
+        parsedOptions = [{
+          type: 'text',
+          content: lesson.options,
+          description: ''
+        }];
+      }
+    }
+
+    const parsedLesson = {
       ...lesson,
+      statement: parsedStatement,
+      options: parsedOptions
+    };
+
+    res.json({
+      ...parsedLesson,
       state: { currentScreen: 'view' }
     });
   } catch (error) {
@@ -203,17 +304,15 @@ export const updateLesson = async (req: Request, res: Response) => {
         details: `No lesson found with ID: ${id}`,
         state: state || { currentScreen: 'basic-info' }
       });
-    }
-
-    const lesson = await prisma.lesson.update({
+    }    const lesson = await prisma.lesson.update({
       where: { id: parseInt(id) },
       data: {
         title: title || undefined,
         description: description !== undefined ? description : undefined,
         subject: subject || undefined,
         ageGroup: ageGroup || undefined,
-        statement: statement || undefined,
-        options: options || undefined,
+        statement: statement ? JSON.stringify(statement) : undefined,
+        options: options ? JSON.stringify(options) : undefined,
       },
       include: {
         createdBy: {
@@ -224,6 +323,18 @@ export const updateLesson = async (req: Request, res: Response) => {
           },
         },
       },
+    });
+
+    // Parse the JSON fields back into objects for the response
+    const parsedLesson = {
+      ...lesson,
+      statement: lesson.statement ? JSON.parse(lesson.statement as string) : null,
+      options: lesson.options ? JSON.parse(lesson.options as string) : []
+    };
+
+    res.json({
+      ...parsedLesson,
+      state: { currentScreen: 'success' }
     });
 
     res.json({
@@ -349,6 +460,57 @@ export const validateLessonState = async (req: Request, res: Response) => {
       error: 'Failed to validate lesson state',
       details: error instanceof Error ? error.message : String(error),
       state: { currentScreen: 'basic-info' }
+    });
+  }
+};
+
+export const getLessonsBySubject = async (req: Request, res: Response) => {
+  try {
+    const { subject } = req.params;
+    
+    // Validate subject parameter
+    if (!subject) {
+      return res.status(400).json({
+        error: 'Subject parameter is required',
+        state: { currentScreen: 'list' }
+      });
+    }
+
+    const lessons = await prisma.lesson.findMany({
+      where: {
+        subject: subject
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    // Transform the statement and options from JSON to objects
+    const transformedLessons = lessons.map(lesson => ({
+      ...lesson,
+      statement: typeof lesson.statement === 'string' ? JSON.parse(lesson.statement as string) : lesson.statement,
+      options: typeof lesson.options === 'string' ? JSON.parse(lesson.options as string) : lesson.options,
+    }));
+
+    res.json({
+      lessons: transformedLessons,
+      state: { currentScreen: 'list' }
+    });
+  } catch (error) {
+    console.error('Error fetching lessons by subject:', error);
+    res.status(500).json({
+      error: 'Failed to fetch lessons',
+      details: error instanceof Error ? error.message : String(error),
+      state: { currentScreen: 'list' }
     });
   }
 };

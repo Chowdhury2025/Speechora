@@ -97,20 +97,22 @@ export const colorGuide = {
 export const componentStyles = {
   // Button variants with Duolingo's signature styles
   button: {
-    primary: 'bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-4 rounded-xl border-b-4 border-[#3c9202] hover:border-[#2e7001] active:border-b-0 active:mt-1',
-    secondary: 'bg-[#1cb0f6] hover:bg-[#0095d9] text-white font-bold py-3 px-4 rounded-xl border-b-4 border-[#0080bc] hover:border-[#0076ad] active:border-b-0 active:mt-1',
-    outline: 'border-2 border-[#58cc02] text-[#58cc02] hover:bg-[#d7ffb8] font-bold py-3 px-4 rounded-xl',
+    primary: 'bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-3 px-4 rounded-xl border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2',
+    secondary: 'bg-[#1cb0f6] hover:bg-[#0095d9] text-white font-bold py-3 px-4 rounded-xl border-b-2 border-[#0080bc] hover:border-[#0076ad] focus:outline-none focus:ring-2 focus:ring-[#1cb0f6] focus:ring-offset-2',
+    outline: 'border-2 border-[#58cc02] text-[#58cc02] hover:bg-[#d7ffb8] font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2',
   },
 
-  // Input styles with modern touch
-  input: {
-    base: 'border-2 border-[#e5e5e5] focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] rounded-xl px-4 py-2 font-medium placeholder-slate-400',
-    error: 'border-2 border-[#ff4b4b] focus:border-[#ff4b4b] focus:ring-1 focus:ring-[#ff4b4b] rounded-xl px-4 py-2',
+  // Form control styles with Duolingo's design language
+  form: {
+    input: 'mt-1 block w-full rounded-xl border-2 border-slate-200 shadow-sm p-2 focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] transition-colors duration-200',
+    select: 'mt-1 block w-full rounded-xl border-2 border-slate-200 shadow-sm p-2 focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] transition-colors duration-200',
+    textarea: 'mt-1 block w-full rounded-xl border-2 border-slate-200 shadow-sm p-2 focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] transition-colors duration-200',
+    label: 'block text-sm font-bold text-slate-600 mb-1',
   },
 
   // Card styles with subtle elevation
   card: {
-    base: 'bg-white border border-[#e5e5e5] rounded-2xl shadow-sm',
+    base: 'bg-white border-2 border-slate-200 rounded-xl shadow-sm',
     hover: 'hover:border-[#58cc02] hover:shadow-md transition-all duration-200',
   }
 };

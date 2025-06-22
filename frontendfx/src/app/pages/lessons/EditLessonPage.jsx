@@ -293,17 +293,16 @@ export default function EditLesson() {
               placeholder="Enter the main content of your lesson"
             />
           ) : (
-            <div className="space-y-2">
-              <input
+            <div className="space-y-2">              <input
                 type="file"
                 accept="image/*"
                 onChange={handleContentFileChange}
-                className="mt-1 block w-full text-sm text-gray-500
+                className="mt-1 block w-full text-sm text-slate-600
                   file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100"
+                  file:rounded-xl file:border-2 file:border-[#1cb0f6]
+                  file:text-sm file:font-bold
+                  file:text-[#1cb0f6] file:bg-white
+                  hover:file:bg-[#e5f6ff] transition-colors duration-200"
               />
               {(tempImagePreviews.content || lessonData.statement) && (
                 <img
@@ -458,29 +457,27 @@ export default function EditLesson() {
     }
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center p-6">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  if (loading) {    return <div className="flex items-center justify-center p-6">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#58cc02]"></div>
+      <span className="ml-2 text-slate-600 font-medium">Loading lesson...</span>
     </div>;
   }
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Edit Lesson</h1>
+  return (    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-slate-700">Edit Lesson</h1>
       {error && (
-        <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-md">
+        <div className="mb-6 p-4 bg-[#ffd4d4] border-2 border-[#ff4b4b] text-[#ff4b4b] rounded-xl font-medium">
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Title</label>
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-2xl border-2 border-slate-200 p-6">
+        <div>          <label className="block text-sm font-bold text-slate-600 mb-1">Title</label>
           <input
             type="text"
             name="title"
             value={lessonData.title}
             onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
+            className="mt-1 block w-full rounded-xl border-2 border-slate-200 shadow-sm p-2 focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] transition-colors duration-200"
             required
           />
         </div>
@@ -593,10 +590,10 @@ export default function EditLesson() {
                     required
                   />
                 )}
-              </div>
-              <button
-                type="button"                onClick={() => handleRemoveOption(index)}
-                className="mt-7 px-3 py-1 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50"
+              </div>              <button
+                type="button"
+                onClick={() => handleRemoveOption(index)}
+                className="mt-7 px-4 py-2 text-sm border-2 border-[#ff4b4b] text-[#ff4b4b] rounded-xl hover:bg-[#ffd4d4] transition-colors duration-200 font-bold"
               >
                 Remove
               </button>
@@ -604,22 +601,20 @@ export default function EditLesson() {
           ))}          <button
             type="button"
             onClick={handleAddOption}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="px-6 py-3 bg-[#1cb0f6] text-white font-bold rounded-xl hover:bg-[#0095d9] transition-colors duration-200 border-b-2 border-[#0080bc] hover:border-[#0076ad] focus:outline-none focus:ring-2 focus:ring-[#1cb0f6] focus:ring-offset-2"
           >
             Add Option
           </button>
-        </div>
-
-        <div className="flex justify-end gap-4">
+        </div>        <div className="flex justify-end gap-4 pt-4">
           <Link
             to="/app/lessons"
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="px-6 py-3 border-2 border-slate-200 rounded-xl text-slate-700 font-bold hover:bg-slate-50 transition-colors duration-200"
           >
             Cancel
           </Link>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-6 py-3 bg-[#58cc02] text-white font-bold rounded-xl hover:bg-[#47b102] transition-colors duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502] focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isSaving}
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
