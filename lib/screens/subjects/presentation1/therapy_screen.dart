@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import '../../../constants/constants.dart';
+import '../../../services/tts_service.dart';
 
 class TherapyScreen extends StatefulWidget {
   static const routeName = '/therapy';
@@ -20,7 +20,7 @@ class TherapyScreen extends StatefulWidget {
 }
 
 class _TherapyScreenState extends State<TherapyScreen> {
-  final FlutterTts flutterTts = FlutterTts();
+  final TTSService _ttsService = TTSService();
   List<Map<String, dynamic>> images = [];
   bool isLoading = true;
   String? error;
@@ -29,14 +29,27 @@ class _TherapyScreenState extends State<TherapyScreen> {
   void initState() {
     super.initState();
     fetchImages();
-    initTts();
+    _ttsService.init();
   }
 
-  Future<void> initTts() async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setPitch(1.0);
+  Future<void> speakText(String text) async {
+    await _ttsService.speak(text);
+  }
+
+  void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
+    final imageUrl = image['imageUrl'] ?? '';
+    final description = image['description'] ?? 'No description available';
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (context) => FullScreenImageView(
+              imageUrl: imageUrl,
+              description: description,
+              onSpeak: speakText,
+            ),
+      ),
+    );
   }
 
   Future<void> fetchImages() async {
@@ -73,26 +86,6 @@ class _TherapyScreenState extends State<TherapyScreen> {
         });
       }
     }
-  }
-
-  Future<void> speakText(String text) async {
-    await flutterTts.speak(text);
-  }
-
-  void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
-    final imageUrl = image['imageUrl'] ?? '';
-    final description = image['description'] ?? 'No description available';
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder:
-            (context) => FullScreenImageView(
-              imageUrl: imageUrl,
-              description: description,
-              onSpeak: speakText,
-            ),
-      ),
-    );
   }
 
   @override
@@ -203,7 +196,7 @@ class _TherapyScreenState extends State<TherapyScreen> {
 
   @override
   void dispose() {
-    flutterTts.stop();
+    _ttsService.stop();
     super.dispose();
   }
 }

@@ -2,9 +2,9 @@ import 'package:book8/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
+import '../../../services/tts_service.dart';
 
 class PlacesScreen extends StatefulWidget {
   static const routeName = '/places';
@@ -17,7 +17,7 @@ class PlacesScreen extends StatefulWidget {
 }
 
 class _PlacesScreenState extends State<PlacesScreen> {
-  final FlutterTts flutterTts = FlutterTts();
+  final TTSService _ttsService = TTSService();
   List<Map<String, dynamic>> images = [];
   bool isLoading = true;
   String? error;
@@ -26,14 +26,36 @@ class _PlacesScreenState extends State<PlacesScreen> {
   void initState() {
     super.initState();
     fetchImages();
-    initTts();
+    _ttsService.init();
   }
 
-  Future<void> initTts() async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setPitch(1.0);
+  Future<void> speakText(String text) async {
+    await _ttsService.speak(text);
+  }
+
+  void _showFullScreenImage(
+    BuildContext context,
+    String imageUrl,
+    String description,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (context) => FullScreenImageView(
+              imageUrl: imageUrl,
+              description: description,
+              onSpeak: speakText,
+            ),
+      ),
+    );
+  }
+
+  Future<void> _refreshImages() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+    await fetchImages();
   }
 
   Future<void> fetchImages() async {
@@ -70,35 +92,6 @@ class _PlacesScreenState extends State<PlacesScreen> {
         });
       }
     }
-  }
-
-  Future<void> speakText(String text) async {
-    await flutterTts.speak(text);
-  }
-
-  void _showFullScreenImage(
-    BuildContext context,
-    String imageUrl,
-    String description,
-  ) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder:
-            (context) => FullScreenImageView(
-              imageUrl: imageUrl,
-              description: description,
-              onSpeak: speakText,
-            ),
-      ),
-    );
-  }
-
-  Future<void> _refreshImages() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
-    await fetchImages();
   }
 
   @override
@@ -187,7 +180,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
 
   @override
   void dispose() {
-    flutterTts.stop();
+    _ttsService.stop();
     super.dispose();
   }
 }

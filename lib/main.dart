@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/profile': (context) => ProfileScreen(),
-        '/true-false-quiz': (context) => FruitQuizScreen(),
+        '/true_false_quiz': (context) => true_false_quiz(),
         '/image-quiz': (context) => const ImageQuizScreen(),
       },
       debugShowCheckedModeBanner: false,

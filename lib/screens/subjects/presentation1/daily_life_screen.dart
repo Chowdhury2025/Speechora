@@ -2,9 +2,9 @@ import 'package:book8/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
+import '../../../services/tts_service.dart';
 
 class DailyLifeScreen extends StatefulWidget {
   final Color backgroundColor;
@@ -19,7 +19,7 @@ class DailyLifeScreen extends StatefulWidget {
 }
 
 class _DailyLifeScreenState extends State<DailyLifeScreen> {
-  final FlutterTts flutterTts = FlutterTts();
+  final TTSService _ttsService = TTSService();
   List<Map<String, dynamic>> images = [];
   bool isLoading = true;
   String? error;
@@ -28,14 +28,7 @@ class _DailyLifeScreenState extends State<DailyLifeScreen> {
   void initState() {
     super.initState();
     fetchImages();
-    initTts();
-  }
-
-  Future<void> initTts() async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setPitch(1.0);
+    _ttsService.init();
   }
 
   Future<void> fetchImages() async {
@@ -66,7 +59,7 @@ class _DailyLifeScreenState extends State<DailyLifeScreen> {
   }
 
   Future<void> speakText(String text) async {
-    await flutterTts.speak(text);
+    await _ttsService.speak(text);
   }
 
   void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
@@ -341,7 +334,7 @@ class _DailyLifeScreenState extends State<DailyLifeScreen> {
 
   @override
   void dispose() {
-    flutterTts.stop();
+    _ttsService.stop();
     super.dispose();
   }
 }

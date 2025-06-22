@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math';
 import 'settings_screen.dart';
 import 'subjects/presentation1/daily_life_screen.dart';
@@ -133,7 +134,7 @@ class MyHomePage extends StatelessWidget {
       color: Colors.blue.shade300,
     ),
     SubjectCard(
-      title: 'True/False Quiz',
+      title: 'Yes or No quiz',
       icon: Icons.quiz,
       color: Colors.orange.shade400,
     ),
@@ -206,8 +207,8 @@ class MyHomePage extends StatelessWidget {
       case 'Question Starters':
         screen = QuestionStartersScreen(backgroundColor: color);
         break;
-      case 'True/False Quiz':
-        screen = FruitQuizScreen();
+      case 'Yes or No quiz':
+        screen = true_false_quiz();
         break;
       case 'Others':
         screen = OthersScreen(backgroundColor: color);
@@ -221,6 +222,12 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force portrait orientation
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -236,51 +243,133 @@ class MyHomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Container(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (var i = 0; i < subjects.length; i += 4)
-                Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var j = i; j < min(i + 4, subjects.length); j++)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: SizedBox(
-                              width: 280,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Fixed parameters for portrait layout
+          final double screenWidth = constraints.maxWidth;
+          final double screenHeight = constraints.maxHeight;
+          final double padding = 16.0;
+          final double spacing = 12.0;
+
+          // Fixed 2x3 grid for portrait mode
+          final int crossAxisCount = 2;
+          final int mainAxisCount = 3;
+
+          // Calculate available space
+          final double availableWidth = screenWidth - (padding * 2);
+          final double availableHeight =
+              screenHeight -
+              (padding * 2) -
+              80; // Account for page indicator and swipe text
+          final double totalHorizontalSpacing = spacing * (crossAxisCount - 1);
+          final double totalVerticalSpacing = spacing * (mainAxisCount - 1);
+
+          final double cardWidthByWidth =
+              (availableWidth - totalHorizontalSpacing) / crossAxisCount;
+          final double cardHeightByHeight =
+              (availableHeight - totalVerticalSpacing) / mainAxisCount;
+
+          // Use the smaller dimension to ensure squares fit properly
+          final double cardSize = min(cardWidthByWidth, cardHeightByHeight);
+
+          // Calculate cards per page
+          final int cardsPerPage = crossAxisCount * mainAxisCount;
+
+          // Split subjects into pages
+          List<List<SubjectCard>> pages = [];
+          for (int i = 0; i < subjects.length; i += cardsPerPage) {
+            pages.add(
+              subjects.sublist(i, min(i + cardsPerPage, subjects.length)),
+            );
+          }
+
+          return PageView.builder(
+            itemCount: pages.length,
+            itemBuilder: (context, pageIndex) {
+              return Container(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  children: [
+                    // Page indicator
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        pages.length,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
+                                index == pageIndex
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey.shade300,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Grid of cards
+                    Expanded(
+                      child: Center(
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                childAspectRatio: 1.0, // Perfect squares
+                                crossAxisSpacing: spacing,
+                                mainAxisSpacing: spacing,
+                              ),
+                          itemCount: pages[pageIndex].length,
+                          itemBuilder: (context, index) {
+                            final subject = pages[pageIndex][index];
+                            return Container(
+                              width: cardSize,
+                              height: cardSize,
                               child: Card(
-                                color: subjects[j].color,
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                color: subject.color,
                                 child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
                                   onTap:
                                       () => _navigateToScreen(
                                         context,
-                                        subjects[j].title,
-                                        subjects[j].color,
+                                        subject.title,
+                                        subject.color,
                                       ),
                                   child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Row(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          subjects[j].icon,
-                                          size: 32,
+                                          subject.icon,
+                                          size:
+                                              cardSize *
+                                              0.25, // Responsive icon size
                                           color: Colors.white,
                                         ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
+                                        const SizedBox(height: 8),
+                                        Flexible(
                                           child: Text(
-                                            subjects[j].title,
-                                            style: const TextStyle(
-                                              fontSize: 18,
+                                            subject.title,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize:
+                                                  cardSize *
+                                                  0.08, // Responsive text size
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],
@@ -288,16 +377,37 @@ class MyHomePage extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                    ],
-                  ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Swipe instruction
+                    Text(
+                      'Swipe left/right for more',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-            ],
-          ),
-        ),
+              );
+            },
+          );
+        },
       ),
     );
+  }
+
+  void dispose() {
+    // Reset orientation settings when widget is disposed
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 }

@@ -2,9 +2,9 @@ import 'package:book8/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
+import '../../../services/tts_service.dart';
 
 class HomeScreen extends StatefulWidget {
   static const routeName = '/home';
@@ -17,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final FlutterTts flutterTts = FlutterTts();
+  final TTSService _ttsService = TTSService();
   List<Map<String, dynamic>> images = [];
   bool isLoading = true;
   String? error;
@@ -26,14 +26,28 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     fetchImages();
-    initTts();
+    _ttsService.init();
   }
 
-  Future<void> initTts() async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setPitch(1.0);
+  Future<void> speakText(String text) async {
+    await _ttsService.speak(text);
+  }
+
+  void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (context) => FullScreenImageView(image: image, onSpeak: speakText),
+      ),
+    );
+  }
+
+  Future<void> _refreshImages() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+    await fetchImages();
   }
 
   Future<void> fetchImages() async {
@@ -61,27 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
-  }
-
-  Future<void> speakText(String text) async {
-    await flutterTts.speak(text);
-  }
-
-  void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder:
-            (context) => FullScreenImageView(image: image, onSpeak: speakText),
-      ),
-    );
-  }
-
-  Future<void> _refreshImages() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
-    await fetchImages();
   }
 
   @override
@@ -157,12 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    flutterTts.stop();
-    super.dispose();
   }
 }
 

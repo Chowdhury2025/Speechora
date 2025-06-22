@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:math';
+import '../../../services/tts_service.dart';
 
 void main() {
   runApp(FruitQuizApp());
@@ -10,12 +10,9 @@ class FruitQuizApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Fruit Quiz',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Roboto',
-      ),
-      home: FruitQuizScreen(),
+      title: 'YES OR NO Quiz',
+      theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Roboto'),
+      home: true_false_quiz(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -29,16 +26,16 @@ class Fruit {
   Fruit({required this.name, required this.emoji, required this.color});
 }
 
-class FruitQuizScreen extends StatefulWidget {
+class true_false_quiz extends StatefulWidget {
   @override
-  _FruitQuizScreenState createState() => _FruitQuizScreenState();
+  _true_false_quizState createState() => _true_false_quizState();
 }
 
-class _FruitQuizScreenState extends State<FruitQuizScreen>
+class _true_false_quizState extends State<true_false_quiz>
     with TickerProviderStateMixin {
-  FlutterTts flutterTts = FlutterTts();
+  final TTSService _ttsService = TTSService();
   Random random = Random();
-  
+
   // List of 15+ fruits
   List<Fruit> fruits = [
     Fruit(name: "banana", emoji: "🍌", color: Colors.yellow),
@@ -70,11 +67,10 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
   AnimationController? _fadeController;
   Animation<double>? _bounceAnimation;
   Animation<double>? _fadeAnimation;
-
   @override
   void initState() {
     super.initState();
-    _initializeTts();
+    _ttsService.init();
     _setupAnimations();
     _generateNewQuestion();
   }
@@ -88,57 +84,43 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
       duration: Duration(milliseconds: 500),
       vsync: this,
     );
-    
-    _bounceAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _bounceController!,
-      curve: Curves.elasticOut,
-    ));
-    
+
+    _bounceAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _bounceController!, curve: Curves.elasticOut),
+    );
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController!,
-      curve: Curves.easeIn,
-    ));
-  }
-
-  void _initializeTts() async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(0.8);
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setPitch(1.0);
+    ).animate(CurvedAnimation(parent: _fadeController!, curve: Curves.easeIn));
   }
 
   void _generateNewQuestion() {
     setState(() {
       // Pick a random fruit to display
       currentFruit = fruits[random.nextInt(fruits.length)];
-      
+
       // Pick a random fruit name to ask about (could be same or different)
       askedFruitName = fruits[random.nextInt(fruits.length)].name;
-      
+
       showOopsMessage = false;
       isCorrect = false;
       totalQuestions++;
     });
-    
+
     _fadeController!.forward();
-    
+
     // Speak the question
     _speakQuestion();
   }
 
   void _speakQuestion() async {
-    await flutterTts.speak("Is this a $askedFruitName?");
+    await _ttsService.speak("Is this a $askedFruitName?");
   }
 
   void _handleAnswer(bool userAnswer) {
     bool correctAnswer = currentFruit!.name == askedFruitName;
-    
+
     if (userAnswer == correctAnswer) {
       // Correct answer
       setState(() {
@@ -148,7 +130,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
       _bounceController!.forward().then((_) {
         _bounceController!.reverse();
       });
-      
+
       // Wait a bit then generate new question
       Future.delayed(Duration(milliseconds: 1500), () {
         _fadeController!.reset();
@@ -159,7 +141,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
       setState(() {
         showOopsMessage = true;
       });
-      
+
       // Hide the message after 2 seconds and allow user to try again
       Future.delayed(Duration(milliseconds: 2000), () {
         setState(() {
@@ -173,7 +155,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
   void dispose() {
     _bounceController?.dispose();
     _fadeController?.dispose();
-    flutterTts.stop();
+    _ttsService.stop();
     super.dispose();
   }
 
@@ -202,9 +184,9 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                   ),
                 ),
               ),
-              
+
               SizedBox(height: 30),
-              
+
               // Question text
               FadeTransition(
                 opacity: _fadeAnimation!,
@@ -218,9 +200,9 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                   textAlign: TextAlign.center,
                 ),
               ),
-              
+
               SizedBox(height: 40),
-              
+
               // Fruit display container
               Expanded(
                 flex: 3,
@@ -255,7 +237,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                           },
                         ),
                       ),
-                      
+
                       // Oops message overlay
                       if (showOopsMessage)
                         Positioned(
@@ -263,9 +245,14 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                           right: 20,
                           bottom: 30,
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 15,
+                            ),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFCCB3), // Light orange background
+                              color: Color(
+                                0xFFFFCCB3,
+                              ), // Light orange background
                               borderRadius: BorderRadius.circular(25),
                               boxShadow: [
                                 BoxShadow(
@@ -278,10 +265,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  '😔',
-                                  style: TextStyle(fontSize: 24),
-                                ),
+                                Text('😔', style: TextStyle(fontSize: 24)),
                                 SizedBox(width: 10),
                                 Text(
                                   'Oops,\ntry again!',
@@ -299,9 +283,9 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                   ),
                 ),
               ),
-              
+
               SizedBox(height: 40),
-              
+
               // Answer buttons
               Row(
                 children: [
@@ -326,11 +310,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                         ),
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.check,
-                              size: 30,
-                              color: Colors.green,
-                            ),
+                            Icon(Icons.check, size: 30, color: Colors.green),
                             SizedBox(height: 5),
                             Text(
                               'Yes',
@@ -345,7 +325,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                       ),
                     ),
                   ),
-                  
+
                   // No button
                   Expanded(
                     child: GestureDetector(
@@ -367,11 +347,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                         ),
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.close,
-                              size: 30,
-                              color: Colors.red,
-                            ),
+                            Icon(Icons.close, size: 30, color: Colors.red),
                             SizedBox(height: 5),
                             Text(
                               'No',
@@ -388,9 +364,9 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                   ),
                 ],
               ),
-              
+
               SizedBox(height: 30),
-              
+
               // Answer feedback
               if (isCorrect && !showOopsMessage)
                 Container(
@@ -400,7 +376,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                     borderRadius: BorderRadius.circular(25),
                   ),
                   child: Text(
-                    currentFruit!.name == askedFruitName 
+                    currentFruit!.name == askedFruitName
                         ? 'Yes, this is ${currentFruit!.name.startsWith('a') ? 'an' : 'a'} ${currentFruit!.name}.'
                         : 'No, this is ${currentFruit!.name.startsWith('a') ? 'an' : 'a'} ${currentFruit!.name}.',
                     style: TextStyle(
@@ -411,9 +387,9 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                     textAlign: TextAlign.center,
                   ),
                 ),
-              
+
               SizedBox(height: 20),
-              
+
               // Replay button
               GestureDetector(
                 onTap: _speakQuestion,
@@ -427,10 +403,7 @@ class _FruitQuizScreenState extends State<FruitQuizScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.volume_up,
-                        color: Color(0xFF2D5A87),
-                      ),
+                      Icon(Icons.volume_up, color: Color(0xFF2D5A87)),
                       SizedBox(width: 8),
                       Text(
                         'Replay Question',
