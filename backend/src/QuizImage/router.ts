@@ -1,5 +1,5 @@
 import express from 'express';
-import { createQuizImage, getQuizImages, updateQuizImage, deleteQuizImage } from './controller';
+import { createQuizImage, getQuizImages, getQuizImageById, updateQuizImage, deleteQuizImage } from './controller';
 
 
 const router = express.Router();
@@ -11,5 +11,6 @@ router.delete('/:id', deleteQuizImage);
 
 // Public routes
 router.get('/', getQuizImages);
+router.get('/:id', getQuizImageById);
 
 export default router;

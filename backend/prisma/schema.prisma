@@ -124,13 +124,12 @@ model QuizImage {
   category    String   // Category like animals, fruits, vehicles, etc.
   ageGroup    String   // Age group this image is appropriate for
   isActive    Boolean  @default(true)
-  quizType    String   // 'true_false' or 'image_quiz' or both 
+  quizTypes   String[]  // Array of quiz types: ['true_false', 'image_quiz']
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
     userId      Int?
   uploader    User?    @relation("QuizImageUploader", fields: [userId], references: [id])
-
-  @@index([category, quizType])
+  @@index([category])
   @@index([ageGroup])
 }
 
@@ -165,7 +164,7 @@ model Lesson {
   description String?
   subject     String  //{wants_and_needs_expression ,action_words_and_verbs, what_questions, where_questions, who_questions, when_questions, why_questions}
   ageGroup    String
-  statement   String  // JSON object with structure: { type: "text" | "image_url" | "video_url", content: string }
+  statement   String  // JSON object with structure: { type: "text" | "image_url" | "YOUTUBE-video_url", content: string }
   options     Json    // Array of objects with structure: [{ type: "text" | "image_url" | "video_url", content: string }]
   userId      Int
   

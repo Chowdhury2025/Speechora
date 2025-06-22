@@ -13,12 +13,11 @@ const QuizImageUpload = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [imageData, setImageData] = useState({
+  const [success, setSuccess] = useState(false);  const [imageData, setImageData] = useState({
     name: '',
     category: '',
     ageGroup: '',
-    quizType: 'image_quiz',
+    quizTypes: ['image_quiz'],
     imageUrl: ''
   });
 
@@ -228,6 +227,52 @@ const QuizImageUpload = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
+              Quiz Types *
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="quizTypes"
+                  value="image_quiz"
+                  checked={imageData.quizTypes.includes('image_quiz')}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setImageData(prev => ({
+                      ...prev,
+                      quizTypes: e.target.checked 
+                        ? [...prev.quizTypes, value]
+                        : prev.quizTypes.filter(type => type !== value)
+                    }));
+                  }}
+                  className="w-4 h-4 text-[#58cc02] border-[#e5f5d5] rounded focus:ring-[#58cc02]"
+                />
+                <span className="ml-2 text-[#3c9202]">Image Quiz</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="quizTypes"
+                  value="true_false"
+                  checked={imageData.quizTypes.includes('true_false')}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setImageData(prev => ({
+                      ...prev,
+                      quizTypes: e.target.checked 
+                        ? [...prev.quizTypes, value]
+                        : prev.quizTypes.filter(type => type !== value)
+                    }));
+                  }}
+                  className="w-4 h-4 text-[#58cc02] border-[#e5f5d5] rounded focus:ring-[#58cc02]"
+                />
+                <span className="ml-2 text-[#3c9202]">True/False Quiz</span>
+              </label>
+            </div>
           </div>
 
           <button

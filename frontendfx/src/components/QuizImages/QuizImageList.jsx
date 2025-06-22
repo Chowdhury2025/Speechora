@@ -45,17 +45,21 @@ const QuizImageList = () => {
   useEffect(() => {
     fetchImages();
   }, [filters]);
-
   const fetchImages = async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
       if (filters.category) queryParams.append('category', filters.category);
       if (filters.ageGroup) queryParams.append('ageGroup', filters.ageGroup);
-      if (filters.quizType) queryParams.append('quizType', filters.quizType);
+      if (filters.quizType) queryParams.append('quizTypes', filters.quizType);
 
       const response = await axios.get(`${API_URL}/api/quiz-images?${queryParams}`);
-      setImages(response.data);
+      // Ensure backward compatibility by converting old quizType to quizTypes array
+      const processedImages = response.data.map(image => ({
+        ...image,
+        quizTypes: image.quizTypes || [image.quizType || 'image_quiz']
+      }));
+      setImages(processedImages);
     } catch (err) {
       setError(err.message || 'Failed to fetch images');
     } finally {
@@ -189,10 +193,11 @@ const QuizImageList = () => {
                   </span>
                   <span className="bg-[#e5f5d5] text-[#3c9202] px-3 py-1 rounded-full text-sm">
                     {image.ageGroup}
-                  </span>
-                  <span className="bg-[#e5f5d5] text-[#3c9202] px-3 py-1 rounded-full text-sm">
-                    {image.quizType === 'image_quiz' ? 'Image Quiz' : 'True/False'}
-                  </span>
+                  </span>                  {image.quizTypes && image.quizTypes.map((type) => (
+                    <span key={type} className="bg-[#e5f5d5] text-[#3c9202] px-3 py-1 rounded-full text-sm">
+                      {type === 'image_quiz' ? 'Image Quiz' : 'True/False'}
+                    </span>
+                  ))}
                 </div>
 
                 {user && (
