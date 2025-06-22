@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:book8/services/quiz_image_service.dart';
+import 'package:book8/services/tts_service.dart';
 import 'dart:math';
-import '../../../services/tts_service.dart';
-
-void main() {
-  runApp(FruitQuizApp());
-}
+import 'package:cached_network_image/cached_network_image.dart';
 
 class FruitQuizApp extends StatelessWidget {
   @override
@@ -12,7 +10,7 @@ class FruitQuizApp extends StatelessWidget {
     return MaterialApp(
       title: 'YES OR NO Quiz',
       theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Roboto'),
-      home: true_false_quiz(),
+      home: TrueOrFalse(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -20,48 +18,44 @@ class FruitQuizApp extends StatelessWidget {
 
 class Fruit {
   final String name;
-  final String emoji;
+  final String imageUrl;
   final Color color;
 
-  Fruit({required this.name, required this.emoji, required this.color});
+  const Fruit({
+    required this.name,
+    required this.imageUrl,
+    required this.color,
+  });
+
+  factory Fruit.fromQuizImage(dynamic quizImage) {
+    return Fruit(
+      name: quizImage.name ?? '',
+      imageUrl: quizImage.imageUrl ?? '',
+      color: Colors.blue, // Default color since we're using actual images now
+    );
+  }
 }
 
-class true_false_quiz extends StatefulWidget {
+class TrueOrFalse extends StatefulWidget {
+  const TrueOrFalse({Key? key}) : super(key: key);
+
   @override
-  _true_false_quizState createState() => _true_false_quizState();
+  _TrueOrFalseState createState() => _TrueOrFalseState();
 }
 
-class _true_false_quizState extends State<true_false_quiz>
+class _TrueOrFalseState extends State<TrueOrFalse>
     with TickerProviderStateMixin {
+  final QuizImageService _quizImageService = QuizImageService();
   final TTSService _ttsService = TTSService();
-  Random random = Random();
-
-  // List of 15+ fruits
-  List<Fruit> fruits = [
-    Fruit(name: "banana", emoji: "🍌", color: Colors.yellow),
-    Fruit(name: "orange", emoji: "🍊", color: Colors.orange),
-    Fruit(name: "apple", emoji: "🍎", color: Colors.red),
-    Fruit(name: "grape", emoji: "🍇", color: Colors.purple),
-    Fruit(name: "strawberry", emoji: "🍓", color: Colors.red),
-    Fruit(name: "watermelon", emoji: "🍉", color: Colors.green),
-    Fruit(name: "pineapple", emoji: "🍍", color: Colors.yellow),
-    Fruit(name: "peach", emoji: "🍑", color: Colors.pink),
-    Fruit(name: "lemon", emoji: "🍋", color: Colors.yellow),
-    Fruit(name: "kiwi", emoji: "🥝", color: Colors.brown),
-    Fruit(name: "mango", emoji: "🥭", color: Colors.orange),
-    Fruit(name: "coconut", emoji: "🥥", color: Colors.brown),
-    Fruit(name: "avocado", emoji: "🥑", color: Colors.green),
-    Fruit(name: "cherry", emoji: "🍒", color: Colors.red),
-    Fruit(name: "blueberry", emoji: "🫐", color: Colors.blue),
-    Fruit(name: "pear", emoji: "🍐", color: Colors.green),
-  ];
-
+  List<Fruit> fruits = [];
   Fruit? currentFruit;
   String? askedFruitName;
   bool showOopsMessage = false;
   bool isCorrect = false;
   int score = 0;
   int totalQuestions = 0;
+  bool isLoading = true;
+  String errorMessage = '';
 
   AnimationController? _bounceController;
   AnimationController? _fadeController;
@@ -70,9 +64,9 @@ class _true_false_quizState extends State<true_false_quiz>
   @override
   void initState() {
     super.initState();
-    _ttsService.init();
     _setupAnimations();
-    _generateNewQuestion();
+    _initializeTTS();
+    _loadQuizImages();
   }
 
   void _setupAnimations() {
@@ -95,332 +89,241 @@ class _true_false_quizState extends State<true_false_quiz>
     ).animate(CurvedAnimation(parent: _fadeController!, curve: Curves.easeIn));
   }
 
-  void _generateNewQuestion() {
-    setState(() {
-      // Pick a random fruit to display
-      currentFruit = fruits[random.nextInt(fruits.length)];
-
-      // Pick a random fruit name to ask about (could be same or different)
-      askedFruitName = fruits[random.nextInt(fruits.length)].name;
-
-      showOopsMessage = false;
-      isCorrect = false;
-      totalQuestions++;
-    });
-
-    _fadeController!.forward();
-
-    // Speak the question
-    _speakQuestion();
+  Future<void> _initializeTTS() async {
+    await _ttsService.init();
   }
 
-  void _speakQuestion() async {
-    await _ttsService.speak("Is this a $askedFruitName?");
-  }
-
-  void _handleAnswer(bool userAnswer) {
-    bool correctAnswer = currentFruit!.name == askedFruitName;
-
-    if (userAnswer == correctAnswer) {
-      // Correct answer
+  Future<void> _loadQuizImages() async {
+    try {
       setState(() {
-        isCorrect = true;
-        score++;
-      });
-      _bounceController!.forward().then((_) {
-        _bounceController!.reverse();
+        isLoading = true;
+        errorMessage = '';
       });
 
-      // Wait a bit then generate new question
-      Future.delayed(Duration(milliseconds: 1500), () {
-        _fadeController!.reset();
+      final images = await _quizImageService.getQuizImages();
+      final trueFalseImages =
+          images
+              .where(
+                (img) =>
+                    (img.quizTypes as List<dynamic>).contains('true_false'),
+              )
+              .toList();
+
+      setState(() {
+        fruits =
+            trueFalseImages.map((img) => Fruit.fromQuizImage(img)).toList();
+        isLoading = false;
+      });
+
+      if (fruits.isNotEmpty) {
         _generateNewQuestion();
-      });
-    } else {
-      // Wrong answer - show "Oops, try again!"
+      }
+    } catch (e) {
       setState(() {
-        showOopsMessage = true;
-      });
-
-      // Hide the message after 2 seconds and allow user to try again
-      Future.delayed(Duration(milliseconds: 2000), () {
-        setState(() {
-          showOopsMessage = false;
-        });
+        isLoading = false;
+        errorMessage = 'Failed to load quiz images: $e';
       });
     }
   }
 
+  void _generateNewQuestion() {
+    if (fruits.isEmpty) return;
+
+    setState(() {
+      currentFruit = fruits[Random().nextInt(fruits.length)];
+      // 50-50 chance to ask about the correct name or a different name
+      if (Random().nextBool()) {
+        askedFruitName = currentFruit!.name;
+      } else {
+        // Get a different random fruit name
+        var otherFruits =
+            fruits.where((f) => f.name != currentFruit!.name).toList();
+        if (otherFruits.isNotEmpty) {
+          askedFruitName =
+              otherFruits[Random().nextInt(otherFruits.length)].name;
+        } else {
+          askedFruitName =
+              currentFruit!.name; // Fallback if there's only one fruit
+        }
+      }
+      showOopsMessage = false;
+    });
+
+    // Speak the question after state is updated
+    _speakQuestion();
+  }
+
+  void _handleAnswer(bool userAnswer) async {
+    bool isCorrectName = currentFruit!.name == askedFruitName;
+    if (userAnswer == isCorrectName) {
+      await _speakFeedback(true);
+      setState(() {
+        score++;
+      });
+      await _speakScore();
+      _generateNewQuestion();
+    } else {
+      await _speakFeedback(false);
+      setState(() {
+        showOopsMessage = true;
+      });
+    }
+  }
+
+  Future<void> _speakQuestion() async {
+    if (currentFruit != null && askedFruitName != null) {
+      await _ttsService.speak('Is this a $askedFruitName?');
+    }
+  }
+
+  Future<void> _speakFeedback(bool isCorrect) async {
+    if (isCorrect) {
+      await _ttsService.speak('Yes! This is ${currentFruit!.name}');
+    } else {
+      await _ttsService.speak(
+        'Wrong! Try again! This is not ${askedFruitName}',
+      );
+    }
+  }
+
+  Future<void> _speakScore() async {
+    await _ttsService.speak('Your score is $score');
+  }
+
   @override
   void dispose() {
+    _ttsService.stop();
     _bounceController?.dispose();
     _fadeController?.dispose();
-    _ttsService.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFB8E6E6), // Light blue-green background
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              // Score display
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Score: $score / $totalQuestions',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D5A87),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 30),
-
-              // Question text
-              FadeTransition(
-                opacity: _fadeAnimation!,
-                child: Text(
-                  'Is this a $askedFruitName?',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D5A87),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-
-              SizedBox(height: 40),
-
-              // Fruit display container
-              Expanded(
-                flex: 3,
-                child: Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFFFF8DC), // Light cream color
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
+      appBar: AppBar(
+        title: const Text('True or False'),
+        backgroundColor: Colors.blue,
+        actions: [
+          if (currentFruit != null)
+            IconButton(
+              icon: const Icon(Icons.volume_up),
+              onPressed: _speakQuestion,
+              tooltip: 'Repeat question',
+            ),
+        ],
+      ),
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : errorMessage.isNotEmpty
+              ? Center(child: Text(errorMessage))
+              : fruits.isEmpty
+              ? const Center(child: Text('No quiz images available'))
+              : Container(
+                decoration: const BoxDecoration(color: Colors.white),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Main fruit display
-                      Center(
-                        child: AnimatedBuilder(
-                          animation: _bounceAnimation!,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: _bounceAnimation!.value,
-                              child: Text(
-                                currentFruit?.emoji ?? '',
-                                style: TextStyle(fontSize: 120),
-                              ),
-                            );
-                          },
+                      Text(
+                        'Score: $score',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-
-                      // Oops message overlay
-                      if (showOopsMessage)
-                        Positioned(
-                          left: 20,
-                          right: 20,
-                          bottom: 30,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 15,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Color(
-                                0xFFFFCCB3,
-                              ), // Light orange background
-                              borderRadius: BorderRadius.circular(25),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('😔', style: TextStyle(fontSize: 24)),
-                                SizedBox(width: 10),
-                                Text(
-                                  'Oops,\ntry again!',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2D5A87),
+                      const SizedBox(height: 20),
+                      if (currentFruit != null) ...[
+                        Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: CachedNetworkImage(
+                              imageUrl: currentFruit!.imageUrl,
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => const Center(
+                                    child: CircularProgressIndicator(),
                                   ),
-                                ),
-                              ],
+                              errorWidget:
+                                  (context, url, error) =>
+                                      const Icon(Icons.error),
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 40),
-
-              // Answer buttons
-              Row(
-                children: [
-                  // Yes button
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _handleAnswer(true),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        margin: EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFF0FFF0), // Light green
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.green, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 5,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
+                        const SizedBox(height: 20),
+                        GestureDetector(
+                          onTap:
+                              _speakQuestion, // Allow tapping the question to repeat it
+                          child: Text(
+                            'Is this a $askedFruitName?',
+                            style: const TextStyle(fontSize: 24),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                        child: Column(
+                        const SizedBox(height: 20),
+                        if (showOopsMessage)
+                          Text(
+                            'Wrong! Try again! This is not $askedFruitName',
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Icon(Icons.check, size: 30, color: Colors.green),
-                            SizedBox(height: 5),
-                            Text(
-                              'Yes',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2D5A87),
+                            ElevatedButton(
+                              onPressed: () => _handleAnswer(true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 50,
+                                  vertical: 20,
+                                ),
+                              ),
+                              child: const Text(
+                                'TRUE',
+                                style: TextStyle(fontSize: 20),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => _handleAnswer(false),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 50,
+                                  vertical: 20,
+                                ),
+                              ),
+                              child: const Text(
+                                'FALSE',
+                                style: TextStyle(fontSize: 20),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  ),
-
-                  // No button
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _handleAnswer(false),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        margin: EdgeInsets.only(left: 10),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFFFE4E1), // Light red
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.red, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 5,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(Icons.close, size: 30, color: Colors.red),
-                            SizedBox(height: 5),
-                            Text(
-                              'No',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2D5A87),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 30),
-
-              // Answer feedback
-              if (isCorrect && !showOopsMessage)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFF0FFF0),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Text(
-                    currentFruit!.name == askedFruitName
-                        ? 'Yes, this is ${currentFruit!.name.startsWith('a') ? 'an' : 'a'} ${currentFruit!.name}.'
-                        : 'No, this is ${currentFruit!.name.startsWith('a') ? 'an' : 'a'} ${currentFruit!.name}.',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2D5A87),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-              SizedBox(height: 20),
-
-              // Replay button
-              GestureDetector(
-                onTap: _speakQuestion,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Color(0xFF2D5A87), width: 2),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.volume_up, color: Color(0xFF2D5A87)),
-                      SizedBox(width: 8),
-                      Text(
-                        'Replay Question',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D5A87),
-                        ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

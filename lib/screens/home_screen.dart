@@ -208,7 +208,7 @@ class MyHomePage extends StatelessWidget {
         screen = QuestionStartersScreen(backgroundColor: color);
         break;
       case 'Yes or No quiz':
-        screen = true_false_quiz();
+        screen = TrueOrFalse();
         break;
       case 'Others':
         screen = OthersScreen(backgroundColor: color);

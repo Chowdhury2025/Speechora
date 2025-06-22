@@ -8,7 +8,7 @@ class QuizImage {
   final String name;
   final String category;
   final String ageGroup;
-  final String quizType;
+  final List<String> quizTypes;
 
   QuizImage({
     required this.id,
@@ -16,7 +16,7 @@ class QuizImage {
     required this.name,
     required this.category,
     required this.ageGroup,
-    required this.quizType,
+    required this.quizTypes,
   });
 
   factory QuizImage.fromJson(Map<String, dynamic> json) {
@@ -26,7 +26,7 @@ class QuizImage {
       name: json['name'],
       category: json['category'],
       ageGroup: json['ageGroup'],
-      quizType: json['quizType'],
+      quizTypes: List<String>.from(json['quizTypes'] ?? []),
     );
   }
 }

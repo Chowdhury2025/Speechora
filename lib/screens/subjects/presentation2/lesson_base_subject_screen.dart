@@ -25,8 +25,9 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
   String? error;
   List<Lesson> lessons = [];
   late final TTSService _tts;
-  Lesson? selectedLesson;
+  int currentLessonIndex = 0;
   LessonContent? selectedOption;
+  bool isShowingLessonList = true; // Show lesson list initially
 
   @override
   void initState() {
@@ -182,6 +183,40 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
     );
   }
 
+  void _selectLesson(int index) async {
+    if (index >= 0 && index < lessons.length) {
+      setState(() {
+        currentLessonIndex = index;
+        selectedOption = null;
+        isShowingLessonList = false;
+      });
+      // Play the new lesson's statement
+      await _tts.speak(lessons[index].statement.text);
+    }
+  }
+
+  Widget _buildLessonList() {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.5,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleLessonList() {
+    setState(() {
+      isShowingLessonList = !isShowingLessonList;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -212,10 +247,8 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
         ),
         body: const Center(child: Text('No lessons available')),
       );
-    }
-
-    // Take the first lesson as active
-    final activeLesson = lessons[0];
+    } // Get the currently selected lesson
+    final activeLesson = lessons[currentLessonIndex];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -283,6 +316,15 @@ class _LessonBaseSubjectScreenState extends State<LessonBaseSubjectScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _toggleLessonList,
+        backgroundColor: widget.backgroundColor,
+        child: Icon(
+          isShowingLessonList ? Icons.close : Icons.list,
+          color: Colors.white,
+        ),
+      ),
+      bottomSheet: isShowingLessonList ? _buildLessonList() : null,
     );
   }
 
