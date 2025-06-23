@@ -5,6 +5,16 @@ import 'screens/settings_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/subjects/presentation4/trueorfalse.dart';
 import 'screens/image_quiz_screen.dart';
+import 'screens/splash_screen.dart';
+
+// Duolingo-like colors
+class AppColors {
+  static const Color primary = Color(0xFF58CC02);        // Main green color
+  static const Color secondary = Color(0xFF1CB0F6);      // Blue color
+  static const Color background = Color(0xFFFFFDFD);     // Off-white background
+  static const Color text = Color(0xFF4B4B4B);          // Dark gray text
+  static const Color error = Color(0xFFFF4B4B);         // Red for errors
+}
 
 void main() {
   runApp(const MyApp());
@@ -19,18 +29,67 @@ class MyApp extends StatelessWidget {
       title: 'Kids Learning App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          background: AppColors.background,
+          error: AppColors.error,
+          onBackground: AppColors.text,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
-        fontFamily: 'Roboto',
+        fontFamily: 'Nunito',
         textTheme: const TextTheme(
-          headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          displayLarge: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w900,
+            color: AppColors.text,
+          ),
+          displayMedium: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: AppColors.text,
+          ),
+          displaySmall: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: AppColors.text,
+          ),
+          headlineMedium: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.text,
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            textStyle: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         ),
       ),
-      initialRoute: '/',
+      home: const SplashScreen(),
       routes: {
-        '/': (context) => MyHomePage(title: 'books8'),
+        '/home': (context) => MyHomePage(title: 'books8'),
         '/login': (context) => const LoginScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/profile': (context) => ProfileScreen(),

@@ -2,9 +2,10 @@ import 'package:book8/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
+import '../../../services/tts_service.dart';
+import '../../presentation_screen_wrapper.dart';
 
 class FamilyAndFriendsScreen extends StatefulWidget {
   static const routeName = '/family-and-friends';
@@ -17,7 +18,6 @@ class FamilyAndFriendsScreen extends StatefulWidget {
 }
 
 class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
-  final FlutterTts flutterTts = FlutterTts();
   List<Map<String, dynamic>> images = [];
   bool isLoading = true;
   String? error;
@@ -26,14 +26,6 @@ class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
   void initState() {
     super.initState();
     fetchImages();
-    initTts();
-  }
-
-  Future<void> initTts() async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.setVolume(1.0);
-    await flutterTts.setPitch(1.0);
   }
 
   Future<void> fetchImages() async {
@@ -64,7 +56,7 @@ class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
   }
 
   Future<void> speakText(String text) async {
-    await flutterTts.speak(text);
+    await TTSService().speak(text);
   }
 
   void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
@@ -86,74 +78,66 @@ class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Family & Friends',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        backgroundColor: widget.backgroundColor,
-        elevation: 0,
-      ),
-      body: Container(
+    return PresentationScreenWrapper(
+      title: 'Family & Friends',
+      backgroundColor: widget.backgroundColor,
+      ttsText: 'Family and Friends',
+      child: Container(
         color: widget.backgroundColor.withOpacity(0.1),
         child: RefreshIndicator(
           onRefresh: _refreshImages,
-          child:
-              isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : error != null
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : error != null
                   ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Error: $error'),
-                        ElevatedButton(
-                          onPressed: _refreshImages,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  )
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Error: $error'),
+                          ElevatedButton(
+                            onPressed: _refreshImages,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
                   : images.isEmpty
-                  ? const Center(child: Text('No images available'))
-                  : GridView.builder(
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.0,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                    itemCount: images.length,
-                    itemBuilder: (context, index) {
-                      final image = images[index];
-                      return GestureDetector(
-                        onTap: () => _showFullScreenImage(context, image),
-                        child: Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      ? const Center(child: Text('No images available'))
+                      : GridView.builder(
+                          padding: const EdgeInsets.all(8),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 1.0,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: CachedNetworkImage(
-                              imageUrl: image['url'],
-                              fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => const Center(
-                                    child: CircularProgressIndicator(),
+                          itemCount: images.length,
+                          itemBuilder: (context, index) {
+                            final image = images[index];
+                            return GestureDetector(
+                              onTap: () => _showFullScreenImage(context, image),
+                              child: Card(
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: CachedNetworkImage(
+                                    imageUrl: image['url'],
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
                                   ),
-                              errorWidget:
-                                  (context, url, error) =>
-                                      const Icon(Icons.error),
-                            ),
-                          ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
         ),
       ),
     );
@@ -161,7 +145,7 @@ class _FamilyAndFriendsScreenState extends State<FamilyAndFriendsScreen> {
 
   @override
   void dispose() {
-    flutterTts.stop();
+    TTSService().stop();
     super.dispose();
   }
 }

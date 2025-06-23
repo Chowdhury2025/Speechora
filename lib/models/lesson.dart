@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'lesson_content.dart';
 
 class Lesson {
@@ -6,11 +7,8 @@ class Lesson {
   final String? description;
   final String subject;
   final String ageGroup;
-  final LessonContent statement;
-  final List<LessonContent> options;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final int userId;
+  final Map<String, dynamic> statement;
+  final List<Map<String, dynamic>> options;
 
   Lesson({
     required this.id,
@@ -20,26 +18,27 @@ class Lesson {
     required this.ageGroup,
     required this.statement,
     required this.options,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.userId,
   });
 
   factory Lesson.fromJson(Map<String, dynamic> json) {
+    // Parse statement
+    final statementData = json['statement'];
+    final Map<String, dynamic> statementJson =
+        statementData is String ? jsonDecode(statementData) : statementData;
+
+    // Parse options
+    final optionsData = json['options'];
+    final List<dynamic> optionsList =
+        optionsData is String ? jsonDecode(optionsData) : optionsData;
+
     return Lesson(
       id: json['id'] as int,
       title: json['title'] as String,
       description: json['description'] as String?,
       subject: json['subject'] as String,
       ageGroup: json['ageGroup'] as String,
-      statement: LessonContent.fromJson(json['statement']),
-      options:
-          (json['options'] as List)
-              .map((option) => LessonContent.fromJson(option))
-              .toList(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      userId: json['userId'] as int,
+      statement: statementJson,
+      options: optionsList.cast<Map<String, dynamic>>(),
     );
   }
 }

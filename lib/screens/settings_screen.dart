@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import '../models/user_model.dart';
-import '../services/tts_service.dart';
-
-// import 'package:book8/constants/constants.dart';
+import './about_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<SettingsScreen> createState() => SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  UserModel? currentUser;
-  String selectedAgeGroup = '6-8 years';
-  String selectedVoiceAccent = 'American';
-  final TTSService _ttsService = TTSService();
+class SettingsScreenState extends State<SettingsScreen> {
+  static String selectedLanguage = 'English';
+  static String selectedVoiceAccent = 'American';
 
-  final List<String> ageGroups = [
-    '3-5 years',
-    '6-8 years',
-    '9-11 years',
-    '12-14 years',
-    '15-17 years',
-    '18+ years',
+  final List<String> languages = [
+    'English',
+    'Spanish',
+    'French',
+    'German',
+    'Hindi',
+    'Chinese',
+    'Arabic',
+    'Bengali',
+    'Portuguese',
+    'Russian',
   ];
 
   final List<String> voiceAccents = [
@@ -43,227 +40,161 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthentication();
+    _loadPreferences();
   }
 
-  Future<void> _checkAuthentication() async {
+  Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    final userData = prefs.getString('userData');
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
-    if (!isLoggedIn || userData == null) {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-      return;
-    }
-
-    if (mounted) {
+    final lang = prefs.getString('selectedLanguage');
+    final accent = prefs.getString('selectedVoiceAccent');
+    if (lang != null) {
       setState(() {
-        currentUser = UserModel.fromJson(jsonDecode(userData));
+        selectedLanguage = lang;
+        SettingsScreenState.selectedLanguage = lang;
       });
-    } // Load saved preferences
-    final savedAgeGroup = prefs.getString('ageGroup');
-    final savedVoiceAccent = prefs.getString('voiceAccent');
-
-    if (mounted) {
+    }
+    if (accent != null) {
       setState(() {
-        if (savedAgeGroup != null) {
-          selectedAgeGroup = savedAgeGroup;
-        }
-        if (savedVoiceAccent != null) {
-          selectedVoiceAccent = savedVoiceAccent;
-        }
+        selectedVoiceAccent = accent;
+        SettingsScreenState.selectedVoiceAccent = accent;
       });
     }
   }
 
-  Future<void> _handleLogout() async {
+  Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
-  }
-
-  Future<void> _launchPremiumSignup() async {
-    final Uri url = Uri.parse('https://book8.vercel.app/register');
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch premium signup page')),
-        );
-      }
-    }
+    await prefs.setString('selectedLanguage', selectedLanguage);
+    await prefs.setString('selectedVoiceAccent', selectedVoiceAccent);
   }
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = Theme.of(context).primaryColor;
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Theme.of(context).primaryColor,
+        title: const Text('Settings', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // User Profile Section
-          if (currentUser != null) ...[
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.person)),
-                    title: Text(currentUser!.username ?? 'User'),
-                    subtitle: Text(currentUser!.email),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/profile');
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout),
-                    title: const Text('Logout'),
-                    onTap: _handleLogout,
-                  ),
-                ],
+          // Go Premium Banner
+          Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              color: Colors.amber[700],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              'GO PREMIUM NOW',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                letterSpacing: 1.2,
               ),
             ),
-            const SizedBox(height: 16),
-          ],
-
-          // Age Group Selection
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.child_care),
-              title: const Text('Age Group'),
-              subtitle: Text(selectedAgeGroup),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder:
-                      (context) => AlertDialog(
-                        title: const Text('Select Age Group'),
-                        content: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children:
-                                ageGroups.map((age) {
-                                  return ListTile(
-                                    title: Text(age),
-                                    selected: age == selectedAgeGroup,
-                                    onTap: () async {
-                                      setState(() {
-                                        selectedAgeGroup = age;
-                                      });
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      await prefs.setString('ageGroup', age);
-                                      Navigator.pop(context);
-                                    },
-                                  );
-                                }).toList(),
-                          ),
-                        ),
-                      ),
-                );
-              },
-            ),
           ),
-
-          const SizedBox(height: 16),
-
-          // Voice Accent Selection
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.record_voice_over),
-              title: const Text('Voice Accent'),
-              subtitle: Text(selectedVoiceAccent),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder:
-                      (context) => AlertDialog(
-                        title: const Text('Select Voice Accent'),
-                        content: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children:
-                                voiceAccents.map((accent) {
-                                  return ListTile(
-                                    title: Text(accent),
-                                    selected: accent == selectedVoiceAccent,
-                                    onTap: () async {
-                                      setState(() {
-                                        selectedVoiceAccent = accent;
-                                      });
-                                      // Save the accent preference
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      await prefs.setString(
-                                        'voiceAccent',
-                                        accent,
-                                      );
-                                      // Update TTS service with new accent
-                                      await _ttsService.setAccent(accent);
-                                      // Speak a test phrase with the new accent
-                                      await _ttsService.speak(
-                                        'This is a test of the $accent accent',
-                                      );
-                                      Navigator.pop(context);
-                                    },
-                                  );
-                                }).toList(),
-                          ),
-                        ),
-                      ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Premium Account
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.star, color: Colors.amber),
-                  title: const Text('Premium Account'),
-                  subtitle: const Text('Get access to all educational content'),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Unlock all educational videos and features with a premium account.',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-                ButtonBar(
-                  children: [
-                    TextButton(
-                      onPressed: _launchPremiumSignup,
-                      child: const Text('SIGN UP FOR PREMIUM'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // App Version
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('App Version'),
-              subtitle: const Text('1.0.0'),
-            ),
-          ),
+          _settingsCard(Icons.language, 'Language', trailing: selectedLanguage, onTap: _showLanguageDialog),
+          _settingsCard(Icons.record_voice_over, 'Voice Accent', trailing: selectedVoiceAccent, onTap: _showAccentDialog),
+          _settingsCard(Icons.category, 'Categories'),
+          _settingsCard(Icons.favorite, 'Favorites'),
+          _settingsCard(Icons.folder, 'Change File Locations'),
+          _settingsCard(Icons.view_column, 'Display', trailing: 'two columns'),
+          _settingsCard(Icons.notifications, 'Notifications'),
+          _settingsCard(Icons.delete, 'Clear Downloads'),
+          _settingsCard(Icons.cleaning_services, 'Clear Cache'),
+          const SizedBox(height: 10),
+          _settingsCard(Icons.copyright, 'Copyright Information'),
+          _settingsCard(Icons.privacy_tip, 'Privacy Policy'),
+          _settingsCard(Icons.star_rate, 'Rate Us'),
+          _settingsCard(Icons.apps, 'More Apps'),
+          _settingsCard(Icons.info, 'About'),
         ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Language'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: languages.map((lang) => ListTile(
+              title: Text(lang),
+              selected: lang == selectedLanguage,
+              onTap: () {
+                setState(() {
+                  selectedLanguage = lang;
+                  SettingsScreenState.selectedLanguage = lang;
+                });
+                _savePreferences();
+                Navigator.pop(context);
+              },
+            )).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAccentDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Voice Accent'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: voiceAccents.map((accent) => ListTile(
+              title: Text(accent),
+              selected: accent == selectedVoiceAccent,
+              onTap: () {
+                setState(() {
+                  selectedVoiceAccent = accent;
+                  SettingsScreenState.selectedVoiceAccent = accent;
+                });
+                _savePreferences();
+                Navigator.pop(context);
+              },
+            )).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _settingsCard(IconData icon, String title, {String? trailing, VoidCallback? onTap}) {
+    final backgroundColor = Theme.of(context).primaryColor;
+    final cardColor = backgroundColor.withOpacity(0.7);
+    final textColor = Colors.white;
+    return Card(
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 7),
+      child: ListTile(
+        leading: Icon(icon, color: textColor),
+        title: Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
+        trailing: trailing != null ? Text(trailing, style: TextStyle(color: textColor.withOpacity(0.7))) : const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 18),
+        onTap: onTap ?? () {
+          if (title == 'About') {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const AboutScreen()),
+            );
+          }
+        },
       ),
     );
   }
