@@ -4,10 +4,13 @@ import { useRecoilState, useRecoilValue, useSetRecoilState, useResetRecoilState 
 import { sidebarState, userStates, authState, companyNameState } from '../../../atoms';
 import appLogo from '../../../assets/appIcon-removebg-preview.png';
 import { 
-  Home, 
+  LayoutDashboard, 
   Users, 
+  PlaySquare,
+  GraduationCap,
   BookOpen, 
-  Image, 
+  ImagePlus,
+  Image,
   Crown, 
   BarChart2, 
   Settings, 
@@ -27,13 +30,16 @@ const Sidebar = () => {
   const location = useLocation();
   const user = useRecoilValue(userStates);
   const role = user?.role?.toUpperCase();  const allNavItems = [
-    { path: 'dashboard', label: 'Dashboard', icon: Home, roles: ['SUPERUSER', 'ADMIN', 'PARENT_GUARDIAN'] },
+    // Admin Dashboard
+    { path: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPERUSER', 'ADMIN',] },
+    // Parent Dashboard
+    { path: 'parent-dashboard', label: 'Parent Dashboard', icon: LayoutDashboard, roles: ['PARENT_GUARDIAN','SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
     { path: 'users', label: 'Users', icon: Users, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
-    { path: 'videos', label: 'Videos', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
-    { path: 'tests', label: 'Tests', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN', 'TEACHER'] },
+    { path: 'videos', label: 'Videos', icon: PlaySquare, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
+    { path: 'tests', label: 'Tests', icon: GraduationCap, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN', 'TEACHER'] },
     { path: 'lessons', label: 'Lessons', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN', 'TEACHER'] },
     { path: 'images', label: 'Images', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
-    { path: 'quiz-images', label: 'Quiz Images', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
+    { path: 'quiz-images', label: 'Quiz Images', icon: ImagePlus, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'premium', label: 'Premium', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
     { path: 'analytics', label: 'Analytics', icon: BarChart2, roles: ['SUPERUSER', 'ADMIN'] },
     { path: 'settings', label: 'Settings', icon: Settings, roles: ['SUPERUSER', 'ADMIN'] }
@@ -79,11 +85,9 @@ const Sidebar = () => {
         >
           {isOpen ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
         </button>
-      </div>
-
-      {/* Navigation Items */}
-      <nav className="flex flex-col h-full py-6 px-3">
-        <div className="flex-1 space-y-3">
+      </div>      {/* Navigation Items */}
+      <nav className="flex flex-col h-[calc(100vh-8rem)] py-6 px-3">
+        <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar max-h-[calc(100vh-12rem)]">
           {navItems.map((item) => {
             const Icon = item.icon;
             const fullPath = `/app/${item.path}`;
@@ -100,11 +104,11 @@ const Sidebar = () => {
                   ${isActive 
                     ? 'bg-[#58cc02] text-white border-b-2 border-[#3c9202]' 
                     : 'text-duo-gray-600 hover:bg-[#e5f6ff] hover:text-[#1cb0f6]'}
-                  ${!isOpen ? 'justify-center h-12' : 'h-10'}
+                  ${!isOpen ? 'justify-center w-12 h-12' : 'h-10'}
                   focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2
                 `}
               >
-                <div className="relative group flex items-center">
+                <div className={`relative group flex items-center ${!isOpen ? 'justify-center' : ''}`}>
                   <Icon 
                     size={24} 
                     className={`
@@ -133,7 +137,7 @@ const Sidebar = () => {
         </div>
 
         {/* Logout Button */}
-        <div className="mt-auto pt-4 border-t border-slate-200">
+        <div className="sticky bottom-0 pt-4 mt-auto border-t border-slate-200 bg-white">
           <button
             onClick={handleLogout}
             className={`
@@ -159,7 +163,7 @@ const Sidebar = () => {
               </span>
               {!isOpen && (
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                  Logout
+                  Logonbhjut
                 </div>
               )}
             </div>

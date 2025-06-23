@@ -54,10 +54,23 @@ const TestsPage = () => {
     // TODO: Implement question editing
     console.log('Editing question:', question);
   };
-
   const handleStartActualTest = (testId) => {
     // TODO: Implement actual test taking
     console.log('Starting actual test:', testId);
+  };
+
+  const handleDeleteTest = async (testId) => {
+    if (window.confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
+      try {
+        setLoading(true);
+        await api.delete(`/api/tests/tests/${testId}`);
+        fetchTests(); // Refresh the list after deletion
+      } catch (error) {
+        setError(error.response?.data?.error || 'Failed to delete test. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   if (loading) {
@@ -118,18 +131,25 @@ const TestsPage = () => {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-primary font-medium">{test.subject}</span>
                 <span className="text-slate-500">{test.ageGroup}</span>
-              </div>
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <div className="flex justify-between">
+              </div>              <div className="mt-4 pt-4 border-t border-slate-200">
+                <div className="flex justify-between items-center">
                   <span className="text-slate-600">
                     {test.questions?.length || 0} Questions
                   </span>
-                  <button
-                    onClick={() => handleStartTest(test.id)}
-                    className="text-secondary hover:text-secondary-hover font-bold"
-                  >
-                    Start Test
-                  </button>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handleDeleteTest(test.id)}
+                      className="text-[#ff4b4b] hover:text-[#e03232] font-bold transition-colors"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => handleStartTest(test.id)}
+                      className="text-secondary hover:text-secondary-hover font-bold"
+                    >
+                      Start Test
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

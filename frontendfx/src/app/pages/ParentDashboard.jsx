@@ -1,0 +1,318 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useRecoilValue } from 'recoil';
+import { userStates } from '../../atoms';
+import api from '../../utils/api';
+import { 
+  BookOpen, 
+  GraduationCap, 
+  Trophy, 
+  Clock, 
+  Calendar,
+  TrendingUp,
+  Star,
+  DollarSign,
+  Receipt,
+  CreditCard
+} from 'lucide-react';
+
+const ParentDashboard = () => {
+  const navigate = useNavigate();
+  const user = useRecoilValue(userStates);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);  const [dashboardData, setDashboardData] = useState({
+    recentTests: [],
+    completedLessons: 0,
+    upcomingTests: [],
+    childProgress: [],
+    achievements: [],
+    schoolFees: {
+      currentTerm: {},
+      paymentHistory: []
+    }
+  });
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/parent/dashboard');
+      const data = response.data;
+      
+      setDashboardData({
+        recentTests: data.recentTests || [],
+        completedLessons: data.completedLessons?.recentLessons?.length || 0,
+        totalCompletedLessons: data.stats.totalCompletedLessons || 0,
+        childProgress: data.childProgress || [],        achievements: data.achievements || [],
+        stats: data.stats || {},
+        schoolFees: data.schoolFees || { currentTerm: {}, paymentHistory: [] }
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const StatCard = ({ icon: Icon, title, value, color }) => (
+    <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5] hover:border-[#58cc02] transition-all duration-200 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-bold text-[#3c9202]">{title}</p>
+          <p className="text-2xl font-bold mt-2 text-[#58cc02]">{value}</p>
+        </div>
+        <div className={`p-3 rounded-xl ${color}`}>
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#58cc02]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-4">
+        <div className="text-red-600 mb-4">{error}</div>
+        <button
+          onClick={fetchDashboardData}
+          className="bg-[#58cc02] hover:bg-[#47b102] text-white font-bold py-2 px-4 rounded-xl
+            transition-colors duration-200 border-b-2 border-[#3c9202]
+            focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      {/* Welcome Section */}
+      <div className="bg-[#e5f5d5] rounded-2xl p-6 mb-8">
+        <h1 className="text-2xl font-bold text-[#3c9202] mb-2">
+          Welcome back, {user?.firstName || user?.username}!
+        </h1>
+        <p className="text-[#3c9202]">
+          Track your child's learning progress and achievements here.
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">        <StatCard
+          icon={BookOpen}
+          title="Completed Lessons"
+          value={dashboardData.totalCompletedLessons}
+          color="bg-[#58cc02]"
+        />
+        <StatCard
+          icon={GraduationCap}
+          title="Test Score Average"
+          value="85%"
+          color="bg-[#1cb0f6]"
+        />
+        <StatCard
+          icon={Trophy}
+          title="Achievements"
+          value={dashboardData.achievements.length}
+          color="bg-[#ffc800]"
+        />
+        <StatCard
+          icon={Clock}
+          title="Learning Hours"
+          value="12.5"
+          color="bg-[#ff4b4b]"
+        />
+      </div>
+
+      {/* Recent Activity & Progress */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Tests */}
+        <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5]">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-[#3c9202]">Recent Tests</h2>
+            <button 
+              onClick={() => navigate('/app/tests')}
+              className="text-[#58cc02] hover:text-[#47b102] font-bold"
+            >
+              View All
+            </button>
+          </div>
+          <div className="space-y-4">
+            {dashboardData.recentTests.map((test) => (
+              <div key={test.id} className="flex items-center justify-between p-4 bg-[#f7ffec] rounded-xl">
+                <div>
+                  <h3 className="font-bold text-[#3c9202]">{test.title}</h3>
+                  <p className="text-sm text-[#58cc02]">{test.subject}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-[#3c9202]">{test.score}%</p>
+                  <p className="text-sm text-[#58cc02]">{new Date(test.date).toLocaleDateString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress Chart */}
+        <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5]">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-[#3c9202]">Learning Progress</h2>
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="w-5 h-5 text-[#58cc02]" />
+              <span className="text-[#58cc02] font-bold">+15% this month</span>
+            </div>
+          </div>
+          {/* Add your chart component here */}
+          <div className="h-64 flex items-center justify-center bg-[#f7ffec] rounded-xl">
+            <p className="text-[#3c9202]">Progress Chart Coming Soon</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Child Progress Section */}
+      <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
+        <h2 className="text-xl font-bold text-[#3c9202] mb-4">Subject Progress</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {dashboardData.childProgress.map((subject, index) => (
+            <div key={index} className="bg-[#f7ffec] rounded-xl p-4">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-bold text-[#3c9202]">{subject.subject}</h3>
+                <span className="text-[#58cc02] font-bold">{subject.progress}%</span>
+              </div>
+              <div className="w-full bg-[#e5f5d5] rounded-full h-2.5">
+                <div 
+                  className="bg-[#58cc02] h-2.5 rounded-full" 
+                  style={{ width: `${subject.progress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-[#58cc02] mt-2">
+                {subject.completedLessons} of {subject.totalLessons} lessons completed
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* School Fees Section */}
+      <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-[#3c9202]">School Fees</h2>          <button 
+            onClick={() => navigate('/app/premium')}
+            className="flex items-center gap-2 bg-[#58cc02] hover:bg-[#47b102] text-white px-4 py-2 rounded-xl
+              transition-colors duration-200 border-b-2 border-[#3c9202]"
+          >
+            <CreditCard className="w-4 h-4" />
+            <span>Make Payment</span>
+          </button>
+        </div>
+
+        {/* Current Term Fees */}
+        <div className="bg-[#f7ffec] rounded-xl p-6 mb-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="font-bold text-[#3c9202]">
+                {dashboardData.schoolFees.currentTerm.term} - {dashboardData.schoolFees.currentTerm.year}
+              </h3>
+              <p className="text-sm text-[#58cc02]">
+                Due by {new Date(dashboardData.schoolFees.currentTerm.dueDate).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-[#3c9202]">
+                ₦{dashboardData.schoolFees.currentTerm.amount?.toLocaleString()}
+              </p>
+              <span className={`inline-block px-3 py-1 rounded-full text-xs ${
+                dashboardData.schoolFees.currentTerm.status === 'paid' 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-red-100 text-red-800'
+              }`}>                {dashboardData.schoolFees.currentTerm.status === 'paid' ? 'Paid' : 'Unpaid'}
+              </span>
+              {dashboardData.schoolFees.currentTerm.status !== 'paid' && (
+                <button 
+                  onClick={() => navigate('/app/premium')}
+                  className="mt-2 flex items-center gap-2 bg-[#58cc02] hover:bg-[#47b102] text-white px-3 py-1.5 rounded-xl
+                    transition-colors duration-200 border-b-2 border-[#3c9202] text-sm"
+                >
+                  <CreditCard className="w-3 h-3" />
+                  <span>Pay Now</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Fee Breakdown */}
+          <div className="space-y-2">
+            {dashboardData.schoolFees.currentTerm.breakdown?.map((item, index) => (
+              <div key={index} className="flex justify-between items-center">
+                <span className="text-sm text-[#3c9202]">{item.item}</span>
+                <span className="text-sm font-bold text-[#58cc02]">
+                  ₦{item.amount.toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Payment History */}
+        <div>
+          <h3 className="font-bold text-[#3c9202] mb-4 flex items-center gap-2">
+            <Receipt className="w-5 h-5" />
+            <span>Payment History</span>
+          </h3>
+          <div className="space-y-3">
+            {dashboardData.schoolFees.paymentHistory.map((payment) => (
+              <div key={payment.id} 
+                className="flex justify-between items-center p-4 bg-[#f7ffec] rounded-xl"
+              >
+                <div>
+                  <h4 className="font-bold text-[#3c9202]">
+                    {payment.term} - {payment.year}
+                  </h4>
+                  <p className="text-sm text-[#58cc02]">
+                    Receipt: {payment.receiptNo}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-[#3c9202]">
+                    ₦{payment.amount.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-[#58cc02]">
+                    {new Date(payment.datePaid).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Achievements Section */}
+      <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
+        <h2 className="text-xl font-bold text-[#3c9202] mb-4">Recent Achievements</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {dashboardData.achievements.map((achievement) => (
+            <div key={achievement.id} className="flex items-center p-4 bg-[#f7ffec] rounded-xl">
+              <Star className="w-8 h-8 text-[#ffc800] mr-3" />
+              <div>
+                <h3 className="font-bold text-[#3c9202]">{achievement.title}</h3>
+                <p className="text-sm text-[#58cc02]">{achievement.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ParentDashboard;

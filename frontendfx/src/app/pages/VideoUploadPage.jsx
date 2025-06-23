@@ -6,17 +6,18 @@ import { API_URL } from '../../config';
 import { TabNavigator } from '../components/common/TabNavigator';
 import { getThumbnailUrl } from '../utils/youtube';
 const VideoUploadPage = () => {
-  const userState = useRecoilValue(userStates);
-  const [videoData, setVideoData] = useState({
+  const userState = useRecoilValue(userStates);  const [videoData, setVideoData] = useState({
     title: '',
     linkyoutube_link: '',
     thumbnail: '',
     category: '',
+    customCategory: '',
     position: 0,
     description: '',
     ageGroup: '',
     name: userState.username || ''
   });
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);  const validateYoutubeUrl = (url) => {
@@ -178,26 +179,56 @@ const VideoUploadPage = () => {
             <p className="mt-1 text-sm text-[#3c9202]">
               Position determines the order in which videos appear (0 = first)
             </p>
-          </div>
-
-          <div>
+          </div>          <div>
             <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Category *
             </label>
-            <select
-              name="category"
-              value={videoData.category}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
-              required
-            >
-              <option value="">Select a category</option>
-              {categoryOptions.map(category => (
-                <option key={category.slug} value={category.slug}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-3">
+              <select
+                name="category"
+                value={videoData.category}
+                onChange={(e) => {
+                  if (e.target.value === 'custom') {
+                    setIsCustomCategory(true);
+                    setVideoData(prev => ({ ...prev, category: '' }));
+                  } else {
+                    setIsCustomCategory(false);
+                    setVideoData(prev => ({ ...prev, category: e.target.value, customCategory: '' }));
+                  }
+                }}
+                className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
+                required={!isCustomCategory}
+              >
+                <option value="">Select a category</option>
+                {categoryOptions.map(category => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
+                  </option>
+                ))}
+                <option value="custom">+ Add Custom Category</option>
+              </select>
+
+              {isCustomCategory && (
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    name="customCategory"
+                    value={videoData.customCategory}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setVideoData(prev => ({
+                        ...prev,
+                        customCategory: value,
+                        category: value.toLowerCase().replace(/\s+/g, '_')
+                      }));
+                    }}
+                    placeholder="Enter custom category"
+                    className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
+                    required={isCustomCategory}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

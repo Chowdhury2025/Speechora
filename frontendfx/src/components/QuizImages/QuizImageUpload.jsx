@@ -75,7 +75,7 @@ const QuizImageUpload = () => {
         name: '',
         category: '',
         ageGroup: '',
-        quizType: 'image_quiz',
+        quizTypes: ['image_quiz'],
         imageUrl: ''
       });
       setSelectedFile(null);

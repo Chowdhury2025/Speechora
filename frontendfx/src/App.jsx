@@ -7,6 +7,7 @@ import Sidebar from './app/components/common/Sidebar.jsx';
 
 // Dashboard Pages
 import DashboardPage from './app/pages/DashboardPage.jsx';
+import ParentDashboard from './app/pages/ParentDashboard.jsx';
 import UsersPage from './app/pages/UsersPage.jsx';
 import TestsPage from './app/pages/TestsPage.jsx';
 import ImagesPage from './app/pages/ImagesPage.jsx';
@@ -34,19 +35,28 @@ import CreateLessonPage from './app/pages/lessons/CreateLessonPage.jsx';
 import EditLessonPage from './app/pages/lessons/EditLessonPage.jsx';
 
 // Define which menu items are accessible to each role
-const ROLE_PERMISSIONS = {
-  SUPERUSER: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
-  ADMIN: ['Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
-  CONTENTMANAGER: ['Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
+const ROLE_PERMISSIONS = {  SUPERUSER: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
+  ADMIN: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+  CONTENTMANAGER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds'],
-  PARENT_GUARDIAN: ['Dashboard', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
-  TEACHER: ['Videos', 'Tests', 'Lessons', 'Quiz Images'],
+  PARENT_GUARDIAN: ['Parent Dashboard', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
+  TEACHER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Quiz Images'],
 };
 
 // Define all app routes (must match ROLE_PERMISSIONS names)
 const APP_ROUTES = [
-  // ddd
-  // Main routes
+  { name: 'Dashboard', path: 'dashboard', element: DashboardPage },
+  { name: 'Parent Dashboard', path: 'parent-dashboard', element: ParentDashboard },
+  { name: 'Users', path: 'users', element: UsersPage },
+  { name: 'Tests', path: 'tests', element: TestsPage },
+  { name: 'Lessons', path: 'lessons/*', element: LessonsListPage },
+  { name: 'Images', path: 'images', element: ImagesPage },
+  { name: 'Quiz Images', path: 'quiz-images', element: QuizImagesPage },
+  { name: 'Premium', path: 'premium', element: PremiumSalesPage },
+  { name: 'Analytics', path: 'analytics', element: AnalyticsPage },
+  { name: 'Settings', path: 'settings', element: SettingsPage },
+  { name: 'Videos', path: 'videos', element: VideoListPage },
+  { name: 'Videos-Upload', path: 'videos/upload', element: VideoUploadPage },
   { name: 'Dashboard', path: 'dashboard', element: DashboardPage },
   { name: 'Users',     path: 'users',     element: UsersPage },
   { name: 'Videos',    path: 'videos',    element: VideoListPage },  { name: 'Lessons',   path: 'lessons',   element: LessonsListPage },
