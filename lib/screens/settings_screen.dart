@@ -73,7 +73,10 @@ class SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Settings', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Settings',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: backgroundColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -101,8 +104,18 @@ class SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-          _settingsCard(Icons.language, 'Language', trailing: selectedLanguage, onTap: _showLanguageDialog),
-          _settingsCard(Icons.record_voice_over, 'Voice Accent', trailing: selectedVoiceAccent, onTap: _showAccentDialog),
+          _settingsCard(
+            Icons.language,
+            'Language',
+            trailing: selectedLanguage,
+            onTap: _showLanguageDialog,
+          ),
+          _settingsCard(
+            Icons.record_voice_over,
+            'Voice Accent',
+            trailing: selectedVoiceAccent,
+            onTap: _showAccentDialog,
+          ),
           _settingsCard(Icons.category, 'Categories'),
           _settingsCard(Icons.favorite, 'Favorites'),
           _settingsCard(Icons.folder, 'Change File Locations'),
@@ -124,58 +137,76 @@ class SettingsScreenState extends State<SettingsScreen> {
   void _showLanguageDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView(
-            shrinkWrap: true,
-            children: languages.map((lang) => ListTile(
-              title: Text(lang),
-              selected: lang == selectedLanguage,
-              onTap: () {
-                setState(() {
-                  selectedLanguage = lang;
-                  SettingsScreenState.selectedLanguage = lang;
-                });
-                _savePreferences();
-                Navigator.pop(context);
-              },
-            )).toList(),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Language'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children:
+                    languages
+                        .map(
+                          (lang) => ListTile(
+                            title: Text(lang),
+                            selected: lang == selectedLanguage,
+                            onTap: () {
+                              setState(() {
+                                selectedLanguage = lang;
+                                SettingsScreenState.selectedLanguage = lang;
+                              });
+                              _savePreferences();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        )
+                        .toList(),
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
   void _showAccentDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Voice Accent'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView(
-            shrinkWrap: true,
-            children: voiceAccents.map((accent) => ListTile(
-              title: Text(accent),
-              selected: accent == selectedVoiceAccent,
-              onTap: () {
-                setState(() {
-                  selectedVoiceAccent = accent;
-                  SettingsScreenState.selectedVoiceAccent = accent;
-                });
-                _savePreferences();
-                Navigator.pop(context);
-              },
-            )).toList(),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Voice Accent'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children:
+                    voiceAccents
+                        .map(
+                          (accent) => ListTile(
+                            title: Text(accent),
+                            selected: accent == selectedVoiceAccent,
+                            onTap: () {
+                              setState(() {
+                                selectedVoiceAccent = accent;
+                                SettingsScreenState.selectedVoiceAccent =
+                                    accent;
+                              });
+                              _savePreferences();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        )
+                        .toList(),
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
-  Widget _settingsCard(IconData icon, String title, {String? trailing, VoidCallback? onTap}) {
+  Widget _settingsCard(
+    IconData icon,
+    String title, {
+    String? trailing,
+    VoidCallback? onTap,
+  }) {
     final backgroundColor = Theme.of(context).primaryColor;
     final cardColor = backgroundColor.withOpacity(0.7);
     final textColor = Colors.white;
@@ -186,15 +217,30 @@ class SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.symmetric(vertical: 7),
       child: ListTile(
         leading: Icon(icon, color: textColor),
-        title: Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
-        trailing: trailing != null ? Text(trailing, style: TextStyle(color: textColor.withOpacity(0.7))) : const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 18),
-        onTap: onTap ?? () {
-          if (title == 'About') {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const AboutScreen()),
-            );
-          }
-        },
+        title: Text(
+          title,
+          style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
+        ),
+        trailing:
+            trailing != null
+                ? Text(
+                  trailing,
+                  style: TextStyle(color: textColor.withOpacity(0.7)),
+                )
+                : const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white54,
+                  size: 18,
+                ),
+        onTap:
+            onTap ??
+            () {
+              if (title == 'About') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const AboutScreen()),
+                );
+              }
+            },
       ),
     );
   }

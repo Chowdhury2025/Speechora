@@ -201,6 +201,7 @@ class _TrueOrFalseState extends State<TrueOrFalse>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFBEE9E8),
       appBar: AppBar(
         title: const Text('True or False'),
         backgroundColor: Colors.blue,
@@ -220,108 +221,177 @@ class _TrueOrFalseState extends State<TrueOrFalse>
               ? Center(child: Text(errorMessage))
               : fruits.isEmpty
               ? const Center(child: Text('No quiz images available'))
-              : Container(
-                decoration: const BoxDecoration(color: Colors.white),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Score: $score',
+              : SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Question
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+                      child: Text(
+                        'Is this a $askedFruitName?',
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 32,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF223A5E),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    // Fruit image with rounded background
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3C7),
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                      padding: const EdgeInsets.all(24),
+                      child: SizedBox(
+                        width: 140,
+                        height: 140,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child:
+                              currentFruit != null
+                                  ? CachedNetworkImage(
+                                    imageUrl: currentFruit!.imageUrl,
+                                    fit: BoxFit.contain,
+                                    placeholder:
+                                        (context, url) => const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                    errorWidget:
+                                        (context, url, error) =>
+                                            const Icon(Icons.error),
+                                  )
+                                  : const SizedBox.shrink(),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      if (currentFruit != null) ...[
-                        Container(
-                          width: 200,
-                          height: 200,
+                    ),
+                    // Oops/feedback message
+                    if (showOopsMessage)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.5),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: const Offset(0, 3),
+                            color: const Color(0xFFFFE0B2),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Text('😕', style: TextStyle(fontSize: 28)),
+                              SizedBox(width: 10),
+                              Text(
+                                'Oops, try again!',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF223A5E),
+                                ),
                               ),
                             ],
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: CachedNetworkImage(
-                              imageUrl: currentFruit!.imageUrl,
-                              fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                              errorWidget:
-                                  (context, url, error) =>
-                                      const Icon(Icons.error),
+                        ),
+                      ),
+                    // Yes/No buttons
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 8.0,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _handleAnswer(true),
+                              icon: const Icon(
+                                Icons.check,
+                                size: 36,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                'Yes',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF8ED081),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        GestureDetector(
-                          onTap:
-                              _speakQuestion, // Allow tapping the question to repeat it
-                          child: Text(
-                            'Is this a $askedFruitName?',
-                            style: const TextStyle(fontSize: 24),
-                            textAlign: TextAlign.center,
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _handleAnswer(false),
+                              icon: const Icon(
+                                Icons.close,
+                                size: 36,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                'No',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF8C8C),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                    // Bottom feedback/answer
+                    if (showOopsMessage)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 16.0,
+                          left: 24,
+                          right: 24,
                         ),
-                        const SizedBox(height: 20),
-                        if (showOopsMessage)
-                          Text(
-                            'Wrong! Try again! This is not $askedFruitName',
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3C7),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 12,
+                          ),
+                          child: Text(
+                            'No, this is ${currentFruit?.name ?? ''}',
                             style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 20,
+                              fontSize: 22,
+                              color: Color(0xFF223A5E),
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => _handleAnswer(true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 50,
-                                  vertical: 20,
-                                ),
-                              ),
-                              child: const Text(
-                                'TRUE',
-                                style: TextStyle(fontSize: 20),
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => _handleAnswer(false),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 50,
-                                  vertical: 20,
-                                ),
-                              ),
-                              child: const Text(
-                                'FALSE',
-                                style: TextStyle(fontSize: 20),
-                              ),
-                            ),
-                          ],
                         ),
-                      ],
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
     );

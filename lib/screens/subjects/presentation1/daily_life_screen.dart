@@ -368,7 +368,7 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFBEE9E8),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -376,141 +376,88 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: Colors.white),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.transparent,
-                builder:
-                    (context) => Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: const BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.image['title'] ?? 'Untitled',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (widget.image['description'] != null &&
-                              widget.image['description'].toString().isNotEmpty)
-                            Text(
-                              widget.image['description'],
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 16,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-              );
-            },
-          ),
-        ],
       ),
-      body: Stack(
-        children: [
-          PhotoView(
-            imageProvider: NetworkImage(widget.image['imageUrl']),
-            minScale: PhotoViewComputedScale.contained,
-            maxScale: PhotoViewComputedScale.covered * 3,
-            backgroundDecoration: const BoxDecoration(color: Colors.black),
-            loadingBuilder:
-                (context, event) => const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
+      body: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Title at the top
+            Padding(
+              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+              child: Text(
+                widget.image['title'] ?? 'Untitled',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF223A5E),
                 ),
-            errorBuilder:
-                (context, error, stackTrace) => const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.broken_image, color: Colors.white, size: 64),
-                      SizedBox(height: 16),
-                      Text(
-                        'Failed to load image',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black.withOpacity(0.8), Colors.transparent],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.image['title'] ?? 'Untitled',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (widget.image['description'] != null &&
-                      widget.image['description'].toString().isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        widget.image['description'],
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        FloatingActionButton(
-                          mini: true,
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          onPressed: () {
-                            final textToSpeak =
-                                '${widget.image['title'] ?? 'Image'}. ${widget.image['description'] ?? ''}';
-                            widget.onSpeak(textToSpeak);
-                          },
-                          child: const Icon(
-                            Icons.volume_up,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                textAlign: TextAlign.center,
               ),
             ),
-          ),
-        ],
+            // Image in the middle
+            Expanded(
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: Image.network(
+                    widget.image['imageUrl'],
+                    fit: BoxFit.contain,
+                    errorBuilder:
+                        (context, error, stackTrace) => const Icon(
+                          Icons.error,
+                          size: 80,
+                          color: Colors.grey,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+            // Description at the bottom in a rounded card
+            if (widget.image['description'] != null &&
+                widget.image['description'].toString().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 32.0,
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3C7),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 12,
+                  ),
+                  child: Text(
+                    widget.image['description'],
+                    style: const TextStyle(
+                      fontSize: 22,
+                      color: Color(0xFF223A5E),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            // Speaker button
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: FloatingActionButton(
+                backgroundColor: Colors.blue,
+                onPressed: () {
+                  final textToSpeak =
+                      '${widget.image['title'] ?? 'Image'}. ${widget.image['description'] ?? ''}';
+                  widget.onSpeak(textToSpeak);
+                },
+                child: const Icon(Icons.volume_up, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

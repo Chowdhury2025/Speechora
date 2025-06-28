@@ -118,7 +118,7 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
               ? 'Loading...'
               : correctImage != null
               ? 'Find the ${correctImage!.name}!'
-              : 'Find the Item!',
+              : 'Find the Item! ss',
         ),
         actions: [
           IconButton(
