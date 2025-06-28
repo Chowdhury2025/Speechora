@@ -40,7 +40,7 @@ class LessonBaseSubjectScreen extends StatelessWidget {
               final lesson = lessons[index];
               return ListTile(
                 title: Text(lesson.title),
-                subtitle: Text('Age: ${lesson.ageGroup}'),
+
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap:
                     () => Navigator.push(

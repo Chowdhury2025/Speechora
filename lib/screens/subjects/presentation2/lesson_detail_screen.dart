@@ -24,10 +24,22 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       case 'text':
         return Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            content['content'],
-            style: const TextStyle(fontSize: 18),
-            textAlign: TextAlign.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  content['content'],
+                  style: const TextStyle(fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.volume_up),
+                onPressed: () => _tts.speak(content['content'] ?? ''),
+                tooltip: 'Speak',
+              ),
+            ],
           ),
         );
       case 'image_url':
@@ -85,19 +97,25 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         context: context,
         builder:
             (context) => Dialog(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.network(option['content'], fit: BoxFit.contain),
-                  if (option['description'] != null)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(option['description']),
-                    ),
-                ],
+              child: _ImageOptionDialog(
+                imageUrl: option['content'],
+                description: option['description'],
+                tts: _tts,
               ),
             ),
       );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Play the statement text (if type is text) when the screen opens
+    final statement = widget.lesson.statement;
+    if (statement is Map<String, dynamic> && statement['type'] == 'text') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _tts.speak(statement['content'] ?? '');
+      });
     }
   }
 
@@ -162,5 +180,50 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   void dispose() {
     _tts.stop();
     super.dispose();
+  }
+}
+
+class _ImageOptionDialog extends StatefulWidget {
+  final String imageUrl;
+  final String? description;
+  final TTSService tts;
+  const _ImageOptionDialog({
+    required this.imageUrl,
+    this.description,
+    required this.tts,
+  });
+  @override
+  State<_ImageOptionDialog> createState() => _ImageOptionDialogState();
+}
+
+class _ImageOptionDialogState extends State<_ImageOptionDialog> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.description != null && widget.description!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.tts.speak(widget.description!);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Image.network(widget.imageUrl, fit: BoxFit.contain),
+        if (widget.description != null)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(widget.description!),
+          ),
+        IconButton(
+          icon: const Icon(Icons.volume_up),
+          onPressed: () => widget.tts.speak(widget.description ?? ''),
+          tooltip: 'Speak Description',
+        ),
+      ],
+    );
   }
 }

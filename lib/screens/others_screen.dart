@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'base_subject_screen.dart';
+import 'subjects/presentation6/base_subject_screen.dart';
 
 class OthersScreen extends StatelessWidget {
   static const routeName = '/others';

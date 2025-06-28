@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'settings_screen.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
-import 'subjects/presentation2/wants_and_needs_screen.dart';
-import 'subjects/presentation2/what_questions_screen.dart';
-import 'subjects/presentation2/where_questions_screen.dart';
-import 'subjects/presentation2/who_questions_screen.dart';
-import 'subjects/presentation2/when_questions_screen.dart';
+import 'subjects/presentation2/lesson_base_subject_screen.dart';
+import 'subjects/presentation3/image_quiz_screen.dart';
 import 'subjects/presentation6/how_questions_screen.dart';
-import 'subjects/presentation6/others_screen.dart';
+import 'others_screen.dart';
 import 'subjects/presentation4/trueorfalse.dart';
+import 'subjects/presentation6/video_categories_screen.dart';
 
 class SubjectCard {
   final String title;
@@ -135,11 +133,21 @@ class MyHomePage extends StatelessWidget {
           icon: Icons.more_horiz,
           color: const Color(0xFF1CB0F6), // Duolingo blue
         ),
+        SubjectCard(
+          title: 'How To',
+          icon: Icons.video_library,
+          color: const Color(0xFF1CB0F6), // Use a distinct color
+        ),
       ];
 
   void _navigateToScreen(BuildContext context, String title, Color color) {
-    if (title == 'Image Quiz Game') {
-      Navigator.pushNamed(context, '/image-quiz');
+    if (title == 'How To') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VideoCategoriesScreen(backgroundColor: color),
+        ),
+      );
       return;
     }
 
@@ -209,25 +217,59 @@ class MyHomePage extends StatelessWidget {
         );
         break;
       case 'I Want / Needs':
-        screen = WantsAndNeedsScreen(backgroundColor: color);
+        screen = LessonBaseSubjectScreen(
+          title: 'I Want / Needs',
+          backgroundColor: color,
+          subject: 'wants_and_needs_expression',
+        );
         break;
-
+      case 'Actions / Verbs':
+        screen = LessonBaseSubjectScreen(
+          title: 'Actions / Verbs',
+          backgroundColor: color,
+          subject: 'action_words_and_verbs',
+        );
+        break;
       case 'What Questions':
-        screen = WhatQuestionsScreen(backgroundColor: color);
+        screen = LessonBaseSubjectScreen(
+          title: 'What Questions',
+          backgroundColor: color,
+          subject: 'what_questions',
+        );
         break;
       case 'Where Questions':
-        screen = WhereQuestionsScreen(backgroundColor: color);
+        screen = LessonBaseSubjectScreen(
+          title: 'Where Questions',
+          backgroundColor: color,
+          subject: 'where_questions',
+        );
         break;
       case 'Who Questions':
-        screen = WhoQuestionsScreen(backgroundColor: color);
+        screen = LessonBaseSubjectScreen(
+          title: 'Who Questions',
+          backgroundColor: color,
+          subject: 'who_questions',
+        );
         break;
       case 'When Questions':
-        screen = WhenQuestionsScreen(backgroundColor: color);
+        screen = LessonBaseSubjectScreen(
+          title: 'When Questions',
+          backgroundColor: color,
+          subject: 'when_questions',
+        );
         break;
+      case 'Why Questions':
+        screen = LessonBaseSubjectScreen(
+          title: 'Why Questions',
+          backgroundColor: color,
+          subject: 'why_questions',
+        );
+        break;
+      case 'Image Quiz Game':
+        screen = const ImageQuizScreen(title: 'School');
       case 'How Questions':
         screen = HowQuestionsScreen(backgroundColor: color);
         break;
-
       case 'Yes or No quiz':
         screen = TrueOrFalse();
         break;

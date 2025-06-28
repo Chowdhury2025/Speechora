@@ -4,16 +4,16 @@ import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/subjects/presentation4/trueorfalse.dart';
-import 'screens/image_quiz_screen.dart';
+import 'screens/subjects/presentation5/image_quiz_screen.dart';
 import 'screens/splash_screen.dart';
 
 // Duolingo-like colors
 class AppColors {
-  static const Color primary = Color(0xFF58CC02);        // Main green color
-  static const Color secondary = Color(0xFF1CB0F6);      // Blue color
-  static const Color background = Color(0xFFFFFDFD);     // Off-white background
-  static const Color text = Color(0xFF4B4B4B);          // Dark gray text
-  static const Color error = Color(0xFFFF4B4B);         // Red for errors
+  static const Color primary = Color(0xFF58CC02); // Main green color
+  static const Color secondary = Color(0xFF1CB0F6); // Blue color
+  static const Color background = Color(0xFFFFFDFD); // Off-white background
+  static const Color text = Color(0xFF4B4B4B); // Dark gray text
+  static const Color error = Color(0xFFFF4B4B); // Red for errors
 }
 
 void main() {
@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsScreen(),
         '/profile': (context) => ProfileScreen(),
         '/TrueOrFalse': (context) => TrueOrFalse(),
-        '/image-quiz': (context) => const ImageQuizScreen(),
+        // '/image-quiz': (context) => const ImageQuizScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

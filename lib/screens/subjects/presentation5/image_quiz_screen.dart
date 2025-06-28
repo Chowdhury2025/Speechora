@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../services/tts_service.dart';
-import '../services/quiz_image_service.dart';
+import '../../../services/tts_service.dart';
+import '../../../services/quiz_image_service.dart';
 
 class ImageQuizScreen extends StatefulWidget {
   const ImageQuizScreen({Key? key}) : super(key: key);

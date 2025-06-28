@@ -52,6 +52,23 @@ class VideoService {
       throw Exception('Failed to connect to server: $e');
     }
   }
+
+  static Future<List<String>> getAllCategories() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/videos/categories'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<String>();
+      } else {
+        throw Exception('Failed to load categories: \\${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to connect to server: $e');
+    }
+  }
 }
 
 class Video {
@@ -72,7 +89,8 @@ class Video {
   });
 
   String get thumbnailUrl => getThumbnailUrl(linkyoutube_link);
-  String get fallbackThumbnailUrl => getThumbnailUrl(linkyoutube_link, quality: 'hqdefault');
+  String get fallbackThumbnailUrl =>
+      getThumbnailUrl(linkyoutube_link, quality: 'hqdefault');
 
   factory Video.fromJson(Map<String, dynamic> json) {
     return Video(
