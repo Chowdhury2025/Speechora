@@ -13,10 +13,7 @@ class HomeScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Home',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

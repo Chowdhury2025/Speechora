@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class SchoolScreen extends StatelessWidget {
   final Color backgroundColor;
-  const SchoolScreen({Key? key, required this.backgroundColor}) : super(key: key);
+  const SchoolScreen({Key? key, required this.backgroundColor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +14,7 @@ class SchoolScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'School',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class ToysAndGamesScreen extends StatelessWidget {
   final Color backgroundColor;
-  const ToysAndGamesScreen({Key? key, required this.backgroundColor}) : super(key: key);
+  const ToysAndGamesScreen({Key? key, required this.backgroundColor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +14,7 @@ class ToysAndGamesScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Toys & Games',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

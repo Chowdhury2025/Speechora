@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class TrueOrFalse extends StatelessWidget {
   final Color backgroundColor;
-  const TrueOrFalse({Key? key, this.backgroundColor = const Color(0xFF58CC02)}) : super(key: key);
+  const TrueOrFalse({Key? key, this.backgroundColor = const Color(0xFF58CC02)})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +14,7 @@ class TrueOrFalse extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Yes or No Quiz',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
