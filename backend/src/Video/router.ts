@@ -16,4 +16,7 @@ videoRouter.post('/category', videoController.getVideosByCategoryController);
 // Route to delete a video
 videoRouter.delete('/:id', videoController.deleteVideo);
 
+// Route to get all video categories
+videoRouter.get('/categories', videoController.getAllVideoCategories);
+
 export default videoRouter;

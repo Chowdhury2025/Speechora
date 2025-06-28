@@ -103,3 +103,22 @@ export const deleteVideo = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to delete video' });
     }
 };
+
+// Get all unique video categories
+export const getAllVideoCategories = async (_req: Request, res: Response) => {
+    try {
+        const categories = await prisma.videos.findMany({
+            select: { category: true },
+            distinct: ['category'],
+            orderBy: { category: 'asc' },
+        });
+        // Return as a flat array of strings, filtering out null/empty
+        const categoryList = categories
+            .map(c => c.category)
+            .filter((c): c is string => !!c && c.trim() !== '');
+        res.json(categoryList);
+    } catch (error) {
+        console.error('Error fetching video categories:', error);
+        res.status(500).json({ message: 'Failed to fetch video categories' });
+    }
+};
