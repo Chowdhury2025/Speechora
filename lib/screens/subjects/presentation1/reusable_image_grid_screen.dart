@@ -18,7 +18,8 @@ class ReusableImageGridScreen extends StatefulWidget {
   });
 
   @override
-  State<ReusableImageGridScreen> createState() => _ReusableImageGridScreenState();
+  State<ReusableImageGridScreen> createState() =>
+      _ReusableImageGridScreenState();
 }
 
 class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
@@ -37,7 +38,9 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
   Future<void> fetchImages() async {
     try {
       final response = await http.get(
-        Uri.parse('${Constants.baseUrl}/images?category=${widget.imageCategory}'),
+        Uri.parse(
+          '${Constants.baseUrl}/images?category=${widget.imageCategory}',
+        ),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -67,7 +70,8 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
   void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => _FullScreenImageView(image: image, onSpeak: speakText),
+        builder:
+            (context) => _FullScreenImageView(image: image, onSpeak: speakText),
       ),
     );
   }
@@ -86,7 +90,10 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: widget.backgroundColor,
         elevation: 0,
@@ -222,33 +229,35 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
                     CachedNetworkImage(
                       imageUrl: image['imageUrl'],
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: Colors.grey.shade200,
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade300,
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.broken_image,
-                              size: 32,
-                              color: Colors.grey,
+                      placeholder:
+                          (context, url) => Container(
+                            color: Colors.grey.shade200,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Image not available',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
+                          ),
+                      errorWidget:
+                          (context, url, error) => Container(
+                            color: Colors.grey.shade300,
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.broken_image,
+                                  size: 32,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Image not available',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -398,11 +407,12 @@ class _FullScreenImageViewState extends State<_FullScreenImageView> {
                   child: Image.network(
                     widget.image['imageUrl'],
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.error,
-                      size: 80,
-                      color: Colors.grey,
-                    ),
+                    errorBuilder:
+                        (context, error, stackTrace) => const Icon(
+                          Icons.error,
+                          size: 80,
+                          color: Colors.grey,
+                        ),
                   ),
                 ),
               ),

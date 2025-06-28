@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class FoodAndDrinkScreen extends StatelessWidget {
   final Color backgroundColor;
-  const FoodAndDrinkScreen({Key? key, required this.backgroundColor}) : super(key: key);
+  const FoodAndDrinkScreen({Key? key, required this.backgroundColor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +14,7 @@ class FoodAndDrinkScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Food & Drink',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

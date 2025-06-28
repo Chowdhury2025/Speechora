@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class DailyLifeScreen extends StatelessWidget {
   final Color backgroundColor;
-  const DailyLifeScreen({Key? key, required this.backgroundColor}) : super(key: key);
+  const DailyLifeScreen({Key? key, required this.backgroundColor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -73,9 +74,16 @@ class DailyLifeScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                   ),
-                  icon: const Icon(Icons.play_arrow, size: 28, color: Colors.white),
+                  icon: const Icon(
+                    Icons.play_arrow,
+                    size: 28,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     'Start Learning',
                     style: TextStyle(

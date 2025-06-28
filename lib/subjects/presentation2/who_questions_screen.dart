@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class WhoQuestionsScreen extends StatelessWidget {
   final Color backgroundColor;
-  const WhoQuestionsScreen({Key? key, required this.backgroundColor}) : super(key: key);
+  const WhoQuestionsScreen({Key? key, required this.backgroundColor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +14,7 @@ class WhoQuestionsScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Who Questions',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

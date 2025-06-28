@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class WhereQuestionsScreen extends StatelessWidget {
   final Color backgroundColor;
-  const WhereQuestionsScreen({Key? key, required this.backgroundColor}) : super(key: key);
+  const WhereQuestionsScreen({Key? key, required this.backgroundColor})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +14,7 @@ class WhereQuestionsScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Where Questions',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

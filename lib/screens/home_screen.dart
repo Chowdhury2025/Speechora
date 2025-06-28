@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:math';
 import 'settings_screen.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/wants_and_needs_screen.dart';
