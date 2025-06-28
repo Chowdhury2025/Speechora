@@ -2,15 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
 import 'settings_screen.dart';
-import 'subjects/presentation1/daily_life_screen.dart';
-import 'subjects/presentation1/home_screen.dart' as subject;
-import 'subjects/presentation1/school_screen.dart';
-import 'subjects/presentation1/therapy_screen.dart';
-import 'subjects/presentation1/activities_screen.dart';
-import 'subjects/presentation1/family_and_friends_screen.dart';
-import 'subjects/presentation1/toys_and_games_screen.dart';
-import 'subjects/presentation1/food_and_drink_screen.dart';
-import 'subjects/presentation1/places_screen.dart';
+import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/wants_and_needs_screen.dart';
 import 'subjects/presentation2/what_questions_screen.dart';
 import 'subjects/presentation2/where_questions_screen.dart';
@@ -155,31 +147,67 @@ class MyHomePage extends StatelessWidget {
     Widget screen;
     switch (title) {
       case 'My World & Daily Life':
-        screen = DailyLifeScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'My World & Daily Life',
+          imageCategory: 'my_world_daily_life',
+          backgroundColor: Color(0xFF1CB0F6),
+        );
         break;
       case 'Home':
-        screen = subject.HomeScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'Home',
+          imageCategory: 'home',
+          backgroundColor: Color(0xFFFF4B4B),
+        );
         break;
       case 'School':
-        screen = SchoolScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'School',
+          imageCategory: 'school',
+          backgroundColor: Color(0xFFFFC800),
+        );
         break;
       case 'Therapy':
-        screen = TherapyScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'Therapy',
+          imageCategory: 'therapy',
+          backgroundColor: Color(0xFF58CC02),
+        );
         break;
       case 'Activities':
-        screen = ActivitiesScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'Activities',
+          imageCategory: 'activities',
+          backgroundColor: Color(0xFF1CB0F6),
+        );
         break;
       case 'Family & Friends':
-        screen = FamilyAndFriendsScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'Family & Friends',
+          imageCategory: 'family_and_friends',
+          backgroundColor: Color(0xFFFF4B4B),
+        );
         break;
       case 'Toys & Games':
-        screen = ToysAndGamesScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'Toys & Games',
+          imageCategory: 'toys_and_games',
+          backgroundColor: Color(0xFFFFC800),
+        );
         break;
       case 'Food & Drink':
-        screen = FoodAndDrinkScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'Food & Drink',
+          imageCategory: 'food_and_drink',
+          backgroundColor: Color(0xFF58CC02),
+        );
         break;
       case 'Places':
-        screen = PlacesScreen(backgroundColor: color);
+        screen = const ReusableImageGridScreen(
+          title: 'Places',
+          imageCategory: 'places',
+          backgroundColor: Color(0xFF1CB0F6),
+        );
         break;
       case 'I Want / Needs':
         screen = WantsAndNeedsScreen(backgroundColor: color);

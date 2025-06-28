@@ -5,17 +5,23 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../services/tts_service.dart';
 
-class PlacesScreen extends StatefulWidget {
-  static const routeName = '/places';
+class ReusableImageGridScreen extends StatefulWidget {
+  final String title;
+  final String imageCategory;
   final Color backgroundColor;
 
-  const PlacesScreen({super.key, required this.backgroundColor});
+  const ReusableImageGridScreen({
+    super.key,
+    required this.title,
+    required this.imageCategory,
+    required this.backgroundColor,
+  });
 
   @override
-  State<PlacesScreen> createState() => _PlacesScreenState();
+  State<ReusableImageGridScreen> createState() => _ReusableImageGridScreenState();
 }
 
-class _PlacesScreenState extends State<PlacesScreen> {
+class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
   final TTSService _ttsService = TTSService();
   List<Map<String, dynamic>> images = [];
   bool isLoading = true;
@@ -31,9 +37,8 @@ class _PlacesScreenState extends State<PlacesScreen> {
   Future<void> fetchImages() async {
     try {
       final response = await http.get(
-        Uri.parse('${Constants.baseUrl}/images?category=places'),
+        Uri.parse('${Constants.baseUrl}/images?category=${widget.imageCategory}'),
       );
-
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         if (mounted) {
@@ -62,8 +67,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
   void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder:
-            (context) => FullScreenImageView(image: image, onSpeak: speakText),
+        builder: (context) => _FullScreenImageView(image: image, onSpeak: speakText),
       ),
     );
   }
@@ -80,9 +84,9 @@ class _PlacesScreenState extends State<PlacesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Places',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          widget.title,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: widget.backgroundColor,
         elevation: 0,
@@ -218,35 +222,33 @@ class _PlacesScreenState extends State<PlacesScreen> {
                     CachedNetworkImage(
                       imageUrl: image['imageUrl'],
                       fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) => Container(
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey.shade300,
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.broken_image,
+                              size: 32,
+                              color: Colors.grey,
                             ),
-                          ),
-                      errorWidget:
-                          (context, url, error) => Container(
-                            color: Colors.grey.shade300,
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.broken_image,
-                                  size: 32,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Image not available',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                            SizedBox(height: 8),
+                            Text(
+                              'Image not available',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
+                          ],
+                        ),
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -336,25 +338,24 @@ class _PlacesScreenState extends State<PlacesScreen> {
   }
 }
 
-class FullScreenImageView extends StatefulWidget {
+class _FullScreenImageView extends StatefulWidget {
   final Map<String, dynamic> image;
   final Function(String) onSpeak;
 
-  const FullScreenImageView({
+  const _FullScreenImageView({
     Key? key,
     required this.image,
     required this.onSpeak,
   }) : super(key: key);
 
   @override
-  State<FullScreenImageView> createState() => _FullScreenImageViewState();
+  State<_FullScreenImageView> createState() => _FullScreenImageViewState();
 }
 
-class _FullScreenImageViewState extends State<FullScreenImageView> {
+class _FullScreenImageViewState extends State<_FullScreenImageView> {
   @override
   void initState() {
     super.initState();
-    // Play text-to-speech automatically when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final textToSpeak =
           '${widget.image['title'] ?? 'Image'}. ${widget.image['description'] ?? ''}';
@@ -378,7 +379,6 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Title at the top
             Padding(
               padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
               child: Text(
@@ -391,7 +391,6 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                 textAlign: TextAlign.center,
               ),
             ),
-            // Image in the middle
             Expanded(
               child: Center(
                 child: ClipRRect(
@@ -399,17 +398,15 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                   child: Image.network(
                     widget.image['imageUrl'],
                     fit: BoxFit.contain,
-                    errorBuilder:
-                        (context, error, stackTrace) => const Icon(
-                          Icons.error,
-                          size: 80,
-                          color: Colors.grey,
-                        ),
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.error,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
             ),
-            // Description at the bottom in a rounded card
             if (widget.image['description'] != null &&
                 widget.image['description'].toString().isNotEmpty)
               Padding(
@@ -440,7 +437,6 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                   ),
                 ),
               ),
-            // Speaker button
             Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: FloatingActionButton(
