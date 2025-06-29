@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../models/lesson_models.dart';
 import '../../../services/tts_service.dart';
 
@@ -88,158 +89,166 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE6F3F7),
+      backgroundColor: const Color(
+        0xFFB8E6E1,
+      ), // Light teal background like the image
       appBar: AppBar(
-        title: Text(widget.lesson.title),
+        title: Text(
+          widget.lesson.title,
+          style: GoogleFonts.nunito(
+            fontWeight: FontWeight.w900,
+            fontSize: 26,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
+        ),
         backgroundColor: widget.backgroundColor,
         elevation: 0,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 24),
-          // Highlighted statement at the top
-          if (_currentDescription != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                children: List.generate(_highlightWords.length, (i) {
-                  return Text(
-                    _highlightWords[i] + ' ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          i == _currentWordIndex
-                              ? Colors.orange
-                              : const Color(0xFF2B4A5A),
-                      backgroundColor:
-                          i == _currentWordIndex
-                              ? Colors.yellow[200]
-                              : Colors.transparent,
-                    ),
-                  );
-                }),
-              ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight:
+                  screenHeight -
+                  MediaQuery.of(context).padding.top -
+                  kToolbarHeight -
+                  MediaQuery.of(context).padding.bottom,
             ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GridView.builder(
-                itemCount: widget.lesson.options.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.95,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemBuilder: (context, index) {
-                  final option = widget.lesson.options[index];
-                  if (option['type'] != 'image_url')
-                    return const SizedBox.shrink();
-                  final isSpeaking = _speakingIndex == index;
-                  // Pick a pastel color for each card (cycle through a palette)
-                  final pastelColors = [
-                    const Color(0xFFFFF3D6), // light yellow
-                    const Color(0xFFFFE0D6), // light orange
-                    const Color(0xFFD6F3FF), // light blue
-                    const Color(0xFFD6FFE0), // light green
-                    const Color(0xFFFFD6F3), // light pink
-                    const Color(0xFFE0D6FF), // light purple
-                  ];
-                  final bgColor = pastelColors[index % pastelColors.length];
-                  return GestureDetector(
-                    onTap: () => _handleOptionTap(option, index),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color:
-                              isSpeaking
-                                  ? const Color(0xFFFFB74D)
-                                  : Colors.transparent,
-                          width: 3,
+            child: Column(
+              children: [
+                // Main content area
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      // Main question at the top
+                      Text(
+                        _currentDescription ?? '',
+                        style: GoogleFonts.nunito(
+                          fontSize: screenWidth < 400 ? 32 : 38,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF2B5A5A), // Dark teal text
+                          letterSpacing: 0.5,
+                          height: 1.1,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+                        textAlign: TextAlign.center,
                       ),
-                      margin: const EdgeInsets.all(2),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.network(
-                            option['content'],
-                            height: 70,
-                            width: 70,
-                            fit: BoxFit.contain,
-                            errorBuilder:
-                                (context, error, stackTrace) => const Icon(
-                                  Icons.image,
-                                  size: 60,
-                                  color: Colors.grey,
+                      const SizedBox(height: 30),
+                      // Options as large cards
+                      ...widget.lesson.options
+                          .asMap()
+                          .entries
+                          .where((entry) => entry.value['type'] == 'image_url')
+                          .map((entry) {
+                            final index = entry.key;
+                            final option = entry.value;
+                            final isSpeaking = _speakingIndex == index;
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: GestureDetector(
+                                onTap: () => _handleOptionTap(option, index),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Image with rounded corners and border highlight
+                                    Container(
+                                      width: double.infinity,
+                                      height: 180,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color:
+                                              isSpeaking
+                                                  ? const Color(0xFFFFB74D)
+                                                  : Colors.transparent,
+                                          width: 4,
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Image.network(
+                                          option['content'],
+                                          width: double.infinity,
+                                          height: 180,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  Icon(
+                                                    Icons.image,
+                                                    size: 80,
+                                                    color: Colors.grey,
+                                                  ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    // Label below image, styled bold and centered
+                                    Text(
+                                      option['label'] != null
+                                          ? option['label']
+                                          : '',
+                                      style: GoogleFonts.nunito(
+                                        fontSize: screenWidth < 400 ? 22 : 28,
+                                        fontWeight: FontWeight.w900,
+                                        color: const Color(0xFF2B5A5A),
+                                        letterSpacing: 0.5,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
                                 ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            option['description'] ??
-                                option['label'] ??
-                                option['content'],
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2B4A5A),
-                              letterSpacing: 0.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          // Answer box at the bottom
-          if (_speakingIndex != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3D6),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 22),
-                child: Center(
-                  child: Text(
-                    '${widget.lesson.options[_speakingIndex!]['description'] ?? widget.lesson.options[_speakingIndex!]['label'] ?? widget.lesson.options[_speakingIndex!]['content']}',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2B4A5A),
-                      letterSpacing: 0.5,
-                    ),
+                              ),
+                            );
+                          })
+                          .toList(),
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
-              ),
+                // Answer box at the bottom
+                if (_speakingIndex != null)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8DC), // Light cream color
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 24,
+                      horizontal: 16,
+                    ),
+                    child: Text(
+                      '${widget.lesson.options[_speakingIndex!]['description'] ?? widget.lesson.options[_speakingIndex!]['label'] ?? widget.lesson.options[_speakingIndex!]['content']}',
+                      style: GoogleFonts.nunito(
+                        fontSize: screenWidth < 400 ? 28 : 36,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF2B5A5A),
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+              ],
             ),
-        ],
+          ),
+        ),
       ),
     );
   }

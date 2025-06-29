@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'settings_screen.dart';
+import 'auth_premium/settings_screen.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/lesson_base_subject_screen.dart';
 import 'subjects/presentation3/image_quiz_screen.dart';
@@ -239,56 +239,56 @@ class _MyHomePageState extends State<MyHomePage> {
         );
         break;
       case 'I Want / Needs':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'I Want / Needs',
           backgroundColor: color,
           subject: 'wants_and_needs_expression',
         );
         break;
       case 'Actions / Verbs':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'Actions / Verbs',
           backgroundColor: color,
           subject: 'action_words_and_verbs',
         );
         break;
       case 'What Questions':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'What Questions',
           backgroundColor: color,
           subject: 'what_questions',
         );
         break;
       case 'Where Questions':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'Where Questions',
           backgroundColor: color,
           subject: 'where_questions',
         );
         break;
       case 'Who Questions':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'Who Questions',
           backgroundColor: color,
           subject: 'who_questions',
         );
         break;
       case 'When Questions':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'When Questions',
           backgroundColor: color,
           subject: 'when_questions',
         );
         break;
       case 'Why Questions':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'Why Questions',
           backgroundColor: color,
           subject: 'why_questions',
         );
         break;
       case 'Image Quiz Game':
-        screen = LessonBaseSubjectScreen(
+        screen = PresentationTwo(
           title: 'Lessons',
           backgroundColor: color,
           subject: 'presentation3_lessons',
@@ -317,27 +317,87 @@ class _MyHomePageState extends State<MyHomePage> {
       DeviceOrientation.portraitDown,
     ]);
 
-    final language = SettingsScreenState.selectedLanguage;
-    final accent = SettingsScreenState.selectedVoiceAccent;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          userName.isNotEmpty
-              ? userName
-              : (userEmail.isNotEmpty ? userEmail : 'book8'),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(90),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF58CC02), Color(0xFF1CB0F6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-        ],
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.white,
+                    backgroundImage: AssetImage(
+                      'assets/appIcon.png',
+                    ), // Use your app icon or user image asset
+                    onBackgroundImageError: (_, __) {},
+                    child: Container(), // No icon, image only
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          userName.isNotEmpty
+                              ? userName
+                              : (userEmail.isNotEmpty ? userEmail : 'book8'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            letterSpacing: 0.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Welcome back!',
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.settings,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,90 +407,80 @@ class _MyHomePageState extends State<MyHomePage> {
               horizontal: 16.0,
               vertical: 8.0,
             ),
-            child: Row(
-              children: [
-                Chip(
-                  label: Text('Language: $language'),
-                  backgroundColor: Colors.blue.shade100,
-                ),
-                const SizedBox(width: 10),
-                Chip(
-                  label: Text('Voice Accent: $accent'),
-                  backgroundColor: Colors.green.shade100,
-                ),
-              ],
-            ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: GridView.builder(
               padding: const EdgeInsets.all(16.0),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 1, // width:height ratio for perfect square
+              ),
               itemCount: subjects.length,
               itemBuilder: (context, index) {
                 final subject = subjects[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: SizedBox(
-                    height: 100,
-                    child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap:
-                            () => _navigateToScreen(
-                              context,
-                              subject.title,
-                              subject.color,
+                return AspectRatio(
+                  aspectRatio: 1,
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap:
+                          () => _navigateToScreen(
+                            context,
+                            subject.title,
+                            subject.color,
+                          ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: subject.color,
+                          boxShadow: [
+                            BoxShadow(
+                              color: subject.color.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: subject.color,
-                            boxShadow: [
-                              BoxShadow(
-                                color: subject.color.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 20),
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  subject.icon,
-                                  size: 32,
-                                  color: subject.color,
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Text(
-                                  subject.title,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const Icon(
-                                Icons.chevron_right,
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: const BoxDecoration(
                                 color: Colors.white,
-                                size: 32,
+                                shape: BoxShape.circle,
                               ),
-                              const SizedBox(width: 16),
-                            ],
-                          ),
+                              child: Icon(
+                                subject.icon,
+                                size: 28,
+                                color: subject.color,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: Text(
+                                subject.title,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

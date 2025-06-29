@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/auth_premium/login_screen.dart';
+import 'screens/auth_premium/settings_screen.dart';
+import 'screens/staticscreens/profile_screen.dart';
 import 'screens/subjects/presentation4/trueorfalse.dart';
-import 'screens/splash_screen.dart';
+import 'screens/staticscreens/splash_screen.dart';
 
 // Duolingo-like colors
 class AppColors {
