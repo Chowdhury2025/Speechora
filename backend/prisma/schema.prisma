@@ -34,6 +34,11 @@ model User {
   quizImages            QuizImage[] @relation("QuizImageUploader")
 
   Lesson Lesson[]
+
+  premiumBalance   Float    @default(0)
+  premiumActive    Boolean  @default(false)
+  premiumDeduction Float    @default(0)
+  premiumExpiry    DateTime?
 }
 
 model SystemSettings {

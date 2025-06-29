@@ -32,9 +32,50 @@ const ParentDashboard = () => {
     }
   });
 
+  // Premium simulation state
+  const [premium, setPremium] = useState({
+    isActive: false,
+    balance: 0,
+    deduction: 0,
+    expiry: null,
+  });
+  const [addAmount, setAddAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('visa'); // 'visa' or 'mobile_money'
+  const [premiumLoading, setPremiumLoading] = useState(false);
+  const [premiumError, setPremiumError] = useState(null);
+
   useEffect(() => {
     fetchDashboardData();
+    fetchPremiumInfo();
   }, []);
+
+  function calculateExpiry(balance, deduction) {
+    if (!deduction || deduction <= 0) return null;
+    const months = Math.floor(balance / deduction);
+    const now = new Date();
+    now.setMonth(now.getMonth() + months);
+    return now.toISOString().split('T')[0];
+  }
+
+  const fetchPremiumInfo = async () => {
+    if (!userId) return;
+    setPremiumLoading(true);
+    setPremiumError(null);
+    try {
+      const res = await api.get(`/api/user/premium?userId=${userId}`);
+      setPremium({
+        isActive: res.data.premiumActive,
+        balance: res.data.premiumBalance,
+        deduction: res.data.premiumDeduction,
+        expiry: res.data.premiumExpiry,
+      });
+    } catch (err) {
+      setPremiumError('Failed to load premium info.');
+    } finally {
+      setPremiumLoading(false);
+    }
+  };
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -54,6 +95,78 @@ const ParentDashboard = () => {
       setError('Failed to load dashboard data. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Use user.userId for premium endpoints
+  const userId = user?.userId
+
+  const handleAddFunds = async () => {
+    const amount = parseFloat(addAmount);
+    if (isNaN(amount) || amount <= 0) return;
+    if (!userId) {
+      setPremiumError('User ID is missing or invalid. Please log in again.');
+      return;
+    }
+    setPremiumLoading(true);
+    setPremiumError(null);
+    const payload = {
+      userId, // only send numeric userId
+      amount,
+      paymentMethod
+    };
+    console.log('Add Funds Payload:', payload);
+    try {
+      await api.post('/api/user/premium/add', payload);
+      await fetchPremiumInfo();
+      setAddAmount('');
+    } catch (err) {
+      // Show backend error message if available
+      let errorMsg = 'Failed to add funds.';
+      if (err?.response) {
+        errorMsg =
+          (err.response.data && (err.response.data.message || JSON.stringify(err.response.data))) ||
+          'Failed to add funds.';
+        console.error('API Error Response:', err.response);
+      }
+      setPremiumError(errorMsg);
+      console.error('API Error:', err);
+    } finally {
+      setPremiumLoading(false);
+    }
+  };
+
+  const handleCancelPremium = async () => {
+    setPremiumLoading(true);
+    setPremiumError(null);
+    if (!userId) {
+      setPremiumError('User ID is missing or invalid. Please log in again.');
+      return;
+    }
+    try {
+      await api.post('/api/user/premium/cancel', { userId });
+      await fetchPremiumInfo();
+    } catch (err) {
+      setPremiumError('Failed to cancel premium.');
+    } finally {
+      setPremiumLoading(false);
+    }
+  };
+
+  const handleUpgradePremium = async (deduction) => {
+    setPremiumLoading(true);
+    setPremiumError(null);
+    if (!userId) {
+      setPremiumError('User ID is missing or invalid. Please log in again.');
+      return;
+    }
+    try {
+      await api.post('/api/user/premium/upgrade', { userId, deduction });
+      await fetchPremiumInfo();
+    } catch (err) {
+      setPremiumError('Failed to upgrade premium.');
+    } finally {
+      setPremiumLoading(false);
     }
   };
 
@@ -310,6 +423,63 @@ const ParentDashboard = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Premium Section */}
+      <div className="bg-white rounded-2xl p-6 mb-8 border border-[hsl(90,62%,90%)]">
+        <h2 className="text-xl font-bold text-[#3c9202] mb-2 flex items-center gap-4">
+          Premium Account
+          <button
+            onClick={fetchPremiumInfo}
+            className="ml-2 px-3 py-1 text-xs bg-[#e5f5d5] text-[#3c9202] rounded hover:bg-[#c8f2a0] border border-[#58cc02]"
+            disabled={premiumLoading}
+            title="Refresh premium info"
+          >
+            Refresh
+          </button>
+        </h2>
+        {premiumLoading ? (
+          <div className="text-[#58cc02]">Loading premium info...</div>
+        ) : premiumError ? (
+          <div className="text-red-600 mb-2">
+            {premiumError}
+            <br />
+            <span className="text-xs break-all">Payload: {JSON.stringify({ userId, amount: parseFloat(addAmount), paymentMethod })}</span>
+          </div>
+        ) : (
+          <>
+            <p>Status: <span className={premium.isActive ? "text-green-600" : "text-red-600"}>{premium.isActive ? "Active" : "Inactive"}</span></p>
+            <p>Balance: <span className="font-bold">₦{premium.balance}</span></p>
+            <p>Monthly Deduction: <span className="font-bold">₦{premium.deduction}</span></p>
+            <p>Expiry Date: <span className="font-bold">{premium.expiry || "N/A"}</span></p>
+            <div className="flex gap-2 mt-4 items-center">
+              <input
+                type="number"
+                placeholder="Add funds"
+                value={addAmount}
+                onChange={e => setAddAmount(e.target.value)}
+                className="border rounded px-2 py-1"
+              />
+              <select
+                value={paymentMethod}
+                onChange={e => setPaymentMethod(e.target.value)}
+                className="border rounded px-2 py-1"
+              >
+                <option value="visa">Visa</option>
+                <option value="mobile_money">Mobile Money</option>
+              </select>
+              <button onClick={handleAddFunds} className="bg-[#58cc02] text-white px-4 py-1 rounded" disabled={premiumLoading}>Add</button>
+              <button onClick={handleCancelPremium} className="bg-red-500 text-white px-4 py-1 rounded" disabled={premiumLoading}>Cancel</button>
+              <button onClick={() => handleUpgradePremium(1000)} className="bg-blue-500 text-white px-4 py-1 rounded" disabled={premiumLoading}>Upgrade (₦1000/mo)</button>
+            </div>
+            <p className="mt-2 text-sm text-gray-600">Payment Method: <b>{paymentMethod === 'visa' ? 'Visa' : 'Mobile Money'}</b></p>
+            {premium.deduction > 0 && (
+              <p className="mt-2 text-sm text-gray-600">
+                Your balance will last for <b>{Math.floor(premium.balance / premium.deduction)}</b> month(s).
+              </p>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

@@ -611,3 +611,118 @@ export const deleteUserController = async (req: Request, res: Response) => {
     });
   }
 };
+
+// --- Premium APIs ---
+
+// Get premium info
+export const getPremiumInfo = async (req: Request, res: Response) => {
+  const userId = Number(req.body.userId || req.query.userId);
+  if (!userId) return res.status(400).json({ message: "Missing userId" });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json({
+    isActive: user.premiumActive,
+    balance: user.premiumBalance,
+    deduction: user.premiumDeduction,
+    expiry: user.premiumExpiry,
+  });
+};
+
+// Add funds to premium balance
+export const addPremiumFunds = async (req: Request, res: Response) => {
+  const userId = Number(req.body.userId);
+  const { amount } = req.body;
+  if (!userId) return res.status(400).json({ message: "Missing userId" });
+  if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      premiumBalance: { increment: amount },
+      premiumActive: true,
+    },
+  });
+  // Return full premium info for frontend consistency
+  res.json({
+    premiumActive: user.premiumActive,
+    premiumBalance: user.premiumBalance,
+    premiumDeduction: user.premiumDeduction,
+    premiumExpiry: user.premiumExpiry,
+  });
+};
+
+// Cancel premium
+export const cancelPremium = async (req: Request, res: Response) => {
+  const userId = Number(req.body.userId);
+  if (!userId) return res.status(400).json({ message: "Missing userId" });
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      premiumActive: false,
+      premiumBalance: 0,
+      premiumExpiry: null,
+    },
+  });
+  res.json({ message: "Premium cancelled" });
+};
+
+// Upgrade/set deduction
+export const upgradePremium = async (req: Request, res: Response) => {
+  const userId = Number(req.body.userId);
+  const { deduction } = req.body;
+  if (!userId) return res.status(400).json({ message: "Missing userId" });
+  if (!deduction || deduction <= 0) return res.status(400).json({ message: "Invalid deduction" });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  const months = Math.floor(user.premiumBalance / deduction);
+  let expiry = null;
+  if (months > 0) {
+    expiry = new Date();
+    expiry.setMonth(expiry.getMonth() + months);
+  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      premiumActive: true,
+      premiumDeduction: deduction,
+      premiumExpiry: expiry,
+    },
+  });
+  res.json({ message: "Premium upgraded", expiry });
+};
+
+// Send premium-related email
+export const sendPremiumEmail = async (req: Request, res: Response) => {
+  try {
+    const { userId, action, amount, paymentMethod, deduction } = req.body;
+    const id = Number(userId);
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ message: "Missing or invalid userId" });
+    }
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    let subject = "";
+    let bodyContent = "";
+    if (action === "add_funds") {
+      subject = "Premium Funds Added";
+      bodyContent = `<p>Dear ${user.username},</p><p>Your premium account has been credited with ₦${amount} via ${paymentMethod}. Thank you!</p>`;
+    } else if (action === "upgrade") {
+      subject = "Premium Upgraded";
+      bodyContent = `<p>Dear ${user.username},</p><p>Your premium deduction is now ₦${deduction} per month. Enjoy your premium benefits!</p>`;
+    } else if (action === "cancel") {
+      subject = "Premium Cancelled";
+      bodyContent = `<p>Dear ${user.username},</p><p>Your premium subscription has been cancelled. You can re-activate anytime.</p>`;
+    } else {
+      subject = "Premium Account Update";
+      bodyContent = `<p>Dear ${user.username},</p><p>Your premium account has been updated.</p>`;
+    }
+    const emailOptions = {
+      to: user.email,
+      subject,
+      html: generateEmailLayout({ title: subject, bodyContent }),
+    };
+    await sendMail(emailOptions);
+    res.json({ message: "Premium email sent" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to send premium email", error: (error as any)?.message || String(error) });
+  }
+};

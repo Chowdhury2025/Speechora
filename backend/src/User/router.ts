@@ -67,6 +67,11 @@ userRouter.patch("/profile/update", updateUserProfileController);
 userRouter.post('/verify-email', userController.verifyEmailController);
 userRouter.post('/resend-verification', verifyEmailController);
 userRouter.delete('/usersof/:userId', deleteUserController);
+userRouter.get('/premium', userController.getPremiumInfo);
+userRouter.post('/premium/add', userController.addPremiumFunds);
+userRouter.post('/premium/cancel', userController.cancelPremium);
+userRouter.post('/premium/upgrade', userController.upgradePremium);
+userRouter.post('/premium/send-email', userController.sendPremiumEmail);
 
 
 export default userRouter;
