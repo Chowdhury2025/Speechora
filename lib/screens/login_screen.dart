@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/constants.dart';
+import '../models/user_model.dart'; // Add this import
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -40,33 +41,106 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final responseData = jsonDecode(response.body);
 
+      // DEBUG: Print the response data
+      print('=== DEBUG: Login Response ===');
+      print('Status Code: ${response.statusCode}');
+      print('Response Data: $responseData');
+
       if (response.statusCode == 200) {
-        // Store user data
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userData', jsonEncode(responseData));
-        await prefs.setBool('isLoggedIn', true);
+        try {
+          // Transform the API response to match UserModel structure
+          final transformedData = {
+            'id': responseData['userId'],
+            'username': responseData['username'],
+            'lastName': null,
+            'middleName': null,
+            'token': null,
+            'email': responseData['email'],
+            'phoneNumber': responseData['phoneNumber'],
+            'group': responseData['group'],
+            'createdAt': DateTime.now().toIso8601String(),
+            'nrc_card_id': null,
+            'role': responseData['role'],
+            'isEmailVerified': responseData['isEmailVerified'] ?? false,
+            'emailVerificationToken': null,
+            'bloodGroup': responseData['bloodGroup'],
+            'address': responseData['address'],
+            'premium': responseData['premium'], // <-- Accept premium from backend
+            'dateOfBirth': responseData['dateOfBirth'],
+            'gender': responseData['gender'],
+            'emergencyContact': responseData['emergencyContact'],
+          };
 
-        // Save individual user fields for app-wide access
-        await prefs.setString('userName', responseData['username'] ?? '');
-        await prefs.setString('userEmail', responseData['email'] ?? '');
-        await prefs.setString('userRole', responseData['role'] ?? '');
-        await prefs.setString('userPhone', responseData['phoneNumber'] ?? '');
-        await prefs.setString(
-          'userBloodGroup',
-          responseData['bloodGroup'] ?? '',
-        );
-        await prefs.setString('userAddress', responseData['address'] ?? '');
-        await prefs.setString('userGender', responseData['gender'] ?? '');
-        await prefs.setString(
-          'userEmergencyContact',
-          responseData['emergencyContact'] ?? '',
-        );
-        await prefs.setBool('isPremium', (responseData['role'] == 'PREMIUM'));
-        // Add more fields as needed
+          print('=== DEBUG: Transformed Data ===');
+          print('Transformed Data: $transformedData');
 
-        if (mounted) {
-          // Navigate to settings screen after successful login
-          Navigator.pushReplacementNamed(context, '/settings');
+          // Create UserModel from transformed data
+          UserModel user = UserModel.fromJson(transformedData);
+
+          print('=== DEBUG: UserModel created successfully ===');
+          print('User ID: ${user.id}');
+          print('User Email: ${user.email}');
+          print('User Token: ${user.token ?? "No token"}');
+
+          // Store user data
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('userData', jsonEncode(user.toJson()));
+          await prefs.setBool('isLoggedIn', true);
+
+          // Save individual user fields for app-wide access
+          await prefs.setString('userName', user.username ?? '');
+          await prefs.setString('userEmail', user.email);
+          await prefs.setString(
+            'userRole',
+            user.role.toString().split('.').last,
+          );
+          await prefs.setString('userPhone', user.phoneNumber ?? '');
+          await prefs.setString('userBloodGroup', user.bloodGroup ?? '');
+          await prefs.setString('userAddress', user.address ?? '');
+          await prefs.setString('userGender', user.gender ?? '');
+          await prefs.setString(
+            'userEmergencyContact',
+            user.emergencyContact ?? '',
+          );
+
+          // --- PREMIUM LOGIC ---
+          final premium = user.premium;
+          bool isPremium = false;
+          if (premium != null) {
+            final expiry = premium.expiryDate;
+            final balance = premium.balance;
+            if (expiry != null &&
+                expiry.isAfter(DateTime.now()) &&
+                balance != null &&
+                balance > 0) {
+              isPremium = true;
+            }
+          }
+          await prefs.setBool('isPremium', isPremium);
+          await prefs.setString('premiumExpiry', premium?.expiryDate?.toIso8601String() ?? '');
+          await prefs.setDouble('premiumBalance', premium?.balance ?? 0);
+
+          print('=== DEBUG: Data saved to SharedPreferences ===');
+
+          if (mounted) {
+            // Navigate to settings screen after successful login
+            Navigator.pushReplacementNamed(context, '/settings');
+          }
+        } catch (userModelError) {
+          print('=== DEBUG: Error creating UserModel ===');
+          print('Error: $userModelError');
+          print('Response data structure might not match UserModel');
+
+          // If UserModel creation fails, let's see what fields are missing
+          print('=== DEBUG: Available fields in response ===');
+          responseData.forEach((key, value) {
+            print('$key: $value (${value.runtimeType})');
+          });
+
+          setState(() {
+            _errorMessage =
+                'Login successful but data format issue. Please contact support.';
+          });
         }
       } else {
         setState(() {
@@ -75,6 +149,8 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     } catch (e) {
+      print('=== DEBUG: Network or general error ===');
+      print('Error: $e');
       setState(() {
         _errorMessage = 'Network error. Please check your connection.';
       });
@@ -86,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _launchRegisterWebsite() async {
-    final Uri url = Uri.parse('https://book8-frontend.vercel.app/register');
+    final Uri url = Uri.parse('https://book8.vercel.app/register');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -97,9 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _launchForgotPasswordWebsite() async {
-    final Uri url = Uri.parse(
-      'https://book8-frontend.vercel.app/forgot-password',
-    );
+    final Uri url = Uri.parse('https://book8.vercel.app/forgot-password');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

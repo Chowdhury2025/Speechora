@@ -13,7 +13,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late UserModel user;
+  UserModel? user;
   bool isLoading = true;
   final _formKey = GlobalKey<FormState>();
 
@@ -49,25 +49,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else {
         // Handle case where user data is not found
         Navigator.pushReplacementNamed(context, '/login');
+        return; // Prevent infinite loading
       }
     } catch (e) {
       // Handle error loading user data
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Error loading user data')));
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   void _populateFields() {
-    _usernameController.text = user.username ?? '';
-    _lastNameController.text = user.lastName ?? '';
-    _middleNameController.text = user.middleName ?? '';
-    _phoneNumberController.text = user.phoneNumber ?? '';
-    _bloodGroupController.text = user.bloodGroup ?? '';
-    _addressController.text = user.address ?? '';
-    _emergencyContactController.text = user.emergencyContact ?? '';
-    _selectedDate = user.dateOfBirth;
-    _selectedGender = user.gender;
+    if (user == null) return;
+    _usernameController.text = user!.username ?? '';
+    _lastNameController.text = user!.lastName ?? '';
+    _middleNameController.text = user!.middleName ?? '';
+    _phoneNumberController.text = user!.phoneNumber ?? '';
+    _bloodGroupController.text = user!.bloodGroup ?? '';
+    _addressController.text = user!.address ?? '';
+    _emergencyContactController.text = user!.emergencyContact ?? '';
+    _selectedDate = user!.dateOfBirth;
+    _selectedGender = user!.gender;
   }
 
   Future<void> _updateProfile() async {
@@ -78,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      final updatedUser = user.copyWith(
+      final updatedUser = user!.copyWith(
         username: _usernameController.text,
         lastName: _lastNameController.text,
         middleName: _middleNameController.text,
@@ -90,13 +95,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         emergencyContact: _emergencyContactController.text,
       );
 
-      final response = await http.put(
-        Uri.parse('${Constants.baseUrl}/user/profile'),
+      final response = await http.patch(
+        Uri.parse(
+          '${Constants.baseUrl}/user/profile/update',
+        ), // Use the correct backend endpoint and PATCH
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${user.token}',
+          'Authorization': 'Bearer ${user!.token}',
         },
-        body: jsonEncode(updatedUser.toUpdateProfileJson()),
+        body: jsonEncode({
+          'userId': user!.id, // Backend expects userId
+          ...updatedUser.toUpdateProfileJson(),
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -154,6 +164,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text('No user data found.')));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -179,14 +192,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      user.email,
+                      user!.email,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      'Role: ${user.role.toString().split('.').last}',
+                      'Role: ${user!.role.toString().split('.').last}',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],

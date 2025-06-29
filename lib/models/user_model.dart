@@ -17,12 +17,14 @@ class PremiumInfo {
   final String? ageGroup;
   final List<String>? accessTo;
   final List<String>? macAddresses;
+  final double? balance;
 
   PremiumInfo({
     this.expiryDate,
     this.ageGroup,
     this.accessTo,
     this.macAddresses,
+    this.balance,
   });
 
   factory PremiumInfo.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,12 @@ class PremiumInfo {
           json['macAddresses'] != null
               ? List<String>.from(json['macAddresses'])
               : null,
+      balance:
+          (json['balance'] != null)
+              ? (json['balance'] is int
+                  ? (json['balance'] as int).toDouble()
+                  : json['balance'] as double)
+              : null,
     );
   }
 
@@ -46,6 +54,7 @@ class PremiumInfo {
     'ageGroup': ageGroup,
     'accessTo': accessTo,
     'macAddresses': macAddresses,
+    'balance': balance,
   };
 }
 
@@ -112,7 +121,11 @@ class UserModel {
       address: json['address'] as String?,
       premium:
           json['premium'] != null
-              ? PremiumInfo.fromJson(jsonDecode(json['premium'] as String))
+              ? (json['premium'] is String
+                  ? PremiumInfo.fromJson(jsonDecode(json['premium'] as String))
+                  : PremiumInfo.fromJson(
+                    json['premium'] as Map<String, dynamic>,
+                  ))
               : null,
       dateOfBirth:
           json['dateOfBirth'] != null

@@ -16,6 +16,8 @@ class SettingsScreenState extends State<SettingsScreen> {
   String userName = '';
   String userEmail = '';
   bool isPremium = false;
+  String premiumExpiry = '';
+  double premiumBalance = 0;
 
   final List<String> languages = [
     'English',
@@ -89,6 +91,8 @@ class SettingsScreenState extends State<SettingsScreen> {
       userName = prefs.getString('userName') ?? '';
       userEmail = prefs.getString('userEmail') ?? '';
       isPremium = prefs.getBool('isPremium') ?? false;
+      premiumExpiry = prefs.getString('premiumExpiry') ?? '';
+      premiumBalance = prefs.getDouble('premiumBalance') ?? 0;
     });
   }
 
@@ -132,34 +136,87 @@ class SettingsScreenState extends State<SettingsScreen> {
                   color: isPremium ? Colors.amber : Colors.white70,
                 ),
               ),
+              onTap: () {
+                Navigator.of(context).pushNamed('/profile').then((_) {
+                  _loadUserInfo(); // Reload user info after returning
+                });
+              },
             ),
           ),
+
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Go Premium Banner
-                Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[700],
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black26, blurRadius: 8),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'GO PREMIUM NOW',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      letterSpacing: 1.2,
+                if (!isPremium)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[700],
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 8),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'GO PREMIUM NOW',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
-                ),
+                if (isPremium)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      color: Colors.green[700],
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 8),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Premium Account',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        if (premiumExpiry.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              'Expiry: $premiumExpiry',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Balance: ₦${premiumBalance.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 _settingsCard(
                   Icons.language,
                   'Language',
