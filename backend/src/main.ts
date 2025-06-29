@@ -14,6 +14,7 @@ import testRouter from "./Test/router";
 import lessonRouter from "./lesson/router";
 import quizImageRouter from "./QuizImage/router";
 import parentRouter from "./app/Parent/router";  // Add parent router import
+import systemSettingsRouter from './SystemSettings/router';
 
 
 const app: Express = express();
@@ -73,6 +74,7 @@ app.use("/api/tests", testRouter);
 app.use("/api/lessons", lessonRouter);
 app.use("/api/quiz-images", quizImageRouter);
 app.use("/api", parentRouter);  // Add parent routes
+app.use('/api/system', systemSettingsRouter); // Premium Pricing uses POST for update
 
 // Add email configuration router
 

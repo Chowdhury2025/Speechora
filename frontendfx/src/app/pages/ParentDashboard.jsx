@@ -15,6 +15,7 @@ import {
   Receipt,
   CreditCard
 } from 'lucide-react';
+import { fetchPremiumPrice } from '../utils/premium';
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -43,11 +44,18 @@ const ParentDashboard = () => {
   const [paymentMethod, setPaymentMethod] = useState('visa'); // 'visa' or 'mobile_money'
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumError, setPremiumError] = useState(null);
+  const [premiumPrice, setPremiumPrice] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
     fetchPremiumInfo();
+    fetchAndSetPremiumPrice();
   }, []);
+
+  const fetchAndSetPremiumPrice = async () => {
+    const price = await fetchPremiumPrice();
+    setPremiumPrice(price);
+  };
 
   function calculateExpiry(balance, deduction) {
     if (!deduction || deduction <= 0) return null;
@@ -57,18 +65,53 @@ const ParentDashboard = () => {
     return now.toISOString().split('T')[0];
   }
 
+  // Check and update premium status on every fetch
+  const checkAndUpdatePremiumStatus = async (premiumData) => {
+    if (!premiumData) return;
+    // If premium is active and expiry is in the past or today
+    if (premiumData.isActive && premiumData.expiry) {
+      const now = new Date();
+      const expiryDate = new Date(premiumData.expiry);
+      if (expiryDate <= now) {
+        if (premiumData.balance >= premiumData.deduction && premiumData.deduction > 0) {
+          // Deduct and update expiry
+          const newBalance = premiumData.balance - premiumData.deduction;
+          const newExpiry = new Date(expiryDate);
+          newExpiry.setMonth(newExpiry.getMonth() + 1);
+          await api.post('/api/user/premium/update', {
+            userId,
+            balance: newBalance,
+            expiry: newExpiry.toISOString(),
+            isActive: true
+          });
+          setPremium({ ...premiumData, balance: newBalance, expiry: newExpiry.toISOString() });
+        } else {
+          // Deactivate and notify
+          await api.post('/api/user/premium/update', {
+            userId,
+            isActive: false
+          });
+          setPremium({ ...premiumData, isActive: false });
+          // Optionally, trigger a notification to the user here
+        }
+      }
+    }
+  };
+
   const fetchPremiumInfo = async () => {
     if (!userId) return;
     setPremiumLoading(true);
     setPremiumError(null);
     try {
       const res = await api.get(`/api/user/premium?userId=${userId}`);
-      setPremium({
-        isActive: res.data.premiumActive,
-        balance: res.data.premiumBalance,
-        deduction: res.data.premiumDeduction,
-        expiry: res.data.premiumExpiry,
-      });
+      const premiumData = {
+        isActive: res.data.isActive,
+        balance: res.data.balance,
+        deduction: res.data.deduction,
+        expiry: res.data.expiry,
+      };
+      setPremium(premiumData);
+      await checkAndUpdatePremiumStatus(premiumData);
     } catch (err) {
       setPremiumError('Failed to load premium info.');
     } finally {
@@ -295,6 +338,12 @@ const ParentDashboard = () => {
       {/* Child Progress Section */}
       <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
         <h2 className="text-xl font-bold text-[#3c9202] mb-4">Subject Progress</h2>
+        <div className="mb-4">
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
+            style={{ background: premium.isActive ? '#e5f5d5' : '#ffe5e5', color: premium.isActive ? '#3c9202' : '#d32f2f' }}>
+            {premium.isActive ? 'Premium Account Active' : 'Not a Premium Account'}
+          </span>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {dashboardData.childProgress.map((subject, index) => (
             <div key={index} className="bg-[#f7ffec] rounded-xl p-4">
@@ -450,7 +499,7 @@ const ParentDashboard = () => {
           <>
             <p>Status: <span className={premium.isActive ? "text-green-600" : "text-red-600"}>{premium.isActive ? "Active" : "Inactive"}</span></p>
             <p>Balance: <span className="font-bold">₦{premium.balance}</span></p>
-            <p>Monthly Deduction: <span className="font-bold">₦{premium.deduction}</span></p>
+            <p>Monthly Deduction: <span className="font-bold">₦{premiumPrice !== null ? premiumPrice : premium.deduction}</span></p>
             <p>Expiry Date: <span className="font-bold">{premium.expiry || "N/A"}</span></p>
             <div className="flex gap-2 mt-4 items-center">
               <input

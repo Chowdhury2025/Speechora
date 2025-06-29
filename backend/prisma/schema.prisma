@@ -45,7 +45,7 @@ model SystemSettings {
   id                Int      @id @default(autoincrement())
   companyName       String   @default("Default Company Name")
   adminEmail        String   @default("admin@example.com")
-  supportEmail      String   @default("support@example.com")
+  premiumPricing    String   @default("50") // Default premium pricing
   notificationEmail String   @default("notifications@example.com")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

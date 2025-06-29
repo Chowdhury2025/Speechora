@@ -26,7 +26,7 @@ export const getEmailSettings = async (): Promise<SystemSettings> => {
         return {
             companyName: settings?.companyName || process.env.COMPANY_NAME || 'Default Company Name',
             adminEmail: settings?.adminEmail || process.env.ADMIN_EMAIL || 'admin@example.com',
-            supportEmail: settings?.supportEmail || process.env.SUPPORT_EMAIL || 'support@example.com',
+            supportEmail: settings?.adminEmail || process.env.SUPPORT_EMAIL || 'support@example.com',
             notificationEmail: settings?.notificationEmail || process.env.NOTIFICATION_EMAIL || 'notifications@example.com'
         };
     } catch (error) {
@@ -37,5 +37,17 @@ export const getEmailSettings = async (): Promise<SystemSettings> => {
             supportEmail: process.env.SUPPORT_EMAIL || 'support@example.com',
             notificationEmail: process.env.NOTIFICATION_EMAIL || 'notifications@example.com'
         };
+    }
+};
+
+// Function to get a system setting value by key (e.g. premiumPricing)
+export const getSystemSetting = async (key: string): Promise<string | null> => {
+    try {
+        const settings = await prisma.systemSettings.findFirst();
+        if (!settings) return null;
+        return (settings as any)[key] || null;
+    } catch (error) {
+        console.error('Error fetching system setting:', error);
+        return null;
     }
 };
