@@ -195,9 +195,10 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: isTitleHighlighted
-                                        ? Colors.yellowAccent
-                                        : Colors.black87,
+                                    color:
+                                        isTitleHighlighted
+                                            ? Colors.yellowAccent
+                                            : Colors.black87,
                                   ),
                                 ),
                               ),
@@ -261,12 +262,14 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                                   maxWidth: contentWidth,
                                 ),
                                 child: Text(
-                                  widget.image['description'] ?? 'No description',
+                                  widget.image['description'] ??
+                                      'No description',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: isDescHighlighted
-                                        ? Colors.greenAccent
-                                        : Colors.black54,
+                                    color:
+                                        isDescHighlighted
+                                            ? Colors.greenAccent
+                                            : Colors.black54,
                                   ),
                                 ),
                               ),
