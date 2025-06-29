@@ -18,9 +18,9 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
   List<QuizImage> displayedImages = [];
   QuizImage? correctImage;
   QuizImage? selectedImage;
-  bool showSuccess = false;
-  bool showError = false;
+  bool? isCorrect;
   bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -30,10 +30,11 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
   Future<void> _setupNewRound() async {
     setState(() {
       isLoading = true;
+      isCorrect = null;
+      selectedImage = null;
     });
 
     try {
-      // Fetch quiz images from the API
       final images = await _quizImageService.getQuizImages(
         quizType: 'image_quiz',
       );
@@ -42,12 +43,10 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
         throw Exception('No quiz images available');
       }
 
-      // Shuffle all images and take first 6
       final shuffledImages = List<QuizImage>.from(images)..shuffle(random);
       displayedImages = shuffledImages.take(6).toList();
-      // Pick one random image from the 6 as correct answer
       correctImage = displayedImages[random.nextInt(6)];
-      // Speak the name of the correct image
+
       _speakWord();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,182 +65,146 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
     }
   }
 
-  void _handleImageTap(QuizImage image) {
+  Future<void> _handleImageTap(QuizImage image) async {
+    if (selectedImage != null) return;
+
     setState(() {
       selectedImage = image;
+      isCorrect = image.id == correctImage?.id;
     });
-    _ttsService.speak(image.name);
 
-    if (image.id == correctImage?.id) {
-      setState(() {
-        showSuccess = true;
-        showError = false;
-      });
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            showSuccess = false;
-            _setupNewRound();
-          });
-        }
-      });
+    if (isCorrect == true) {
+      await _ttsService.speak('That is a ${image.name}!');
     } else {
-      setState(() {
-        showError = true;
-        showSuccess = false;
-      });
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            showError = false;
-          });
-        }
-      });
+      await _ttsService.speak('That is not a ${correctImage!.name}.');
     }
+
+    await Future.delayed(const Duration(seconds: 2));
+    _setupNewRound();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFBEE9E8),
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text('Can I play?'),
-        elevation: 0,
-      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 32.0, bottom: 16.0),
-                      child: Text(
-                        'Can I play?',
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF223A5E),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Expanded(
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
-                        mainAxisSpacing: 24,
-                        crossAxisSpacing: 24,
-                        children:
-                            displayedImages.map((image) {
-                              final isSelected = selectedImage?.id == image.id;
-                              final cardColor =
-                                  isSelected
-                                      ? const Color(0xFFFFF3C7)
-                                      : (displayedImages.indexOf(image) % 2 == 0
-                                          ? const Color(0xFFFFF3C7)
-                                          : const Color(0xFFFFE0B2));
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedImage = image;
-                                  });
-                                  _ttsService.speak(image.name);
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  decoration: BoxDecoration(
-                                    color: cardColor,
-                                    borderRadius: BorderRadius.circular(28),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.12),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                    border:
-                                        isSelected
-                                            ? Border.all(
-                                              color: Colors.blue,
-                                              width: 3,
-                                            )
-                                            : null,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.8,
+                    children:
+                        displayedImages.map((image) {
+                          final isSelected = selectedImage?.id == image.id;
+                          final showFeedback = isSelected && isCorrect != null;
+
+                          return GestureDetector(
+                            onTap: () => _handleImageTap(image),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? (isCorrect == true
+                                              ? Colors.green
+                                              : Colors.red)
+                                          : Colors.grey.shade300,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 18,
-                                    horizontal: 8,
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                ],
+                              ),
+                              child: Stack(
+                                children: [
+                                  Column(
                                     children: [
                                       Expanded(
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            18,
-                                          ),
-                                          child: Image.network(
-                                            image.imageUrl,
-                                            fit: BoxFit.contain,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    const Icon(Icons.error),
+                                        flex: 3,
+                                        child: Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.all(12),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            child: Image.network(
+                                              image.imageUrl,
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => Container(
+                                                    color: Colors.grey.shade200,
+                                                    child: const Icon(
+                                                      Icons.image_not_supported,
+                                                      size: 40,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                            ),
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        image.name,
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF223A5E),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              image.name,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF223A5E),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
                                         ),
-                                        textAlign: TextAlign.center,
                                       ),
                                     ],
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: 32.0,
-                        left: 16,
-                        right: 16,
-                        top: 16,
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3C7),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 20,
-                          horizontal: 12,
-                        ),
-                        child: Text(
-                          selectedImage != null
-                              ? 'I want to play with ${selectedImage!.name}'
-                              : 'I want to play with ...',
-                          style: const TextStyle(
-                            fontSize: 26,
-                            color: Color(0xFF223A5E),
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
+                                  if (showFeedback)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          isCorrect == true ? '😃' : '😢',
+                                          style: const TextStyle(fontSize: 80),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
                 ),
               ),
     );

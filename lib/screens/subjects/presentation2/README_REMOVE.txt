@@ -1,1 +1,0 @@
-All subject-specific screens in this folder are now removed. Only two reusable screens are used for lesson presentation2: lesson_base_subject_screen.dart and lesson_detail_screen.dart.

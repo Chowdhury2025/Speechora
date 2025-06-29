@@ -46,7 +46,7 @@ class AboutScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            Divider(color: Colors.white24),
+            const Divider(color: Colors.white24),
             const SizedBox(height: 16),
             Text(
               'Developed by Shohan Chowdhury',

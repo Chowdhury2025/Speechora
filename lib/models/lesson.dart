@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'lesson_content.dart';
 
 class Lesson {
   final int id;

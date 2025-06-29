@@ -59,8 +59,6 @@ class _TrueOrFalseState extends State<TrueOrFalse>
 
   AnimationController? _bounceController;
   AnimationController? _fadeController;
-  Animation<double>? _bounceAnimation;
-  Animation<double>? _fadeAnimation;
   @override
   void initState() {
     super.initState();
@@ -78,15 +76,6 @@ class _TrueOrFalseState extends State<TrueOrFalse>
       duration: Duration(milliseconds: 500),
       vsync: this,
     );
-
-    _bounceAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _bounceController!, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController!, curve: Curves.easeIn));
   }
 
   Future<void> _initializeTTS() async {

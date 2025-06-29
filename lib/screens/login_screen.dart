@@ -46,6 +46,24 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('userData', jsonEncode(responseData));
         await prefs.setBool('isLoggedIn', true);
 
+        // Save individual user fields for app-wide access
+        await prefs.setString('userName', responseData['username'] ?? '');
+        await prefs.setString('userEmail', responseData['email'] ?? '');
+        await prefs.setString('userRole', responseData['role'] ?? '');
+        await prefs.setString('userPhone', responseData['phoneNumber'] ?? '');
+        await prefs.setString(
+          'userBloodGroup',
+          responseData['bloodGroup'] ?? '',
+        );
+        await prefs.setString('userAddress', responseData['address'] ?? '');
+        await prefs.setString('userGender', responseData['gender'] ?? '');
+        await prefs.setString(
+          'userEmergencyContact',
+          responseData['emergencyContact'] ?? '',
+        );
+        await prefs.setBool('isPremium', (responseData['role'] == 'PREMIUM'));
+        // Add more fields as needed
+
         if (mounted) {
           // Navigate to settings screen after successful login
           Navigator.pushReplacementNamed(context, '/settings');

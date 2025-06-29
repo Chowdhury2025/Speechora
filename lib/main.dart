@@ -4,7 +4,6 @@ import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/subjects/presentation4/trueorfalse.dart';
-import 'screens/subjects/presentation5/image_quiz_screen.dart';
 import 'screens/splash_screen.dart';
 
 // Duolingo-like colors
@@ -89,7 +88,7 @@ class MyApp extends StatelessWidget {
       ),
       home: const SplashScreen(),
       routes: {
-        '/home': (context) => MyHomePage(title: 'books8'),
+        '/home': (context) => MyHomePage(title: getUserDisplayName()),
         '/login': (context) => const LoginScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/profile': (context) => ProfileScreen(),
@@ -99,4 +98,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
     );
   }
+}
+
+String getUserDisplayName() {
+  // Replace this with your actual user auth logic
+  // For example, if using FirebaseAuth:
+  // return FirebaseAuth.instance.currentUser?.displayName ?? 'User';
+  return 'User'; // Placeholder, replace with real user name
 }

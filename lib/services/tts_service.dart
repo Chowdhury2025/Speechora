@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,5 +51,13 @@ class TTSService {
 
   Future<void> stop() async {
     await _flutterTts.stop();
+  }
+
+  void setStartHandler(VoidCallback handler) {
+    _flutterTts.setStartHandler(handler);
+  }
+
+  void setCompletionHandler(VoidCallback handler) {
+    _flutterTts.setCompletionHandler(handler);
   }
 }

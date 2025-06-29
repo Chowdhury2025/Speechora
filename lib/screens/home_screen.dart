@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_screen.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/lesson_base_subject_screen.dart';
 import 'subjects/presentation3/image_quiz_screen.dart';
+import 'subjects/presentation5/image_quiz_screen.dart';
 import 'subjects/presentation6/how_questions_screen.dart';
 import 'others_screen.dart';
 import 'subjects/presentation4/trueorfalse.dart';
@@ -17,128 +19,148 @@ class SubjectCard {
   SubjectCard({required this.title, required this.icon, required this.color});
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   final String title;
-  final List<SubjectCard> subjects;
+  MyHomePage({super.key, required this.title});
 
-  MyHomePage({super.key, required this.title})
-    : subjects = [
-        SubjectCard(
-          title: 'Image Quiz Game',
-          icon: Icons.image_search,
-          color: const Color(0xFF58CC02), // Duolingo green
-        ),
-        SubjectCard(
-          title: 'My World & Daily Life',
-          icon: Icons.home_outlined,
-          color: const Color(0xFF1CB0F6), // Duolingo blue
-        ),
-        SubjectCard(
-          title: 'Home',
-          icon: Icons.house,
-          color: const Color(0xFFFF4B4B), // Duolingo red
-        ),
-        SubjectCard(
-          title: 'School',
-          icon: Icons.school,
-          color: const Color(0xFFFFC800), // Duolingo yellow
-        ),
-        SubjectCard(
-          title: 'Therapy',
-          icon: Icons.healing,
-          color: const Color(0xFF58CC02), // Duolingo green
-        ),
-        SubjectCard(
-          title: 'Activities',
-          icon: Icons.sports_basketball,
-          color: const Color(0xFF1CB0F6), // Duolingo blue
-        ),
-        SubjectCard(
-          title: 'Family & Friends',
-          icon: Icons.people,
-          color: const Color(0xFFFF4B4B), // Duolingo red
-        ),
-        SubjectCard(
-          title: 'Toys & Games',
-          icon: Icons.toys,
-          color: const Color(0xFFFFC800), // Duolingo yellow
-        ),
-        SubjectCard(
-          title: 'Food & Drink',
-          icon: Icons.restaurant,
-          color: const Color(0xFF58CC02), // Duolingo green
-        ),
-        SubjectCard(
-          title: 'Places',
-          icon: Icons.place,
-          color: const Color(0xFF1CB0F6), // Duolingo blue
-        ),
-        SubjectCard(
-          title: 'I Want / Needs',
-          icon: Icons.favorite,
-          color: const Color(0xFFFF4B4B), // Duolingo red
-        ),
-        SubjectCard(
-          title: 'Actions / Verbs',
-          icon: Icons.directions_run,
-          color: const Color(0xFFFFC800), // Duolingo yellow
-        ),
-        SubjectCard(
-          title: 'What Questions',
-          icon: Icons.help_outline,
-          color: const Color(0xFF58CC02), // Duolingo green
-        ),
-        SubjectCard(
-          title: 'Where Questions',
-          icon: Icons.map,
-          color: const Color(0xFF1CB0F6), // Duolingo blue
-        ),
-        SubjectCard(
-          title: 'Who Questions',
-          icon: Icons.person_search,
-          color: const Color(0xFFFF4B4B), // Duolingo red
-        ),
-        SubjectCard(
-          title: 'When Questions',
-          icon: Icons.access_time,
-          color: const Color(0xFFFFC800), // Duolingo yellow
-        ),
-        SubjectCard(
-          title: 'Why Questions',
-          icon: Icons.psychology,
-          color: const Color(0xFF58CC02), // Duolingo green
-        ),
-        SubjectCard(
-          title: 'How Questions',
-          icon: Icons.lightbulb_outline,
-          color: const Color(0xFF1CB0F6), // Duolingo blue
-        ),
-        SubjectCard(
-          title: 'Choice Questions',
-          icon: Icons.rule,
-          color: const Color(0xFFFF4B4B), // Duolingo red
-        ),
-        SubjectCard(
-          title: 'Question Starters',
-          icon: Icons.question_answer,
-          color: const Color(0xFFFFC800), // Duolingo yellow
-        ),
-        SubjectCard(
-          title: 'Yes or No quiz',
-          icon: Icons.quiz,
-          color: const Color(0xFF58CC02), // Duolingo green
-        ),
-        SubjectCard(
-          title: 'Others',
-          icon: Icons.more_horiz,
-          color: const Color(0xFF1CB0F6), // Duolingo blue
-        ),
-        SubjectCard(
-          title: 'How To',
-          icon: Icons.video_library,
-          color: const Color(0xFF1CB0F6), // Use a distinct color
-        ),
-      ];
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  String userName = '';
+  String userEmail = '';
+  final List<SubjectCard> subjects = [
+    SubjectCard(
+      title: 'Image Quiz Game',
+      icon: Icons.image_search,
+      color: const Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'My World & Daily Life',
+      icon: Icons.home_outlined,
+      color: const Color(0xFF1CB0F6),
+    ),
+    SubjectCard(
+      title: 'Home',
+      icon: Icons.house,
+      color: const Color(0xFFFF4B4B),
+    ),
+    SubjectCard(
+      title: 'School',
+      icon: Icons.school,
+      color: const Color(0xFFFFC800),
+    ),
+    SubjectCard(
+      title: 'Therapy',
+      icon: Icons.healing,
+      color: const Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'Activities',
+      icon: Icons.sports_basketball,
+      color: const Color(0xFF1CB0F6),
+    ),
+    SubjectCard(
+      title: 'Family & Friends',
+      icon: Icons.people,
+      color: const Color(0xFFFF4B4B),
+    ),
+    SubjectCard(
+      title: 'Toys & Games',
+      icon: Icons.toys,
+      color: const Color(0xFFFFC800),
+    ),
+    SubjectCard(
+      title: 'Food & Drink',
+      icon: Icons.restaurant,
+      color: const Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'Places',
+      icon: Icons.place,
+      color: const Color(0xFF1CB0F6),
+    ),
+    SubjectCard(
+      title: 'I Want / Needs',
+      icon: Icons.favorite,
+      color: const Color(0xFFFF4B4B),
+    ),
+    SubjectCard(
+      title: 'Actions / Verbs',
+      icon: Icons.directions_run,
+      color: const Color(0xFFFFC800),
+    ),
+    SubjectCard(
+      title: 'What Questions',
+      icon: Icons.help_outline,
+      color: const Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'Where Questions',
+      icon: Icons.map,
+      color: const Color(0xFF1CB0F6),
+    ),
+    SubjectCard(
+      title: 'Who Questions',
+      icon: Icons.person_search,
+      color: const Color(0xFFFF4B4B),
+    ),
+    SubjectCard(
+      title: 'When Questions',
+      icon: Icons.access_time,
+      color: const Color(0xFFFFC800),
+    ),
+    SubjectCard(
+      title: 'Why Questions',
+      icon: Icons.psychology,
+      color: const Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'How Questions',
+      icon: Icons.lightbulb_outline,
+      color: const Color(0xFF1CB0F6),
+    ),
+    SubjectCard(
+      title: 'Choice Questions',
+      icon: Icons.rule,
+      color: const Color(0xFFFF4B4B),
+    ),
+    SubjectCard(
+      title: 'Question Starters',
+      icon: Icons.question_answer,
+      color: const Color(0xFFFFC800),
+    ),
+    SubjectCard(
+      title: 'Yes or No quiz',
+      icon: Icons.quiz,
+      color: const Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'Others',
+      icon: Icons.more_horiz,
+      color: const Color(0xFF1CB0F6),
+    ),
+    SubjectCard(
+      title: 'How To',
+      icon: Icons.video_library,
+      color: const Color(0xFF1CB0F6),
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('userName') ?? '';
+      userEmail = prefs.getString('userEmail') ?? '';
+    });
+  }
 
   void _navigateToScreen(BuildContext context, String title, Color color) {
     if (title == 'How To') {
@@ -266,9 +288,14 @@ class MyHomePage extends StatelessWidget {
         );
         break;
       case 'Image Quiz Game':
-        screen = const ImageQuizScreen(title: 'School');
+        screen = LessonBaseSubjectScreen(
+          title: 'Lessons',
+          backgroundColor: color,
+          subject: 'presentation3_lessons',
+        );
+        break;
       case 'How Questions':
-        screen = HowQuestionsScreen(backgroundColor: color);
+        screen = LessonScreen(backgroundColor: color);
         break;
       case 'Yes or No quiz':
         screen = TrueOrFalse();
@@ -290,13 +317,16 @@ class MyHomePage extends StatelessWidget {
       DeviceOrientation.portraitDown,
     ]);
 
-    // Get current language and accent from SettingsScreen static (for demo)
     final language = SettingsScreenState.selectedLanguage;
     final accent = SettingsScreenState.selectedVoiceAccent;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(
+          userName.isNotEmpty
+              ? userName
+              : (userEmail.isNotEmpty ? userEmail : 'book8'),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -414,6 +444,7 @@ class MyHomePage extends StatelessWidget {
     );
   }
 
+  @override
   void dispose() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -421,5 +452,6 @@ class MyHomePage extends StatelessWidget {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+    super.dispose();
   }
 }

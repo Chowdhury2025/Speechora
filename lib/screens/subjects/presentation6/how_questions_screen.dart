@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'base_subject_screen.dart';
 
-class HowQuestionsScreen extends StatelessWidget {
+class LessonScreen extends StatelessWidget {
   static const routeName = '/how-questions';
   final Color backgroundColor;
 
-  const HowQuestionsScreen({super.key, required this.backgroundColor});
+  const LessonScreen({super.key, required this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
