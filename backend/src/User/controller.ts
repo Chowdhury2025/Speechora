@@ -6,7 +6,6 @@ import { sendMail } from "../../utils/mail";
 import { generateOTP } from "../../utils/otp";
 import { VerifyEmailAndOTPRequest } from "../../types/interface";
 import { generateEmailLayout } from "../../utils/emailTemplate";
-import { getSystemSetting } from "../../utils/systemSettings";
 
 
 
@@ -121,6 +120,25 @@ export const loginController = async (req: Request, res: Response) => {
     console.log(req.body);
     const user = await prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        group: true,
+        bloodGroup: true,
+        address: true,
+        dateOfBirth: true,
+        gender: true,
+        emergencyContact: true,
+        isEmailVerified: true,
+        premiumActive: true,
+        premiumBalance: true,
+        premiumDeduction: true,
+        premiumExpiry: true,
+        password: true, // Needed for password check
+      },
     });
 
     if (!user) {
@@ -130,7 +148,7 @@ export const loginController = async (req: Request, res: Response) => {
     const verifyPassword = await compare(password, user.password);
     if (!verifyPassword) {
       return res.status(StatusCodes.UNAUTHORIZED).send("Invalid Password");
-    }    // Optionally, check if email is verified
+    }
     if (!user.isEmailVerified) {
       return res.status(StatusCodes.FORBIDDEN).json({
         message: "Email not verified. Please verify your email before logging in.",
@@ -138,7 +156,7 @@ export const loginController = async (req: Request, res: Response) => {
       });
     }
 
-    // Return user details with separate properties 
+    // Return user details with premium info
     return res.status(StatusCodes.OK).json({
       userId: user.id,
       username: user.username,
@@ -152,7 +170,12 @@ export const loginController = async (req: Request, res: Response) => {
       gender: user.gender,
       emergencyContact: user.emergencyContact,
       isEmailVerified: user.isEmailVerified,
-      
+      premium: {
+        expiryDate: user.premiumExpiry,
+        balance: user.premiumBalance,
+        deduction: user.premiumDeduction,
+        isPremium: user.premiumActive,
+      },
     });
   } catch (error: any) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
@@ -619,46 +642,12 @@ export const deleteUserController = async (req: Request, res: Response) => {
 export const getPremiumInfo = async (req: Request, res: Response) => {
   const userId = Number(req.body.userId || req.query.userId);
   if (!userId) return res.status(400).json({ message: "Missing userId" });
-  let user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return res.status(404).json({ message: "User not found" });
-
-  // Always get current premium price from settings
-  const premiumPriceSetting = await getSystemSetting("premium_price");
-  const premiumPrice = Number(premiumPriceSetting) || 0;
-
-  // Deduction/expiry logic on every API call
-  const now = new Date();
-  if (user.premiumActive && user.premiumExpiry && new Date(user.premiumExpiry) <= now) {
-    if (user.premiumBalance >= premiumPrice && premiumPrice > 0) {
-      // Deduct and update expiry, set deduction to current price
-      user = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          premiumBalance: { decrement: premiumPrice },
-          premiumExpiry: new Date(new Date(user.premiumExpiry).setMonth(new Date(user.premiumExpiry).getMonth() + 1)),
-          premiumActive: true,
-          premiumDeduction: premiumPrice,
-        }
-      });
-    } else {
-      // Deactivate and notify
-      user = await prisma.user.update({
-        where: { id: userId },
-        data: { premiumActive: false }
-      });
-      // Send email notification
-      await sendMail({
-        to: user.email,
-        subject: 'Premium Account Inactive - Please Add Funds',
-        html: `<p>Dear ${user.username},</p><p>Your premium account has been deactivated due to insufficient funds. Please add funds to reactivate.</p>`
-      });
-    }
-  }
-
   res.json({
     isActive: user.premiumActive,
     balance: user.premiumBalance,
-    deduction: premiumPrice,
+    deduction: user.premiumDeduction,
     expiry: user.premiumExpiry,
   });
 };
@@ -669,12 +658,11 @@ export const addPremiumFunds = async (req: Request, res: Response) => {
   const { amount } = req.body;
   if (!userId) return res.status(400).json({ message: "Missing userId" });
   if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
-
-  // Only increment balance, do not activate premium or set expiry
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
       premiumBalance: { increment: amount },
+      premiumActive: true,
     },
   });
   // Return full premium info for frontend consistency
@@ -694,37 +682,33 @@ export const cancelPremium = async (req: Request, res: Response) => {
     where: { id: userId },
     data: {
       premiumActive: false,
-      // Do NOT zero balance or clear expiry
+      premiumBalance: 0,
+      premiumExpiry: null,
     },
   });
   res.json({ message: "Premium cancelled" });
 };
 
-// Upgrade/set deduction (renew)
+// Upgrade/set deduction
 export const upgradePremium = async (req: Request, res: Response) => {
   const userId = Number(req.body.userId);
+  const { deduction } = req.body;
   if (!userId) return res.status(400).json({ message: "Missing userId" });
-
-  // Always use current premium price from settings
-  const premiumPriceSetting = await getSystemSetting("premiumPricing");
-  const deduction = Number(premiumPriceSetting) || 0;
   if (!deduction || deduction <= 0) return res.status(400).json({ message: "Invalid deduction" });
-
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return res.status(404).json({ message: "User not found" });
-  if (user.premiumBalance < deduction) {
-    return res.status(400).json({ message: "Insufficient balance for premium upgrade" });
+  const months = Math.floor(user.premiumBalance / deduction);
+  let expiry = null;
+  if (months > 0) {
+    expiry = new Date();
+    expiry.setMonth(expiry.getMonth() + months);
   }
-  // Deduct from balance and set expiry to one month from now
-  let expiry = new Date();
-  expiry.setMonth(expiry.getMonth() + 1);
   await prisma.user.update({
     where: { id: userId },
     data: {
       premiumActive: true,
       premiumDeduction: deduction,
       premiumExpiry: expiry,
-      premiumBalance: { decrement: deduction },
     },
   });
   res.json({ message: "Premium upgraded", expiry });

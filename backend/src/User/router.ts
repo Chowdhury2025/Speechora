@@ -71,7 +71,7 @@ userRouter.get('/premium', userController.getPremiumInfo);
 userRouter.post('/premium/add', userController.addPremiumFunds);
 userRouter.post('/premium/cancel', userController.cancelPremium);
 userRouter.post('/premium/upgrade', userController.upgradePremium);
-userRouter.post('/premium/send-email', userController.sendPremiumEmail);
+// userRouter.post('/premium/send-email', userController.sendPremiumEmail);
 
 
 export default userRouter;
