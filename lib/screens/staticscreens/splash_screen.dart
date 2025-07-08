@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import '../home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,19 +22,44 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(seconds: 3),
     );
 
-    // Ensure we move to home screen after a maximum duration
-    Future.delayed(const Duration(seconds: 5), () {
+    // Check login and premium status after animation
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted && !_hasError) {
-        _navigateToHome();
+        _checkAccessAndNavigate();
       }
     });
   }
 
-  void _navigateToHome() {
+  Future<void> _checkAccessAndNavigate() async {
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => MyHomePage(title: 'books8')),
-    );
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+      if (!isLoggedIn) {
+        Navigator.of(context).pushReplacementNamed('/login');
+        return;
+      }
+
+      final isPremium = prefs.getBool('isPremium') ?? false;
+      final premiumStatus = prefs.getString('premiumStatus') ?? '';
+      final hasAccess = isPremium || premiumStatus == 'trial';
+
+      if (hasAccess) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      } else {
+        // User is logged in but doesn't have premium access
+        Navigator.of(context).pushReplacementNamed('/settings');
+      }
+    } catch (e) {
+      setState(() => _hasError = true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error checking access status')),
+        );
+      }
+    }
   }
 
   @override
@@ -72,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                 // Start the animation
                 _controller.forward().then((_) {
                   if (mounted) {
-                    _navigateToHome();
+                    _checkAccessAndNavigate();
                   }
                 });
               },

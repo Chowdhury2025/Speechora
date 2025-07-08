@@ -1,10 +1,11 @@
+import 'package:book8/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/auth_premium/login_screen.dart';
-import 'screens/auth_premium/settings_screen.dart';
 import 'screens/staticscreens/profile_screen.dart';
 import 'screens/subjects/presentation4/trueorfalse.dart';
 import 'screens/staticscreens/splash_screen.dart';
+import 'widgets/premium_access_wrapper.dart';
 
 // Duolingo-like colors
 class AppColors {
@@ -88,12 +89,17 @@ class MyApp extends StatelessWidget {
       ),
       home: const SplashScreen(),
       routes: {
-        '/home': (context) => MyHomePage(title: getUserDisplayName()),
+        // Unprotected routes (always accessible)
         '/login': (context) => const LoginScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/profile': (context) => ProfileScreen(),
-        '/TrueOrFalse': (context) => TrueOrFalse(),
-        // '/image-quiz': (context) => const ImageQuizScreen(),
+
+        // Protected routes (require premium or trial access)
+        '/home':
+            (context) => PremiumAccessWrapper(
+              child: MyHomePage(title: getUserDisplayName()),
+            ),
+        '/TrueOrFalse': (context) => PremiumAccessWrapper(child: TrueOrFalse()),
       },
       debugShowCheckedModeBanner: false,
     );
@@ -101,8 +107,7 @@ class MyApp extends StatelessWidget {
 }
 
 String getUserDisplayName() {
-  // Replace this with your actual user auth logic
-  // For example, if using FirebaseAuth:
-  // return FirebaseAuth.instance.currentUser?.displayName ?? 'User';
+  // Replace this the actual user auth logic
+
   return 'User'; // Placeholder, replace with real user name
 }

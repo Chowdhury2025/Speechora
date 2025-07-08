@@ -1,7 +1,7 @@
+import 'package:book8/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'auth_premium/settings_screen.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/lesson_base_subject_screen.dart';
 import 'subjects/presentation3/image_quiz_screen.dart';

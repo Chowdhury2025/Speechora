@@ -18,6 +18,8 @@ class PremiumInfo {
   final List<String>? accessTo;
   final List<String>? macAddresses;
   final double? balance;
+  final bool isActive;
+  final DateTime? trialExpiry; // Added field for trial expiry
 
   PremiumInfo({
     this.expiryDate,
@@ -25,6 +27,8 @@ class PremiumInfo {
     this.accessTo,
     this.macAddresses,
     this.balance,
+    this.isActive = false,
+    this.trialExpiry, // Initialize the new field
   });
 
   factory PremiumInfo.fromJson(Map<String, dynamic> json) {
@@ -40,22 +44,26 @@ class PremiumInfo {
           json['macAddresses'] != null
               ? List<String>.from(json['macAddresses'])
               : null,
-      balance:
-          (json['balance'] != null)
-              ? (json['balance'] is int
-                  ? (json['balance'] as int).toDouble()
-                  : json['balance'] as double)
+      balance: json['balance']?.toDouble(),
+      isActive: json['isActive'] ?? false,
+      trialExpiry:
+          json['trialExpiry'] != null
+              ? DateTime.parse(json['trialExpiry'])
               : null,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'expiryDate': expiryDate?.toIso8601String(),
-    'ageGroup': ageGroup,
-    'accessTo': accessTo,
-    'macAddresses': macAddresses,
-    'balance': balance,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'expiryDate': expiryDate?.toIso8601String(),
+      'ageGroup': ageGroup,
+      'accessTo': accessTo,
+      'macAddresses': macAddresses,
+      'balance': balance,
+      'isActive': isActive,
+      'trialExpiry': trialExpiry?.toIso8601String(),
+    };
+  }
 }
 
 class UserModel {
