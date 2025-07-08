@@ -4,7 +4,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/constants.dart';
-import '../../models/user_model.dart'; // Add this import
+import '../../models/user_model.dart';
+import '../../services/premium_guard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -65,8 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'emailVerificationToken': null,
             'bloodGroup': responseData['bloodGroup'],
             'address': responseData['address'],
-            'premium':
-                responseData['premium'], // <-- Accept premium from backend
+            'premium': responseData['premium'],
             'dateOfBirth': responseData['dateOfBirth'],
             'gender': responseData['gender'],
             'emergencyContact': responseData['emergencyContact'],
@@ -104,31 +104,26 @@ class _LoginScreenState extends State<LoginScreen> {
             user.emergencyContact ?? '',
           );
 
-          // --- PREMIUM LOGIC ---
-          final premium = user.premium;
-          bool isPremium = false;
-          if (premium != null) {
-            final expiry = premium.expiryDate;
-            final balance = premium.balance;
-            if (expiry != null &&
-                expiry.isAfter(DateTime.now()) &&
-                balance != null &&
-                balance > 0) {
-              isPremium = true;
+          // Handle premium status
+          if (responseData['premium'] != null) {
+            final premiumData = responseData['premium'];
+            await prefs.setBool('isPremium', premiumData['isActive'] ?? false);
+            await prefs.setString('premiumStatus', premiumData['status'] ?? '');
+            await prefs.setString('premiumExpiry', premiumData['expiryDate'] ?? '');
+            await prefs.setDouble('premiumBalance', (premiumData['balance'] ?? 0.0).toDouble());
+            
+            if (premiumData['trial'] != null) {
+              await prefs.setBool('hasUsedTrial', premiumData['trial']['used'] ?? false);
+              await prefs.setString('trialExpiry', premiumData['trial']['expiryDate'] ?? '');
             }
           }
-          await prefs.setBool('isPremium', isPremium);
-          await prefs.setString(
-            'premiumExpiry',
-            premium?.expiryDate?.toIso8601String() ?? '',
-          );
-          await prefs.setDouble('premiumBalance', premium?.balance ?? 0);
 
           print('=== DEBUG: Data saved to SharedPreferences ===');
 
           if (mounted) {
-            // Navigate to settings screen after successful login
-            Navigator.pushReplacementNamed(context, '/settings');
+            // Navigate based on premium status
+            final initialRoute = await PremiumGuard.getInitialRoute();
+            Navigator.of(context).pushReplacementNamed(initialRoute);
           }
         } catch (userModelError) {
           print('=== DEBUG: Error creating UserModel ===');
