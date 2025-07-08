@@ -41,6 +41,7 @@ const Sidebar = () => {
     { path: 'images', label: 'Images', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'quiz-images', label: 'Quiz Images', icon: ImagePlus, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'premium', label: 'Premium', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
+    { path: 'promo-codes', label: 'Promo Codes', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
     { path: 'analytics', label: 'Analytics', icon: BarChart2, roles: ['SUPERUSER', 'ADMIN'] },
     { path: 'settings', label: 'Settings', icon: Settings, roles: ['SUPERUSER', 'ADMIN'] }
   ];

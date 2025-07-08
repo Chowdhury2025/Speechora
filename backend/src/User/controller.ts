@@ -33,7 +33,12 @@ export const userRegisterController = async (req: Request, res: Response) => {
     const hashedPassword = await hash(password, 10);
     const verificationToken = generateOTP();
 
-    // Create user in the database
+    // Set up trial period (7 days)
+    const trialStartDate = new Date();
+    const trialExpiry = new Date(trialStartDate);
+    trialExpiry.setDate(trialExpiry.getDate() + 7);
+
+    // Create user in the database with trial period
     const user = await prisma.user.create({
       data: {
         username,
@@ -43,68 +48,48 @@ export const userRegisterController = async (req: Request, res: Response) => {
         role: role || "STUDENT",
         emailVerificationToken: verificationToken,
         isEmailVerified: false,
+        trialStartDate,
+        trialExpiry,
+        isTrialUsed: false,
+        premiumActive: true // Active during trial
       },
     });
 
-    // If this is user ID 1, make them a SUPERSUPERUSER
+    // If this is user ID 1, make them a SUPERUSER
     if (user.id === 1) {
       await prisma.user.update({
         where: { id: user.id },
         data: { 
-          role: "SUPERUSER", // Use a valid role from your UserRole enum
+          role: "SUPERUSER",
           group: user.id 
         },
       });
       user.role = "SUPERUSER";
     }
-    // If user is an SUPERUSER, assign group ID
-    else if (role === "SUPERUSER") {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { group: user.id },
-      });
-    }
 
-    // Build verification email content
-    const bodyContent = `
-    <p style="color: #2d3748; font-size: 1rem;">Dear ${user.username},</p>
-    <p style="color: #4a5568; font-size: 1rem; margin-top: 0.5rem;">
-      Thank you for registering with us. We're excited to have you join our community.
-    </p>
-    <p style="color: #4a5568; font-size: 1rem; margin-top: 0.5rem;">
-      Please verify your email by using the following code:
-    </p>
-    <div style="text-align: center; font-size: 1.25rem; font-weight: bold; color: #2f855a; margin: 1rem auto; padding: 0.5rem; background-color: #f0fff4; border-radius: 0.375rem; max-width: 20rem;">
-      ${verificationToken}
-    </div>
-    <p style="color: #4a5568; font-size: 1rem; margin-top: 0.5rem;">
-      Or click the link below to verify your email:
-    </p>
-    <div style="text-align: center; margin-top: 1rem;">      <a href="${frontendUrl}/verify/email/${verificationToken}" style="background-color: #48bb78; color: #ffffff; padding: 0.5rem 1rem; border-radius: 0.25rem; display: inline-block; text-decoration: none;">
-        Verify Email
-      </a>
-    </div>
-  `;
-
+    // Send verification email
+    const verificationLink = `${frontendUrl}/verify-email?token=${verificationToken}&email=${email}`;
     const emailOptions = {
-      to: user.email,
-      subject: "Welcome to Management - Verify Your Email",
+      to: email,
+      subject: "Welcome to Book8 - Verify Your Email",
       html: generateEmailLayout({
-        title: "Welcome to Management - Verify Your Email",
-        bodyContent,
+        title: "Welcome to Book8!",
+        bodyContent: `
+          <p>Dear ${username},</p>
+          <p>Welcome to Book8! You have a 7-day trial period to explore our premium features.</p>
+          <p>Please verify your email by clicking the button below:</p>
+          <a href="${verificationLink}" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+          <p>This link will expire in 24 hours.</p>
+        `,
       }),
     };
 
     await sendMail(emailOptions);
 
-    return res.status(StatusCodes.OK).json({ 
-      username: user.username,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      role: user.role,
+    res.status(StatusCodes.CREATED).json({
       message: user.id === 1
         ? "Registration successful. You have been assigned as SUPERUSER. Please verify your email."
-        : "Registration successful. Please verify your email.",
+        : "Registration successful. Your 7-day trial period has started. Please verify your email.",
     }); 
   } catch (error: any) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -117,7 +102,8 @@ export const userRegisterController = async (req: Request, res: Response) => {
 export const loginController = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    console.log(req.body);
+    
+    // Find the user and include all necessary fields
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
@@ -137,7 +123,10 @@ export const loginController = async (req: Request, res: Response) => {
         premiumBalance: true,
         premiumDeduction: true,
         premiumExpiry: true,
-        password: true, // Needed for password check
+        trialExpiry: true,
+        trialStartDate: true,
+        isTrialUsed: true,
+        password: true,
       },
     });
 
@@ -149,11 +138,36 @@ export const loginController = async (req: Request, res: Response) => {
     if (!verifyPassword) {
       return res.status(StatusCodes.UNAUTHORIZED).send("Invalid Password");
     }
+
     if (!user.isEmailVerified) {
       return res.status(StatusCodes.FORBIDDEN).json({
         message: "Email not verified. Please verify your email before logging in.",
         needsVerification: true,
       });
+    }
+
+    // Check trial and premium status
+    let isPremium = user.premiumActive;
+    let premiumExpiry = user.premiumExpiry;
+    const now = new Date();
+
+    // If user is in trial period
+    if (user.trialExpiry && !user.isTrialUsed && user.trialExpiry > now) {
+      isPremium = true;
+      premiumExpiry = user.trialExpiry;
+    } 
+    // If trial has expired and user hasn't purchased premium
+    else if (user.trialExpiry && !user.isTrialUsed && user.trialExpiry <= now) {
+      // Mark trial as used
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { 
+          isTrialUsed: true,
+          premiumActive: false 
+        },
+      });
+      isPremium = false;
+      premiumExpiry = null;
     }
 
     // Return user details with premium info
@@ -171,10 +185,11 @@ export const loginController = async (req: Request, res: Response) => {
       emergencyContact: user.emergencyContact,
       isEmailVerified: user.isEmailVerified,
       premium: {
-        expiryDate: user.premiumExpiry,
+        isActive: isPremium,
         balance: user.premiumBalance,
         deduction: user.premiumDeduction,
-        isPremium: user.premiumActive,
+        expiry: premiumExpiry,
+        trialExpiry: !user.isTrialUsed ? user.trialExpiry : null,
       },
     });
   } catch (error: any) {

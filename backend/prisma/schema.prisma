@@ -32,6 +32,7 @@ model User {
   images                 images[]  @relation("ImageUploader")
   tests                  Test[]    @relation("TestCreator")
   quizImages            QuizImage[] @relation("QuizImageUploader")
+  //  usedPromoCodes        UsedPromoCode[] @relation("UserUsedPromoCodes")
 
   Lesson Lesson[]
 
@@ -39,6 +40,11 @@ model User {
   premiumActive    Boolean  @default(false)
   premiumDeduction Float    @default(0)
   premiumExpiry    DateTime?
+  trialStartDate   DateTime?
+  trialExpiry      DateTime?
+  isTrialUsed      Boolean  @default(false)
+
+  UsedPromoCode UsedPromoCode[] @relation("UserUsedPromoCodes")
 }
 
 model SystemSettings {
@@ -136,6 +142,32 @@ model QuizImage {
   uploader    User?    @relation("QuizImageUploader", fields: [userId], references: [id])
   @@index([category])
   @@index([ageGroup])
+}
+
+model PromoCode {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique
+  discount    Float     // Percentage discount (e.g., 10.0 for 10%)
+  maxUses     Int       // Maximum number of times this code can be used
+  usedCount   Int       @default(0)
+  validFrom   DateTime  @default(now())
+  validUntil  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  usedBy      UsedPromoCode[]
+}
+
+model UsedPromoCode {
+  id          Int       @id @default(autoincrement())
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  promoCodeId Int
+  user        User      @relation("UserUsedPromoCodes", fields: [userId], references: [id])
+  userId      Int
+  usedAt      DateTime  @default(now())
+  amountSaved Float     // Amount saved by using this promo code
+
+  @@unique([promoCodeId, userId]) // Each user can only use a promo code once
 }
 
 enum UserRole {

@@ -43,29 +43,7 @@ const dummyData = {
             }
         ]
     },
-    recentTests: [
-        {
-            id: 1,
-            title: "Mathematics Test 1",
-            subject: "Mathematics",
-            score: 85,
-            date: "2025-06-20T10:00:00.000Z"
-        },
-        {
-            id: 2,
-            title: "English Grammar",
-            subject: "English",
-            score: 92,
-            date: "2025-06-19T14:30:00.000Z"
-        },
-        {
-            id: 3,
-            title: "Science Quiz",
-            subject: "Science",
-            score: 88,
-            date: "2025-06-18T09:15:00.000Z"
-        }
-    ],
+ 
     completedLessons: {
         count: 24,
         recentLessons: [

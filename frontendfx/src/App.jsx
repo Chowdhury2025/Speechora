@@ -33,12 +33,14 @@ import LandingPage from './app/pages/LandigPage.jsx'; // Added import
 import LessonsListPage from './app/pages/lessons/LessonsListPage.jsx';
 import CreateLessonPage from './app/pages/lessons/CreateLessonPage.jsx';
 import EditLessonPage from './app/pages/lessons/EditLessonPage.jsx';
+import PromoCodesPage from './app/pages/PromoCodesPage.jsx';
 
 // Define which menu items are accessible to each role
-const ROLE_PERMISSIONS = {  SUPERUSER: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds','Videos-Upload'],
-  ADMIN: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds'],
+const ROLE_PERMISSIONS = {  
+  SUPERUSER: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Videos-Upload', 'Promo Codes'],
+  ADMIN: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Promo Codes'],
   CONTENTMANAGER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
-  SUPPORT: ['Users', 'Premium', 'IWantNeeds'],
+  SUPPORT: ['Users', 'Premium', 'IWantNeeds', 'Promo Codes'],
   PARENT_GUARDIAN: ['Parent Dashboard', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
   TEACHER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Quiz Images'],
 };
@@ -71,6 +73,7 @@ const APP_ROUTES = [
   { name: 'Quiz Images', path: 'quiz-images/edit/:id', element: QuizImageEditPage },
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
   { name: 'Settings',  path: 'settings',  element: SettingsPage },
+  { name: 'Promo Codes', path: 'promo-codes', element: PromoCodesPage },
   
   // Sub-routes
   { name: 'Videos',    path: 'videos/upload', element: VideoUploadPage },

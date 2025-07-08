@@ -15,6 +15,7 @@ import lessonRouter from "./lesson/router";
 import quizImageRouter from "./QuizImage/router";
 import parentRouter from "./app/Parent/router";  // Add parent router import
 import systemSettingsRouter from './SystemSettings/router';
+import promoCodeRouter from './app/PromoCode/router';  // Add promo code router import
 
 
 const app: Express = express();
@@ -75,10 +76,16 @@ app.use("/api/lessons", lessonRouter);
 app.use("/api/quiz-images", quizImageRouter);
 app.use("/api", parentRouter);  // Add parent routes
 app.use('/api/system', systemSettingsRouter); // Premium Pricing uses POST for update
+app.use('/api/promo-codes', promoCodeRouter); // Add promo code routes
 
 // Add email configuration router
 
-
+// Version check endpoint
+app.get('/api/version', (req: Request, res: Response) => {
+  // You can set this in your .env or hardcode for now
+  const version = process.env.APP_VERSION || '1.0.0';
+  res.json({ version });
+});
 
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);

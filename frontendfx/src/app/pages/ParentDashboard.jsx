@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
 import api from '../../utils/api';
+import { toast } from 'react-toastify';
 import { 
   BookOpen, 
   GraduationCap, 
@@ -13,7 +14,8 @@ import {
   Star,
   DollarSign,
   Receipt,
-  CreditCard
+  CreditCard,
+  Tag
 } from 'lucide-react';
 import { fetchPremiumPrice } from '../utils/premium';
 
@@ -45,6 +47,12 @@ const ParentDashboard = () => {
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumError, setPremiumError] = useState(null);
   const [premiumPrice, setPremiumPrice] = useState(null);
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState(null);
+  const [promoSuccess, setPromoSuccess] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -213,6 +221,67 @@ const ParentDashboard = () => {
     }
   };
 
+  const handleValidatePromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    setPromoLoading(true);
+    setPromoError(null);
+    setPromoSuccess(null);
+
+    try {
+      const response = await api.post(`${process.env.REACT_APP_API_URL}/api/promo-codes/validate`, {
+        code: promoCode
+      });
+      
+      if (response.data.valid) {
+        setPromoSuccess(`Valid promo code! ${response.data.discount}% discount available`);
+      } else {
+        setPromoError('Invalid promo code');
+      }
+    } catch (error) {
+      setPromoError(error.response?.data?.error || 'Failed to validate promo code');
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleApplyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    setPromoLoading(true);
+    setPromoError(null);
+    setPromoSuccess(null);
+
+    try {
+      const response = await api.post(`${process.env.REACT_APP_API_URL}/api/promo-codes/apply`, {
+        code: promoCode
+      });
+      
+      if (response.data.success) {
+        setPromoSuccess(`Promo code applied! ${response.data.discount}% discount (₦${response.data.discountAmount} saved)`);
+        // Update premium price to reflect the discount
+        setPremiumPrice(response.data.finalPrice);
+        // Clear the promo code input
+        setPromoCode('');
+        // Refresh premium info to show updated balance
+        await fetchPremiumInfo();
+        toast.success('Promo code applied successfully!');
+      } else {
+        setPromoError('Failed to apply promo code');
+      }
+    } catch (error) {
+      setPromoError(error.response?.data?.error || 'Failed to apply promo code');
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
   const StatCard = ({ icon: Icon, title, value, color }) => (
     <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5] hover:border-[#58cc02] transition-all duration-200 shadow-sm">
       <div className="flex items-center justify-between">
@@ -293,7 +362,7 @@ const ParentDashboard = () => {
       {/* Recent Activity & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Tests */}
-        <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5]">
+        {/* <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-[#3c9202]">Recent Tests</h2>
             <button 
@@ -317,7 +386,7 @@ const ParentDashboard = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Progress Chart */}
         <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5]">
@@ -334,38 +403,7 @@ const ParentDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* Child Progress Section */}
-      <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
-        <h2 className="text-xl font-bold text-[#3c9202] mb-4">Subject Progress</h2>
-        <div className="mb-4">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
-            style={{ background: premium.isActive ? '#e5f5d5' : '#ffe5e5', color: premium.isActive ? '#3c9202' : '#d32f2f' }}>
-            {premium.isActive ? 'Premium Account Active' : 'Not a Premium Account'}
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {dashboardData.childProgress.map((subject, index) => (
-            <div key={index} className="bg-[#f7ffec] rounded-xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold text-[#3c9202]">{subject.subject}</h3>
-                <span className="text-[#58cc02] font-bold">{subject.progress}%</span>
-              </div>
-              <div className="w-full bg-[#e5f5d5] rounded-full h-2.5">
-                <div 
-                  className="bg-[#58cc02] h-2.5 rounded-full" 
-                  style={{ width: `${subject.progress}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-[#58cc02] mt-2">
-                {subject.completedLessons} of {subject.totalLessons} lessons completed
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* School Fees Section */}
+      {/* School subscrition section */}
       <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#3c9202]">School Fees</h2>          <button 
@@ -378,52 +416,7 @@ const ParentDashboard = () => {
           </button>
         </div>
 
-        {/* Current Term Fees */}
-        <div className="bg-[#f7ffec] rounded-xl p-6 mb-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="font-bold text-[#3c9202]">
-                {dashboardData.schoolFees.currentTerm.term} - {dashboardData.schoolFees.currentTerm.year}
-              </h3>
-              <p className="text-sm text-[#58cc02]">
-                Due by {new Date(dashboardData.schoolFees.currentTerm.dueDate).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-[#3c9202]">
-                ₦{dashboardData.schoolFees.currentTerm.amount?.toLocaleString()}
-              </p>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs ${
-                dashboardData.schoolFees.currentTerm.status === 'paid' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>                {dashboardData.schoolFees.currentTerm.status === 'paid' ? 'Paid' : 'Unpaid'}
-              </span>
-              {dashboardData.schoolFees.currentTerm.status !== 'paid' && (
-                <button 
-                  onClick={() => navigate('/app/premium')}
-                  className="mt-2 flex items-center gap-2 bg-[#58cc02] hover:bg-[#47b102] text-white px-3 py-1.5 rounded-xl
-                    transition-colors duration-200 border-b-2 border-[#3c9202] text-sm"
-                >
-                  <CreditCard className="w-3 h-3" />
-                  <span>Pay Now</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Fee Breakdown */}
-          <div className="space-y-2">
-            {dashboardData.schoolFees.currentTerm.breakdown?.map((item, index) => (
-              <div key={index} className="flex justify-between items-center">
-                <span className="text-sm text-[#3c9202]">{item.item}</span>
-                <span className="text-sm font-bold text-[#58cc02]">
-                  ₦{item.amount.toLocaleString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        
 
         {/* Payment History */}
         <div>
@@ -450,6 +443,7 @@ const ParentDashboard = () => {
                   </p>
                   <p className="text-sm text-[#58cc02]">
                     {new Date(payment.datePaid).toLocaleDateString()}
+
                   </p>
                 </div>
               </div>
@@ -461,7 +455,6 @@ const ParentDashboard = () => {
       {/* Achievements Section */}
       <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
         <h2 className="text-xl font-bold text-[#3c9202] mb-4">Recent Achievements</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {dashboardData.achievements.map((achievement) => (
             <div key={achievement.id} className="flex items-center p-4 bg-[#f7ffec] rounded-xl">
               <Star className="w-8 h-8 text-[#ffc800] mr-3" />
@@ -471,7 +464,7 @@ const ParentDashboard = () => {
               </div>
             </div>
           ))}
-        </div>
+        {/* </div> */}
       </div>
 
       {/* Premium Section */}
@@ -527,6 +520,52 @@ const ParentDashboard = () => {
                 Your balance will last for <b>{Math.floor(premium.balance / premium.deduction)}</b> month(s).
               </p>
             )}
+
+            {/* Promo Code Section */}
+            <div className="mt-6 border-t pt-4 border-[#e5f5d5]">
+              <h3 className="text-lg font-semibold text-[#3c9202] mb-3 flex items-center gap-2">
+                <Tag className="w-5 h-5" />
+                Promo Code
+              </h3>
+              <div className="flex gap-2 items-start">
+                <div className="flex-1 space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Enter promo code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    className="w-full border-2 border-[#e5f5d5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#58cc02]"
+                  />
+                  {promoError && (
+                    <p className="text-red-500 text-sm">{promoError}</p>
+                  )}
+                  {promoSuccess && (
+                    <p className="text-green-600 text-sm">{promoSuccess}</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleValidatePromoCode}
+                    disabled={promoLoading || !promoCode.trim()}
+                    className="px-4 py-2 bg-[#e5f5d5] text-[#3c9202] rounded-lg hover:bg-[#c8f2a0] transition-colors
+                      focus:outline-none focus:ring-2 focus:ring-[#58cc02] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Validate
+                  </button>
+                  <button
+                    onClick={handleApplyPromoCode}
+                    disabled={promoLoading || !promoCode.trim()}
+                    className="px-4 py-2 bg-[#58cc02] text-white rounded-lg hover:bg-[#47b102] transition-colors
+                      focus:outline-none focus:ring-2 focus:ring-[#58cc02] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">
+                Enter a promo code to get a discount on your premium subscription
+              </p>
+            </div>
           </>
         )}
       </div>
