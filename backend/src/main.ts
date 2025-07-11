@@ -81,7 +81,7 @@ app.use('/api/promo-codes', promoCodeRouter); // Add promo code routes
 // Add email configuration router
 
 // Version check endpoint
-app.get('/api/version', (req: Request, res: Response) => {
+app.get('/api/version', (_req: Request, res: Response) => {
   // You can set this in your .env or hardcode for now
   const version = process.env.APP_VERSION || '1.0.0';
   res.json({ version });
