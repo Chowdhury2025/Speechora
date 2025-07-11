@@ -117,7 +117,7 @@ const Register = () => {
                     type="text"
                     autoComplete="username"
                     required
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                     placeholder="Username"
                     value={formData.username}
                     onChange={handleChange}
@@ -137,7 +137,7 @@ const Register = () => {
                     type="email"
                     autoComplete="email"
                     required
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                     placeholder="Email address"
                     value={formData.email}
                     onChange={handleChange}
@@ -157,7 +157,7 @@ const Register = () => {
                     type="tel"
                     autoComplete="tel"
                     required
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                     placeholder="Phone Number"
                     value={formData.phoneNumber}
                     onChange={handleChange}
@@ -177,7 +177,7 @@ const Register = () => {
                     type="password"
                     autoComplete="new-password"
                     required
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                     placeholder="Password"
                     value={formData.password}
                     onChange={handleChange}
@@ -197,7 +197,7 @@ const Register = () => {
                     type="password"
                     autoComplete="new-password"
                     required
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                     placeholder="Confirm Password"
                     value={formData.confirmPassword}
                     onChange={handleChange}

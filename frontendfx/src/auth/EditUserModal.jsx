@@ -107,7 +107,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                     id="username"
                     value={formData.username}
                     onChange={handleChange}
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   />
                 </div>
 
@@ -124,7 +124,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                     id="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   />
                 </div>
 
@@ -140,7 +140,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                     id="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   >
                     <option value="USER">User</option>
                     <option value="ADMIN">Admin</option>

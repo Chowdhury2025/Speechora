@@ -71,7 +71,7 @@ const UpdatePassword = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your email"
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   />
                 </div>
               </div>
@@ -88,7 +88,7 @@ const UpdatePassword = () => {
                     value={formData.otp}
                     onChange={handleChange}
                     placeholder="Enter OTP code"
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   />
                 </div>
               </div>
@@ -106,7 +106,7 @@ const UpdatePassword = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter new password"
-                    className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   />
                   <button
                     type="button"
