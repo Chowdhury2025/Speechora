@@ -70,7 +70,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   required
                 />
               </div>
@@ -84,7 +84,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   required
                 />
               </div>
@@ -98,7 +98,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                   required
                 />
               </div>
@@ -111,7 +111,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className={componentStyles.input.base}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary font-medium"
                 >
                   <option value="USER">User</option>
                   <option value="ADMIN">Admin</option>
