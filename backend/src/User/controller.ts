@@ -77,6 +77,7 @@ export const userRegisterController = async (req: Request, res: Response) => {
         bodyContent: `
           <p>Dear ${username},</p>
           <p>Welcome to Book8! You have a 7-day trial period to explore our premium features.</p>
+          <p> this is your Verification Code ${verificationToken}</p>
           <p>Please verify your email by clicking the button below:</p>
           <a href="${verificationLink}" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
           <p>This link will expire in 24 hours.</p>
