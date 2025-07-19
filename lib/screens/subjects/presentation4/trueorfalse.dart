@@ -37,7 +37,14 @@ class Fruit {
 }
 
 class TrueOrFalse extends StatefulWidget {
-  const TrueOrFalse({Key? key}) : super(key: key);
+  final Color backgroundColor;
+  final String title;
+
+  const TrueOrFalse({
+    Key? key,
+    this.backgroundColor = const Color(0xFF58CC02),
+    this.title = 'Yes or No Quiz',
+  }) : super(key: key);
 
   @override
   _TrueOrFalseState createState() => _TrueOrFalseState();
@@ -190,10 +197,11 @@ class _TrueOrFalseState extends State<TrueOrFalse>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFBEE9E8),
+      backgroundColor: widget.backgroundColor,
       appBar: AppBar(
-        title: const Text('True or False'),
-        backgroundColor: Colors.blue,
+        title: Text(widget.title),
+        backgroundColor: widget.backgroundColor,
+        elevation: 0,
         actions: [
           if (currentFruit != null)
             IconButton(
@@ -230,13 +238,21 @@ class _TrueOrFalseState extends State<TrueOrFalse>
                     // Fruit image with rounded background
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3C7),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
                       padding: const EdgeInsets.all(24),
                       child: SizedBox(
-                        width: 140,
-                        height: 140,
+                        width: 280,
+                        height: 280,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
                           child:
@@ -262,7 +278,7 @@ class _TrueOrFalseState extends State<TrueOrFalse>
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFE0B2),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(24),
                           ),
                           padding: const EdgeInsets.symmetric(
@@ -362,8 +378,15 @@ class _TrueOrFalseState extends State<TrueOrFalse>
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3C7),
+                            color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ],
                           ),
                           padding: const EdgeInsets.symmetric(
                             vertical: 16,

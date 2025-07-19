@@ -4,7 +4,14 @@ import '../../../services/tts_service.dart';
 import '../../../services/quiz_image_service.dart';
 
 class ImageQuizScreen extends StatefulWidget {
-  const ImageQuizScreen({Key? key, required String title}) : super(key: key);
+  final String title;
+  final Color backgroundColor;
+
+  const ImageQuizScreen({
+    Key? key, 
+    required this.title,
+    this.backgroundColor = const Color(0xFF58CC02),
+  }) : super(key: key);
 
   @override
   State<ImageQuizScreen> createState() => _ImageQuizScreenState();

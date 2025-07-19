@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/lesson_base_subject_screen.dart';
 import 'subjects/presentation3/image_quiz_screen.dart';
-import 'subjects/presentation5/image_quiz_screen.dart';
 import 'subjects/presentation6/how_questions_screen.dart';
 import 'others_screen.dart';
 import 'subjects/presentation4/trueorfalse.dart';
@@ -32,9 +31,14 @@ class _MyHomePageState extends State<MyHomePage> {
   String userEmail = '';
   final List<SubjectCard> subjects = [
     SubjectCard(
-      title: 'Image Quiz Game',
-      icon: Icons.image_search,
+      title: 'Select the Item',
+      icon: Icons.check_circle_outline,
       color: const Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'Guess the Named Image',
+      icon: Icons.image_search,
+      color: const Color(0xFF1CB0F6),
     ),
     SubjectCard(
       title: 'My World & Daily Life',
@@ -130,11 +134,6 @@ class _MyHomePageState extends State<MyHomePage> {
       title: 'Question Starters',
       icon: Icons.question_answer,
       color: const Color(0xFFFFC800),
-    ),
-    SubjectCard(
-      title: 'Yes or No quiz',
-      icon: Icons.quiz,
-      color: const Color(0xFF58CC02),
     ),
     SubjectCard(
       title: 'Others',
@@ -287,18 +286,17 @@ class _MyHomePageState extends State<MyHomePage> {
           subject: 'why_questions',
         );
         break;
-      case 'Image Quiz Game':
-        screen = PresentationTwo(
-          title: 'Lessons',
+      case 'Select the Item':
+        screen = TrueOrFalse(backgroundColor: color, title: 'Select the Item');
+        break;
+      case 'Guess the Named Image':
+        screen = ImageQuizScreen(
+          title: 'Guess the Named Image',
           backgroundColor: color,
-          subject: 'presentation3_lessons',
         );
         break;
       case 'How Questions':
         screen = LessonScreen(backgroundColor: color);
-        break;
-      case 'Yes or No quiz':
-        screen = TrueOrFalse();
         break;
       case 'Others':
         screen = OthersScreen(backgroundColor: color);

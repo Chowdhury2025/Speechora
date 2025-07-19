@@ -100,11 +100,6 @@ class MyApp extends StatelessWidget {
               child: MyHomePage(title: getUserDisplayName()),
               onAccessDeniedRoute: '/settings',
             ),
-        '/TrueOrFalse':
-            (context) => PremiumAccessWrapper(
-              child: TrueOrFalse(),
-              onAccessDeniedRoute: '/settings',
-            ),
       },
       debugShowCheckedModeBanner: false,
     );
