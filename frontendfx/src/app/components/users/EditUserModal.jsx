@@ -1,9 +1,9 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
-import ReactDOM from "react-dom";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { API_URL } from "../../../config";
+import { API_URL } from "../../../config.js";
 
 const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
   const [formData, setFormData] = useState({
@@ -138,10 +138,13 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
                   onChange={handleChange}
                   className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-gray-100"
                 >
-                  <option value="STUDENT">STUDENT</option>
-                  <option value="INSPECTOR">INSPECTOR</option>
-                  <option value="TEACHER">TEACHER</option>
                   <option value="ADMIN">ADMIN</option>
+                  <option value="SUPERUSER">SUPERUSER</option>
+                  <option value="INSPECTOR">INSPECTOR</option>
+                  <option value="STUDENT">STUDENT</option>
+                  <option value="TEACHER">TEACHER</option>
+                  <option value="GUARDIAN_PARENT">GUARDIAN PARENT</option>
+                  <option value="FINANCE">FINANCE</option>
                 </select>
               </div>
 
@@ -198,7 +201,7 @@ const EditUserModal = ({ isOpen, onClose, onUserUpdated, user }) => {
     </AnimatePresence>
   );
 
-  return ReactDOM.createPortal(modalContent, document.body);
+  return createPortal(modalContent, document.body);
 };
 
 export default EditUserModal;

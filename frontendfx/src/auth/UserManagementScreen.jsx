@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { API_URL } from '../config';
 import axios from 'axios';
 import AddUserModal from './AddUserModal.jsx';
-import EditUserModal from './EditUserModal.jsx';
+import EditUserModal from '../../src/app/components/users/EditUserModal.jsx';
 
 const UserManagementScreen = () => {
   const [users, setUsers] = useState([]);

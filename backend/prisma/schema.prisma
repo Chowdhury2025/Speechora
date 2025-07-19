@@ -19,7 +19,7 @@ model User {
   group                  Int?
   createdAt              DateTime  @default(now())
   nrc_card_id            String?
-  role                   UserRole  @default(STUDENT)
+  role                   UserRole  @default(GUARDIAN_PARENT)
   isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
   bloodGroup             String?
