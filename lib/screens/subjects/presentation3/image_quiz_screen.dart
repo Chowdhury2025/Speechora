@@ -8,7 +8,7 @@ class ImageQuizScreen extends StatefulWidget {
   final Color backgroundColor;
 
   const ImageQuizScreen({
-    Key? key, 
+    Key? key,
     required this.title,
     this.backgroundColor = const Color(0xFF58CC02),
   }) : super(key: key);

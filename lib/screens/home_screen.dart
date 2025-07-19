@@ -31,119 +31,107 @@ class _MyHomePageState extends State<MyHomePage> {
   String userEmail = '';
   final List<SubjectCard> subjects = [
     SubjectCard(
-      title: 'Select the Item',
-      icon: Icons.check_circle_outline,
-      color: const Color(0xFF58CC02),
-    ),
-    SubjectCard(
-      title: 'Guess the Named Image',
-      icon: Icons.image_search,
-      color: const Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'My World & Daily Life',
+      title: 'My World & Daily Life', // 1. Daily Routine
       icon: Icons.home_outlined,
-      color: const Color(0xFF1CB0F6),
+      color: Color(0xFF1CB0F6),
     ),
-    SubjectCard(
-      title: 'Home',
-      icon: Icons.house,
-      color: const Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'School',
-      icon: Icons.school,
-      color: const Color(0xFFFFC800),
-    ),
+    SubjectCard(title: 'Home', icon: Icons.house, color: Color(0xFFFF4B4B)),
+    SubjectCard(title: 'School', icon: Icons.school, color: Color(0xFFFFC800)),
     SubjectCard(
       title: 'Therapy',
       icon: Icons.healing,
-      color: const Color(0xFF58CC02),
+      color: Color(0xFF58CC02),
     ),
     SubjectCard(
       title: 'Activities',
       icon: Icons.sports_basketball,
-      color: const Color(0xFF1CB0F6),
+      color: Color(0xFF1CB0F6),
     ),
     SubjectCard(
       title: 'Family & Friends',
       icon: Icons.people,
-      color: const Color(0xFFFF4B4B),
+      color: Color(0xFFFF4B4B),
     ),
     SubjectCard(
       title: 'Toys & Games',
       icon: Icons.toys,
-      color: const Color(0xFFFFC800),
+      color: Color(0xFFFFC800),
     ),
     SubjectCard(
       title: 'Food & Drink',
       icon: Icons.restaurant,
-      color: const Color(0xFF58CC02),
+      color: Color(0xFF58CC02),
     ),
+    SubjectCard(title: 'Places', icon: Icons.place, color: Color(0xFF1CB0F6)),
     SubjectCard(
-      title: 'Places',
-      icon: Icons.place,
-      color: const Color(0xFF1CB0F6),
+      title: 'Actions / Verbs', // 10. Action Verbs
+      icon: Icons.directions_run,
+      color: Color(0xFFFFC800),
     ),
     SubjectCard(
       title: 'I Want / Needs',
       icon: Icons.favorite,
-      color: const Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'Actions / Verbs',
-      icon: Icons.directions_run,
-      color: const Color(0xFFFFC800),
+      color: Color(0xFFFF4B4B),
     ),
     SubjectCard(
       title: 'What Questions',
       icon: Icons.help_outline,
-      color: const Color(0xFF58CC02),
+      color: Color(0xFF58CC02),
     ),
     SubjectCard(
       title: 'Where Questions',
       icon: Icons.map,
-      color: const Color(0xFF1CB0F6),
+      color: Color(0xFF1CB0F6),
     ),
     SubjectCard(
       title: 'Who Questions',
       icon: Icons.person_search,
-      color: const Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'When Questions',
-      icon: Icons.access_time,
-      color: const Color(0xFFFFC800),
+      color: Color(0xFFFF4B4B),
     ),
     SubjectCard(
       title: 'Why Questions',
       icon: Icons.psychology,
-      color: const Color(0xFF58CC02),
+      color: Color(0xFF58CC02),
     ),
     SubjectCard(
       title: 'How Questions',
       icon: Icons.lightbulb_outline,
-      color: const Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'Choice Questions',
-      icon: Icons.rule,
-      color: const Color(0xFFFF4B4B),
+      color: Color(0xFF1CB0F6),
     ),
     SubjectCard(
       title: 'Question Starters',
       icon: Icons.question_answer,
-      color: const Color(0xFFFFC800),
+      color: Color(0xFFFFC800),
     ),
     SubjectCard(
-      title: 'Others',
+      title: 'When Questions',
+      icon: Icons.access_time,
+      color: Color(0xFFFFC800),
+    ),
+    SubjectCard(
+      title: 'Choice Questions',
+      icon: Icons.rule,
+      color: Color(0xFFFF4B4B),
+    ),
+    SubjectCard(
+      title: 'Others', // 20. Basic Responses
       icon: Icons.more_horiz,
-      color: const Color(0xFF1CB0F6),
+      color: Color(0xFF1CB0F6),
     ),
     SubjectCard(
-      title: 'How To',
+      title: 'Select the Item', // 21. Find the Item
+      icon: Icons.check_circle_outline,
+      color: Color(0xFF58CC02),
+    ),
+    SubjectCard(
+      title: 'How To', // 22. Video Learning
       icon: Icons.video_library,
-      color: const Color(0xFF1CB0F6),
+      color: Color(0xFF1CB0F6),
+    ),
+    SubjectCard(
+      title: 'Guess the Named Image', // 23. Games
+      icon: Icons.image_search,
+      color: Color(0xFF1CB0F6),
     ),
   ];
 
@@ -219,7 +207,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 'Toys & Games':
         screen = const ReusableImageGridScreen(
           title: 'Toys & Games',
-          imageCategory: 'toys_and_games',
+          imageCategory: 'toys_games',
           backgroundColor: Color(0xFFFFC800),
         );
         break;

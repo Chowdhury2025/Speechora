@@ -3,7 +3,7 @@ import '../../../models/lesson_models.dart';
 import '../../../services/lesson_service.dart';
 import 'lesson_detail_screen.dart';
 
-class PresentationTwo extends StatelessWidget {
+class PresentationTwo extends StatefulWidget {
   final String title;
   final Color backgroundColor;
   final String subject;
@@ -14,12 +14,24 @@ class PresentationTwo extends StatelessWidget {
     required this.backgroundColor,
     required this.subject,
   });
+
+  @override
+  State<PresentationTwo> createState() => _PresentationTwoState();
+}
+
+class _PresentationTwoState extends State<PresentationTwo> {
+  bool isLoading = false;
+  List<Lesson> lessons = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title), backgroundColor: backgroundColor),
+      appBar: AppBar(
+        title: Text(widget.title),
+        backgroundColor: widget.backgroundColor,
+      ),
       body: FutureBuilder<List<Lesson>>(
-        future: LessonService.getLessonsBySubject(subject),
+        future: LessonService.getLessonsBySubject(widget.subject),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -29,22 +41,38 @@ class PresentationTwo extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final lessons = snapshot.data ?? [];
+          lessons = snapshot.data ?? [];
           if (lessons.isEmpty) {
-            return const Center(child: Text('No lessons available SS'));
+            return const Center(child: Text('No lessons available'));
           }
 
-          return ListView.builder(
-            itemCount: lessons.length,
-            itemBuilder: (context, index) {
-              final lesson = lessons[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() {
+                isLoading = true;
+              });
+              final newLessons = await LessonService.getLessonsBySubject(
+                widget.subject,
+              );
+              if (mounted) {
+                setState(() {
+                  lessons = newLessons;
+                  isLoading = false;
+                });
+              }
+            },
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: lessons.length,
+              itemBuilder: (context, index) {
+                final lesson = lessons[index];
+                return GestureDetector(
                   onTap:
                       () => Navigator.push(
                         context,
@@ -52,91 +80,85 @@ class PresentationTwo extends StatelessWidget {
                           builder:
                               (_) => LessonDetailScreen(
                                 lesson: lesson,
-                                backgroundColor: backgroundColor,
+                                backgroundColor: widget.backgroundColor,
                               ),
                         ),
                       ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: backgroundColor.withOpacity(0.18),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                      border: Border.all(
-                        color: backgroundColor.withOpacity(0.18),
-                        width: 1.5,
+                  child: Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(
+                            color: widget.backgroundColor.withOpacity(0.1),
+                            child: Icon(
+                              Icons.menu_book,
+                              size: 48,
+                              color: widget.backgroundColor.withOpacity(0.3),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.8),
+                                    Colors.black.withOpacity(0.4),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    lesson.title,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (lesson.description != null &&
+                                      lesson.description!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        lesson.description!,
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.all(14),
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: backgroundColor.withOpacity(0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.menu_book,
-                            color: backgroundColor,
-                            size: 28,
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 18,
-                              horizontal: 0,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  lesson.title,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                    color: backgroundColor,
-                                  ),
-                                ),
-                                if (lesson.description != null &&
-                                    lesson.description!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4.0),
-                                    child: Text(
-                                      lesson.description!,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black54,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 16.0),
-                          child: Icon(
-                            Icons.arrow_forward_ios,
-                            color: backgroundColor,
-                            size: 22,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),
