@@ -95,14 +95,16 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => ProfileScreen(),
 
         // Protected routes (require premium or trial access)
-        '/home': (context) => PremiumAccessWrapper(
-          child: MyHomePage(title: getUserDisplayName()),
-          onAccessDeniedRoute: '/settings',
-        ),
-        '/TrueOrFalse': (context) => PremiumAccessWrapper(
-          child: TrueOrFalse(),
-          onAccessDeniedRoute: '/settings',
-        ),
+        '/home':
+            (context) => PremiumAccessWrapper(
+              child: MyHomePage(title: getUserDisplayName()),
+              onAccessDeniedRoute: '/settings',
+            ),
+        '/TrueOrFalse':
+            (context) => PremiumAccessWrapper(
+              child: TrueOrFalse(),
+              onAccessDeniedRoute: '/settings',
+            ),
       },
       debugShowCheckedModeBanner: false,
     );

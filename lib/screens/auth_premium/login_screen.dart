@@ -109,12 +109,24 @@ class _LoginScreenState extends State<LoginScreen> {
             final premiumData = responseData['premium'];
             await prefs.setBool('isPremium', premiumData['isActive'] ?? false);
             await prefs.setString('premiumStatus', premiumData['status'] ?? '');
-            await prefs.setString('premiumExpiry', premiumData['expiryDate'] ?? '');
-            await prefs.setDouble('premiumBalance', (premiumData['balance'] ?? 0.0).toDouble());
-            
+            await prefs.setString(
+              'premiumExpiry',
+              premiumData['expiryDate'] ?? '',
+            );
+            await prefs.setDouble(
+              'premiumBalance',
+              (premiumData['balance'] ?? 0.0).toDouble(),
+            );
+
             if (premiumData['trial'] != null) {
-              await prefs.setBool('hasUsedTrial', premiumData['trial']['used'] ?? false);
-              await prefs.setString('trialExpiry', premiumData['trial']['expiryDate'] ?? '');
+              await prefs.setBool(
+                'hasUsedTrial',
+                premiumData['trial']['used'] ?? false,
+              );
+              await prefs.setString(
+                'trialExpiry',
+                premiumData['trial']['expiryDate'] ?? '',
+              );
             }
           }
 

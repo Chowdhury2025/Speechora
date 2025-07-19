@@ -44,7 +44,7 @@ class PremiumGuard {
 
   static Future<Map<String, bool>> getSettingsAccess() async {
     final hasFullAccess = await hasAccess();
-    
+
     return {
       'language': true, // Always accessible
       'voiceAccent': hasFullAccess,

@@ -193,18 +193,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                   if (premiumStatus == 'trial' && trialExpiry != null)
                     Text(
                       'Trial expires in ${trialExpiry!.difference(DateTime.now()).inDays + 1} days',
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(color: Colors.amber, fontSize: 12),
                     ),
                   if (premiumStatus == 'premium' && premiumExpiry.isNotEmpty)
                     Text(
                       'Premium expires: ${DateTime.parse(premiumExpiry).toString().split(' ')[0]}',
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(color: Colors.green, fontSize: 12),
                     ),
                 ],
               ),
@@ -237,7 +231,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                           onPressed: () async {
                             final result = await showDialog<bool>(
                               context: context,
-                              builder: (context) => const PremiumPaymentDialog(),
+                              builder:
+                                  (context) => const PremiumPaymentDialog(),
                             );
 
                             if (result == true) {
@@ -259,10 +254,16 @@ class SettingsScreenState extends State<SettingsScreen> {
                             child: TextButton(
                               onPressed: () async {
                                 final now = DateTime.now();
-                                final trialExpiry = now.add(const Duration(days: 7));
+                                final trialExpiry = now.add(
+                                  const Duration(days: 7),
+                                );
 
-                                final prefs = await SharedPreferences.getInstance();
-                                await prefs.setString('trialExpiry', trialExpiry.toIso8601String());
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                await prefs.setString(
+                                  'trialExpiry',
+                                  trialExpiry.toIso8601String(),
+                                );
                                 await prefs.setBool('isPremium', true);
                                 await prefs.setString('premiumStatus', 'trial');
                                 await prefs.setBool('hasUsedTrial', true);
@@ -307,7 +308,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                     margin: const EdgeInsets.only(bottom: 20),
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     decoration: BoxDecoration(
-                      color: premiumStatus == 'trial' ? Colors.amber[700] : Colors.green[700],
+                      color:
+                          premiumStatus == 'trial'
+                              ? Colors.amber[700]
+                              : Colors.green[700],
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(color: Colors.black26, blurRadius: 8),
@@ -317,7 +321,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       children: [
                         Text(
-                          premiumStatus == 'trial' ? 'Trial Active' : 'Premium Account',
+                          premiumStatus == 'trial'
+                              ? 'Trial Active'
+                              : 'Premium Account',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -336,7 +342,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ),
                           ),
-                        if (premiumStatus == 'premium' && premiumExpiry.isNotEmpty)
+                        if (premiumStatus == 'premium' &&
+                            premiumExpiry.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
@@ -515,7 +522,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     final cardColor = backgroundColor.withOpacity(0.7);
     final textColor = Colors.white;
     final isAccessible = _settingsAccess[title.toLowerCase()] ?? true;
-    
+
     return Card(
       color: cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -525,69 +532,71 @@ class SettingsScreenState extends State<SettingsScreen> {
         children: [
           ListTile(
             leading: Icon(
-              icon, 
-              color: isAccessible ? textColor : textColor.withOpacity(0.5)
+              icon,
+              color: isAccessible ? textColor : textColor.withOpacity(0.5),
             ),
             title: Text(
               title,
               style: TextStyle(
                 color: isAccessible ? textColor : textColor.withOpacity(0.5),
-                fontWeight: FontWeight.w600
+                fontWeight: FontWeight.w600,
               ),
             ),
-            trailing: !isAccessible
-              ? const Icon(
-                  Icons.lock,
-                  color: Colors.amber,
-                  size: 20,
-                )
-              : (trailing != null
-                  ? Text(
-                      trailing,
-                      style: TextStyle(color: textColor.withOpacity(0.7)),
-                    )
-                  : const Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white54,
-                      size: 18,
-                    )),
-            onTap: !isAccessible
-              ? () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Premium Feature'),
-                      content: const Text(
-                        'This feature is only available for Premium and Trial users.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            showDialog(
-                              context: context,
-                              builder: (context) => const PremiumPaymentDialog(),
-                            );
-                          },
-                          child: const Text('Upgrade to Premium'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              : (onTap ??
-                  () {
-                    if (title == 'About') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => const AboutScreen()),
+            trailing:
+                !isAccessible
+                    ? const Icon(Icons.lock, color: Colors.amber, size: 20)
+                    : (trailing != null
+                        ? Text(
+                          trailing,
+                          style: TextStyle(color: textColor.withOpacity(0.7)),
+                        )
+                        : const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white54,
+                          size: 18,
+                        )),
+            onTap:
+                !isAccessible
+                    ? () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (context) => AlertDialog(
+                              title: const Text('Premium Feature'),
+                              content: const Text(
+                                'This feature is only available for Premium and Trial users.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (context) =>
+                                              const PremiumPaymentDialog(),
+                                    );
+                                  },
+                                  child: const Text('Upgrade to Premium'),
+                                ),
+                              ],
+                            ),
                       );
                     }
-                  }),
+                    : (onTap ??
+                        () {
+                          if (title == 'About') {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const AboutScreen(),
+                              ),
+                            );
+                          }
+                        }),
           ),
         ],
       ),
