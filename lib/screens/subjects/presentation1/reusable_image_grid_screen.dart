@@ -70,9 +70,7 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
 
   void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ImageDetailScreen(image: image),
-      ),
+      MaterialPageRoute(builder: (context) => ImageDetailScreen(image: image)),
     );
   }
 
