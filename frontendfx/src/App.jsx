@@ -41,7 +41,7 @@ const ROLE_PERMISSIONS = {
   ADMIN: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Promo Codes'],
   CONTENTMANAGER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds', 'Promo Codes'],
-  PARENT_GUARDIAN: ['Parent Dashboard', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
+  GUARDIAN_PARENT: ['Parent Dashboard', 'Premium',],
   TEACHER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Quiz Images'],
 };
 
@@ -92,7 +92,6 @@ function getFirstAllowedRoute(role) {
     const routePath = firstAllowedPage.path.replace(/^\//, '');
     return `/app/${routePath}`;
   }
-  return '/no-role'; // Fallback if no route is allowed or found
 }
 
 // Protects a route based on `permission` string
@@ -107,10 +106,7 @@ function ProtectedRoute({ permission, children }) {
       return;
     }
 
-    if (!user?.role || user.role === 'STAFF') {
-      navigate('/no-role', { replace: true });
-      return;
-    }
+   
 
     const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
     if (!allowed.includes(permission)) {
@@ -119,14 +115,11 @@ function ProtectedRoute({ permission, children }) {
     }
   }, [isAuthenticated, user, permission, navigate]);
 
-  if (!isAuthenticated || !user?.role || user.role === 'STAFF') {
-    return null;
-  }
 
-  const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
-  if (!allowed.includes(permission)) {
-    return null;
-  }
+  // const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
+  // if (!allowed.includes(permission)) {
+  //   return null;
+  // }
 
   return children;
 }
@@ -143,10 +136,7 @@ function IndexRouteHandler() {
       return;
     }
 
-    if (!user?.role || user.role === 'STAFF') {
-      navigate('/no-role', { replace: true });
-      return;
-    }
+   
 
     const allowed = ROLE_PERMISSIONS[user.role.toUpperCase()] || [];
     if (!allowed.includes('Dashboard')) {
@@ -215,10 +205,10 @@ function Layout() {
       return;
     }
 
-    if (!user?.role || user.role === 'STAFF') {
-      navigate('/no-role', { replace: true });
-      return;
-    }
+    // if (!user?.role || user.role === 'STAFF') {
+    //   navigate('/no-role', { replace: true });
+    //   return;
+    // }
 
     // If we're at /app exactly, redirect to the proper route
     if (window.location.pathname === '/app') {
@@ -294,7 +284,7 @@ function App() {
           <Route path='/update/password' element={<UpdatePassword />} />
          <Route path='/verify-email' element={<EmailVerification />} />
           <Route path='/verify/email/:token' element={<EmailVerification />} />
-          <Route path='/no-role' element={<NoRoleAssigned />} />
+          {/* <Route path='/no-role' element={<NoRoleAssigned />} /> */}
           <Route path='/test' element={<UserManagementScreen />} />          
               {/* Authenticated app routes under /app */}
           <Route path="/app" element={<Layout />}>

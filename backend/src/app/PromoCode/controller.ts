@@ -72,6 +72,7 @@ export const createPromoCode = async (req: Request, res: Response) => {
 export const validatePromoCode = async (req: Request, res: Response) => {
   try {
     const { code } = req.body as ValidatePromoCodeData;
+    console.log(req.body)
     
     if (!code || typeof code !== 'string') {
       return res.status(400).json({ error: 'Invalid promo code format' });

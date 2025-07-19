@@ -2,17 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
+import {API_URL} from'../../config'
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { 
-  BookOpen, 
-  GraduationCap, 
-  Trophy, 
-  Clock, 
-  Calendar,
-  TrendingUp,
+ 
   Star,
-  DollarSign,
   Receipt,
   CreditCard,
   Tag
@@ -212,7 +207,7 @@ const ParentDashboard = () => {
       return;
     }
     try {
-      await api.post('/api/user/premium/upgrade', { userId, deduction });
+      await api.post(`${API_URL}/api/user/premium/upgrade`, { userId, deduction });
       await fetchPremiumInfo();
     } catch (err) {
       setPremiumError('Failed to upgrade premium.');
@@ -232,7 +227,7 @@ const ParentDashboard = () => {
     setPromoSuccess(null);
 
     try {
-      const response = await api.post(`${process.env.REACT_APP_API_URL}/api/promo-codes/validate`, {
+      const response = await api.post(`${API_URL}/api/promo-codes/validate`, {
         code: promoCode
       });
       
@@ -333,7 +328,7 @@ const ParentDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">        <StatCard
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">        <StatCard
           icon={BookOpen}
           title="Completed Lessons"
           value={dashboardData.totalCompletedLessons}
@@ -357,7 +352,7 @@ const ParentDashboard = () => {
           value="12.5"
           color="bg-[#ff4b4b]"
         />
-      </div>
+      </div> */}
 
       {/* Recent Activity & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -388,25 +383,12 @@ const ParentDashboard = () => {
           </div>
         </div> */}
 
-        {/* Progress Chart */}
-        <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5]">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-[#3c9202]">Learning Progress</h2>
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="w-5 h-5 text-[#58cc02]" />
-              <span className="text-[#58cc02] font-bold">+15% this month</span>
-            </div>
-          </div>
-          {/* Add your chart component here */}
-          <div className="h-64 flex items-center justify-center bg-[#f7ffec] rounded-xl">
-            <p className="text-[#3c9202]">Progress Chart Coming Soon</p>
-          </div>
-        </div>
+        
       </div>
       {/* School subscrition section */}
       <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-[#3c9202]">School Fees</h2>          <button 
+          <h2 className="text-xl font-bold text-[#3c9202]">learning Fees</h2>          <button 
             onClick={() => navigate('/app/premium')}
             className="flex items-center gap-2 bg-[#58cc02] hover:bg-[#47b102] text-white px-4 py-2 rounded-xl
               transition-colors duration-200 border-b-2 border-[#3c9202]"
@@ -512,7 +494,7 @@ const ParentDashboard = () => {
               </select>
               <button onClick={handleAddFunds} className="bg-[#58cc02] text-white px-4 py-1 rounded" disabled={premiumLoading}>Add</button>
               <button onClick={handleCancelPremium} className="bg-red-500 text-white px-4 py-1 rounded" disabled={premiumLoading}>Cancel</button>
-              <button onClick={() => handleUpgradePremium(1000)} className="bg-blue-500 text-white px-4 py-1 rounded" disabled={premiumLoading}>Upgrade (₦1000/mo)</button>
+              <button onClick={() => handleUpgradePremium(1000)} className="bg-blue-500 text-white px-4 py-1 rounded" disabled={premiumLoading}>Upgrade plan(₦1000/mo)</button>
             </div>
             <p className="mt-2 text-sm text-gray-600">Payment Method: <b>{paymentMethod === 'visa' ? 'Visa' : 'Mobile Money'}</b></p>
             {premium.deduction > 0 && (
@@ -533,7 +515,7 @@ const ParentDashboard = () => {
                     type="text"
                     placeholder="Enter promo code"
                     value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setPromoCode(e.target.value)}
                     className="w-full border-2 border-[#e5f5d5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#58cc02]"
                   />
                   {promoError && (

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import {API_URL} from '../../../config'
 
 const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const [paymentMethod, setPaymentMethod] = useState('mobile');
@@ -7,8 +8,34 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
+  
+  // Promo code states
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [finalAmount, setFinalAmount] = useState(amount || 0);
 
+  // Update finalAmount when amount prop changes
+  React.useEffect(() => {
+    if (amount !== undefined && amount !== null) {
+      setFinalAmount(amount);
+      // Reset promo code states when amount changes
+      setPromoApplied(false);
+      setPromoDiscount(0);
+      setPromoCode('');
+      setPromoError('');
+    }
+  }, [amount]);
+
+  // Early returns should come after all hooks
   if (!isOpen) return null;
+
+  // Safety check for amount
+  if (amount === undefined || amount === null) {
+    return null;
+  }
 
   const detectProvider = (number) => {
     const prefix = number.substring(0, 3);
@@ -24,9 +51,86 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
     setSelectedProvider(detectProvider(number));
   };
 
-  const handlePayment = () => {
+  const validatePromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    setPromoLoading(true);
+    setPromoError('');
+
+    try {
+      const response = await fetch(`${API_URL}/api/promo-codes/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: promoCode.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPromoApplied(true);
+        setPromoDiscount(data.discount);
+        const discountAmount = (amount * data.discount) / 100;
+        setFinalAmount(amount - discountAmount);
+        setPromoError('');
+      } else {
+        setPromoError(data.error || 'Invalid promo code');
+        setPromoApplied(false);
+        setPromoDiscount(0);
+        setFinalAmount(amount);
+      }
+    } catch (error) {
+      setPromoError('Failed to validate promo code');
+      setPromoApplied(false);
+      setPromoDiscount(0);
+      setFinalAmount(amount);
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode('');
+    setPromoApplied(false);
+    setPromoDiscount(0);
+    setPromoError('');
+    setFinalAmount(amount);
+  };
+
+  const handlePayment = async () => {
+    let paymentAmount = finalAmount;
+    
+    // If promo code is applied, use the apply endpoint to increment usage
+    if (promoApplied) {
+      try {
+        const response = await fetch(`${API_URL}/api/promocodes/apply`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: promoCode.trim() }),
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          paymentAmount = data.finalPrice;
+        } else {
+          alert(`Promo code error: ${data.error}`);
+          return;
+        }
+      } catch (error) {
+        alert('Failed to apply promo code');
+        return;
+      }
+    }
+
     // Simulate payment processing
-    alert(`Payment of K${amount} processed successfully!`);
+    alert(`Payment of K${paymentAmount.toFixed(2)} processed successfully!`);
     onClose();
   };
 
@@ -41,17 +145,78 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
         </div>
         
         <div className="mb-4">
-          <p className="text-lg font-semibold text-center">Amount: K{amount}</p>
+          <div className="text-lg font-semibold text-center">
+            {promoApplied ? (
+              <div>
+                <p className="text-sm text-gray-500 line-through">Original: K{amount?.toFixed(2)}</p>
+                <p className="text-green-600">
+                  Final Amount: K{finalAmount?.toFixed(2)}
+                </p>
+                <p className="text-sm text-green-600">
+                  Saved: K{(amount - finalAmount)?.toFixed(2)} ({promoDiscount}% off)
+                </p>
+              </div>
+            ) : (
+              <p>Amount: K{amount?.toFixed(2)}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Promo Code Section */}
+        <div className="mb-4 p-3 bg-gray-50 rounded">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Promo Code (Optional)
+          </label>
+          
+          {promoApplied ? (
+            <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded">
+              <div className="flex items-center">
+                <span className="text-green-600 mr-2">✓</span>
+                <span className="text-green-700 font-medium">{promoCode}</span>
+                <span className="text-sm text-green-600 ml-2">({promoDiscount}% off)</span>
+              </div>
+              <button
+                onClick={removePromoCode}
+                className="text-red-500 hover:text-red-700 text-sm"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="Enter promo code"
+                className="flex-1 p-2 border rounded"
+                disabled={promoLoading}
+              />
+              <button
+                onClick={validatePromoCode}
+                disabled={promoLoading || !promoCode.trim()}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+              >
+                {promoLoading ? 'Checking...' : 'Apply'}
+              </button>
+            </div>
+          )}
+          
+          {promoError && (
+            <p className="text-red-500 text-sm mt-1">{promoError}</p>
+          )}
         </div>
 
         {/* Payment Method Tabs */}
-        <div className="flex mb-4 border-b">          <button
+        <div className="flex mb-4 border-b">
+          <button
             className={`py-2 px-4 ${paymentMethod === 'mobile' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
             onClick={() => setPaymentMethod('mobile')}
           >
             Mobile Money
           </button>
-          <button            className={`py-2 px-4 ${paymentMethod === 'card' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
+          <button
+            className={`py-2 px-4 ${paymentMethod === 'card' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
             onClick={() => setPaymentMethod('card')}
           >
             Card
@@ -75,7 +240,8 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
             {selectedProvider && (
               <div className="mb-4">
                 <p className="text-sm font-medium text-gray-700">Provider detected:</p>
-                <div className="flex items-center gap-2 mt-1">                  <img
+                <div className="flex items-center gap-2 mt-1">
+                  <img
                     src={`/images/${selectedProvider.toLowerCase()}.png`}
                     alt={selectedProvider}
                     className="h-8"
@@ -136,7 +302,7 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
           onClick={handlePayment}
           className="w-full mt-6 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
         >
-          Pay Now
+          Pay K{finalAmount?.toFixed(2)} Now
         </button>
       </div>
     </div>

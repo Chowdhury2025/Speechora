@@ -45,7 +45,7 @@ export const userRegisterController = async (req: Request, res: Response) => {
         email,
         password: hashedPassword,
         phoneNumber,
-        role: role || "STUDENT",
+        role: role || "GUARDIAN_PARENT",
         emailVerificationToken: verificationToken,
         isEmailVerified: false,
         trialStartDate,

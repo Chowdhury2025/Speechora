@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import {API_URL} from "../../config"
 
 const PromoCodesPage = () => {
   const [promoCodes, setPromoCodes] = useState([]);
@@ -15,7 +16,7 @@ const PromoCodesPage = () => {
   const fetchPromoCodes = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/promo-codes/list`);
+      const response = await axios.get(`${API_URL}/api/promo-codes/list`);
       setPromoCodes(response.data);
     } catch (error) {
       toast.error('Failed to fetch promo codes');
@@ -32,7 +33,7 @@ const PromoCodesPage = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/promo-codes/create`, {
+      await axios.post(`${API_URL}/api/promo-codes/create`, {
         ...formData,
         discount: parseFloat(formData.discount),
         maxUses: parseInt(formData.maxUses),
@@ -52,7 +53,7 @@ const PromoCodesPage = () => {
     
     try {
       setLoading(true);
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/promo-codes/${code}`);
+      await axios.delete(`${API_URL}/api/promo-codes/${code}`);
       toast.success('Promo code deleted successfully');
       fetchPromoCodes();
     } catch (error) {

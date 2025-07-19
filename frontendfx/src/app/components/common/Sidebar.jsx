@@ -33,11 +33,11 @@ const Sidebar = () => {
     // Admin Dashboard
     { path: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPERUSER', 'ADMIN',] },
     // Parent Dashboard
-    { path: 'parent-dashboard', label: 'Parent Dashboard', icon: LayoutDashboard, roles: ['PARENT_GUARDIAN','SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
+    { path: 'parent-dashboard', label: 'Parent Dashboard', icon: LayoutDashboard, roles: ['GUARDIAN_PARENT','SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
     { path: 'users', label: 'Users', icon: Users, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
     { path: 'videos', label: 'Videos', icon: PlaySquare, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
-    { path: 'tests', label: 'Tests', icon: GraduationCap, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN', 'TEACHER'] },
-    { path: 'lessons', label: 'Lessons', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'PARENT_GUARDIAN', 'TEACHER'] },
+    { path: 'tests', label: 'Tests', icon: GraduationCap, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER',  'TEACHER'] },
+    { path: 'lessons', label: 'Lessons', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER',  'TEACHER'] },
     { path: 'images', label: 'Images', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'quiz-images', label: 'Quiz Images', icon: ImagePlus, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'premium', label: 'Premium', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
