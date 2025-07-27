@@ -7,11 +7,11 @@ const prisma = new PrismaClient();
 // Add a new video
 export const addVideo = async (req: Request, res: Response) => {
     try {
-        const { title, linkyoutube_link, category, description, ageGroup, name } = req.body;
+        const { title, linkyoutube_link, video_url, category, description, ageGroup, name } = req.body;
 
         // Validate required fields
-        if (!title || !linkyoutube_link) {
-            return res.status(400).json({ message: 'Title and YouTube link are required' });
+        if (!title || (!linkyoutube_link && !video_url)) {
+            return res.status(400).json({ message: 'Title and either YouTube link or R2 video URL is required' });
         }
 
         // Create new video
@@ -19,6 +19,7 @@ export const addVideo = async (req: Request, res: Response) => {
             data: {
                 title,
                 linkyoutube_link,
+                video_url,
                 category,
                 description,
                 ageGroup,
@@ -41,6 +42,7 @@ export const getAllVideos = async (_req: Request, res: Response) => {
                 createdAt: 'desc',
             },
         });
+        // All fields including video_url are returned by default
         res.json(videos);
     } catch (error) {
         console.error('Error fetching videos:', error);
@@ -77,6 +79,7 @@ export const getVideosByCategoryController = async (req: Request, res: Response)
                 position: 'asc'
             }
         });
+        // All fields including video_url are returned by default
         console.log('Found videos:', videos.length);
 
         return res.status(StatusCodes.OK).json(videos);
@@ -97,6 +100,7 @@ export const deleteVideo = async (req: Request, res: Response) => {
                 id: parseInt(id),
             },
         });
+        // If you want to delete the R2 file from storage, add logic here
         res.json({ message: 'Video deleted successfully' });
     } catch (error) {
         console.error('Error deleting video:', error);

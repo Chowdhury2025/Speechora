@@ -49,17 +49,18 @@ model User {
 
 model SystemSettings {
   id                Int      @id @default(autoincrement())
-  companyName       String   @default("Default Company Name")
-  adminEmail        String   @default("admin@example.com")
+  companyName       String   @default("Book8 Learning Platform")
+  adminEmail        String   @default("admin@book8.com")
   premiumPricing    String   @default("50") // Default premium pricing
-  notificationEmail String   @default("notifications@example.com")
+  notificationEmail String   @default("notifications@book8.com")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
 
 model videos {
   id               Int      @id @default(autoincrement())
-  linkyoutube_link String
+  linkyoutube_link String?
+  video_url        String?  // R2 video URL (optional)
   title            String
   category         String?
   position         Int?

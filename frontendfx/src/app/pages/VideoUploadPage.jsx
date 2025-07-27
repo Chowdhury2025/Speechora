@@ -119,7 +119,7 @@ const VideoUploadPage = () => {
       }
 
       // Submit to your API
-      // await axios.post(`${API_URL}/api/videos`, finalVideoData);
+  await axios.post(`${API_URL}/api/videos`, finalVideoData);
       
       setSuccess(true);
       

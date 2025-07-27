@@ -18,7 +18,8 @@ const ImageUpload = () => {
     category: '',
     description: '',
     ageGroup: '',
-    name: user?.username || ''
+    name: user?.username || '',
+    position: 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -234,6 +235,21 @@ const ImageUpload = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-[#3c9202] text-sm font-bold mb-2">
+              Position
+            </label>
+            <input
+              type="number"
+              name="position"
+              value={imageData.position}
+              onChange={handleChange}
+              min="0"
+              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
+            />
+            <p className="text-sm text-[#58cc02] mt-1">Used for ordering images in a sequence</p>
           </div>
 
           <div>

@@ -242,6 +242,7 @@ export const countryCodes = [
   { code: '+212',  name: 'Western Sahara' },
   { code: '+967',  name: 'Yemen' },
   { code: '+263',  name: 'Zimbabwe' },
+  { code: '+260',  name: 'Zambia' },
 ];
 
 

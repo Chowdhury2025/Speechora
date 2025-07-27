@@ -31,10 +31,14 @@ const ImagesPage = () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/images`);
-      setImages(response.data);
+      // Sort images by position, handling null positions last
+      const sortedImages = [...response.data].sort((a, b) => 
+        (a.position ?? Infinity) - (b.position ?? Infinity)
+      );
+      setImages(sortedImages);
       
       // Extract unique categories from image data
-      const uniqueCategories = [...new Set(response.data.map(image => image.category))].filter(Boolean);
+      const uniqueCategories = [...new Set(sortedImages.map(image => image.category))].filter(Boolean);
       setCategories(uniqueCategories);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch images');

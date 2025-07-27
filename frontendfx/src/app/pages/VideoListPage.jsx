@@ -125,7 +125,12 @@ const VideoListPage = () => {
           {filteredVideos.map(video => (
             <div key={video.id} className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105 w-full max-w-sm">
               <div className="relative">
-                {video.linkyoutube_link && (
+                {video.video_url ? (
+                  <video controls className="w-full h-48 object-cover bg-gray-100">
+                    <source src={video.video_url} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : video.linkyoutube_link ? (
                   <img
                     src={getThumbnailUrl(video.linkyoutube_link)}
                     alt={video.title}
@@ -135,50 +140,63 @@ const VideoListPage = () => {
                         e.target.src = getThumbnailUrl(video.linkyoutube_link, 'hqdefault');
                       } else {
                         e.target.parentElement.innerHTML = `
-                          <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
-                            <span class="text-gray-400">No thumbnail available</span>
+                          <div class=\"w-full h-48 bg-gray-100 flex items-center justify-center\">
+                            <span class=\"text-gray-400\">No thumbnail available</span>
                           </div>
                         `;
                       }
                     }}
                   />
+                ) : (
+                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                    <span className="text-gray-400">No video available</span>
+                  </div>
                 )}
               </div>
-              
               <div className="p-4">
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="font-semibold text-lg line-clamp-2 flex-1 pr-2">{video.title}</h3>
                 </div>
-                
                 <div className="flex items-center text-sm text-gray-600 mb-2">
                   <span className="mr-3 truncate">By: {video.name}</span>
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex-shrink-0">
                     {video.category}
                   </span>
                 </div>
-                
                 <div className="text-sm text-gray-500 mb-3">
                   Age Group: {video.ageGroup}
                 </div>
-                
                 {video.description && (
                   <p className="text-gray-600 text-sm line-clamp-3 mb-4">
                     {video.description}
                   </p>
                 )}
-                
                 <div className="flex flex-col gap-2">
-                  <a
-                    href={video.linkyoutube_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 12.796V3.204L4.519 8 10 12.796zm.001 2.197c-1.145 0-2-.927-2-2V7.079c0-1.145.855-2 2-2s2 .855 2 2v5.914c0 1.073-.855 2-2 2z" />
-                    </svg>
-                    Watch Video
-                  </a>
+                  {video.video_url ? (
+                    <a
+                      href={video.video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 12.796V3.204L4.519 8 10 12.796zm.001 2.197c-1.145 0-2-.927-2-2V7.079c0-1.145.855-2 2-2s2 .855 2 2v5.914c0 1.073-.855 2-2 2z" />
+                      </svg>
+                      Play Video
+                    </a>
+                  ) : video.linkyoutube_link ? (
+                    <a
+                      href={video.linkyoutube_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 12.796V3.204L4.519 8 10 12.796zm.001 2.197c-1.145 0-2-.927-2-2V7.079c0-1.145.855-2 2-2s2 .855 2 2v5.914c0 1.073-.855 2-2 2z" />
+                      </svg>
+                      Watch Video
+                    </a>
+                  ) : null}
                   <button
                     onClick={() => handleDelete(video.id)}
                     className="inline-flex items-center justify-center w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200"

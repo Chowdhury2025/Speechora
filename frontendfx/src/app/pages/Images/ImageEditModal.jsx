@@ -13,11 +13,12 @@ const ImageEditModal = ({
   categories = [] 
 }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    ageGroup: '',
-    name: ''
+    title: image?.title || '',
+    description: image?.description || '',
+    category: image?.category || '',
+    ageGroup: image?.ageGroup || 'All ages',
+    name: image?.name || '',
+    position: typeof image?.position === 'number' ? image.position : 0
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -72,7 +73,8 @@ const ImageEditModal = ({
         description: image.description || '',
         category: image.category || '',
         ageGroup: image.ageGroup || 'All ages',
-        name: image.name || ''
+        name: image.name || '',
+        position: typeof image.position === 'number' ? image.position : 0
       });
       setPreviewUrl(image.imageUrl || '');
       setSelectedFile(null);
@@ -199,6 +201,7 @@ const ImageEditModal = ({
         category: formData.category.trim() || null,
         ageGroup: formData.ageGroup || null,
         name: formData.name.trim() || null,
+        position: formData.position || 0,
         imageUrl: imageUrl
       };
 
@@ -404,6 +407,25 @@ const ImageEditModal = ({
             {/* Description */}
             <div>
               <label className="block text-sm font-bold text-[#3C3C3C] mb-2">
+                Position
+              </label>
+              <input
+                type="number"
+                name="position"
+                value={formData.position}
+                onChange={handleInputChange}
+                disabled={loading}
+                min="0"
+                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] disabled:opacity-50 disabled:bg-slate-100"
+                placeholder="Enter position number"
+              />
+              <p className="text-xs text-[#4b4b4b] mt-1">
+                Used for ordering images in a sequence
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-[#3C3C3C] mb-2">
                 Description
               </label>
               <textarea
@@ -498,8 +520,8 @@ const ImageEditModal = ({
               <input
                 type="text"
                 name="name"
-                disabled="true"
-                value={formData.name}
+                disabled={true}
+                value={formData.name || ''}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] disabled:opacity-50 disabled:bg-slate-100"
                 placeholder="Enter author name"

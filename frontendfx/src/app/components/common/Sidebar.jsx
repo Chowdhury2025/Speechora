@@ -29,7 +29,9 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useRecoilState(sidebarState);
   const location = useLocation();
   const user = useRecoilValue(userStates);
-  const role = user?.role?.toUpperCase();  const allNavItems = [
+  const role = user?.role?.toUpperCase();
+  
+  const allNavItems = [
     // Admin Dashboard
     { path: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPERUSER', 'ADMIN',] },
     // Parent Dashboard
@@ -65,17 +67,37 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`
-      ${isOpen ? 'w-64' : 'w-16'} 
-      fixed left-0 h-screen bg-white
-      flex flex-col shadow-lg transition-all duration-300 z-50
-    `}>
-      {/* Logo Section */}
-      <div className="flex items-center justify-center p-4 border-b border-gray-200">
-        <img src={appLogo} alt="App Logo" className={`${isOpen ? 'w-32' : 'w-12'} transition-all duration-300`} />
+    <>
+      {/* Mobile Menu Button - Only visible on mobile */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 p-2 rounded-lg bg-[#58cc02] text-white md:hidden z-50
+          hover:bg-[#47b102] active:bg-[#3c9202] transition-all duration-200
+          border-b-2 border-[#3c9202] hover:border-[#2e7502]
+          focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
+      >
+        {isOpen ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
+      </button>
+
+      {/* Overlay - Only visible on mobile when sidebar is open */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 md:hidden z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <div className={`
+        ${isOpen ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-16'} 
+        fixed left-0 h-screen bg-white
+        flex flex-col shadow-lg transition-all duration-300 z-50
+      `}>
+        {/* Logo Section */}
+      <div className="flex items-center justify-center p-3 sm:p-4 border-b border-gray-200">
+        <img src={appLogo} alt="App Logo" className={`${isOpen ? 'w-28 sm:w-32' : 'w-0 sm:w-12'} transition-all duration-300`} />
       </div>
-      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
-        <span className={`font-bold text-duo-gray-700 text-lg transition-all duration-300 ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>
+      <div className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 border-b border-slate-200">
+        <span className={`font-bold text-duo-gray-700 text-base sm:text-lg transition-all duration-300 ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>
           Book8 Admin
         </span>
         <button 
@@ -87,8 +109,8 @@ const Sidebar = () => {
           {isOpen ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
         </button>
       </div>      {/* Navigation Items */}
-      <nav className="flex flex-col h-[calc(100vh-8rem)] py-6 px-3">
-        <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar max-h-[calc(100vh-12rem)]">
+      <nav className="flex flex-col h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)] py-4 sm:py-6 px-2 sm:px-3">
+        <div className="flex-1 space-y-2 sm:space-y-3 overflow-y-auto custom-scrollbar max-h-[calc(100vh-11rem)] sm:max-h-[calc(100vh-12rem)]">
           {navItems.map((item) => {
             const Icon = item.icon;
             const fullPath = `/app/${item.path}`;
@@ -100,12 +122,12 @@ const Sidebar = () => {
                 key={item.path}
                 to={fullPath}
                 className={`
-                  flex items-center px-3 py-3 rounded-xl transition-all duration-200
-                  font-bold text-sm
+                  flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200
+                  font-bold text-xs sm:text-sm
                   ${isActive 
                     ? 'bg-[#58cc02] text-white border-b-2 border-[#3c9202]' 
                     : 'text-duo-gray-600 hover:bg-[#e5f6ff] hover:text-[#1cb0f6]'}
-                  ${!isOpen ? 'justify-center w-12 h-12' : 'h-10'}
+                  ${!isOpen ? 'justify-center w-10 sm:w-12 h-10 sm:h-12' : 'h-9 sm:h-10'}
                   focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2
                 `}
               >
@@ -172,6 +194,7 @@ const Sidebar = () => {
         </div>
       </nav>
     </div>
+    </>
   );
 };
 
