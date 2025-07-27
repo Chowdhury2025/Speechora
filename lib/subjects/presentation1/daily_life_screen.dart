@@ -13,7 +13,7 @@ class DailyLifeScreen extends StatelessWidget {
         backgroundColor: backgroundColor,
         elevation: 0,
         title: const Text(
-          'My World & Daily Life',
+          'Daily routine',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,

@@ -31,7 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String userEmail = '';
   final List<SubjectCard> subjects = [
     SubjectCard(
-      title: 'My World & Daily Life', // 1. Daily Routine
+      title: 'Daily routine', // 1. Daily Routine
       icon: Icons.home_outlined,
       color: Color(0xFF1CB0F6),
     ),
@@ -162,9 +162,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     Widget screen;
     switch (title) {
-      case 'My World & Daily Life':
+      case 'Daily routine':
         screen = const ReusableImageGridScreen(
-          title: 'My World & Daily Life',
+          title: 'Daily routine',
           imageCategory: 'my_world_daily_life',
           backgroundColor: Color(0xFF1CB0F6),
         );

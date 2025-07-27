@@ -10,7 +10,7 @@ class VideoService {
   // Map Flutter category names to backend slugs
   static String getCategorySlug(String category) {
     final Map<String, String> categoryMap = {
-      'My World & Daily Life': 'my_world_daily_life',
+      'Daily routine': 'my_world_daily_life',
       'Home': 'home',
       'School': 'school',
       'Therapy': 'therapy',
