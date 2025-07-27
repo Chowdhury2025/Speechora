@@ -249,7 +249,7 @@ export const countryCodes = [
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    countryCode: '+260',
+    countryCode: '+1',
     phoneNumber: '',
     username: '',
     email: '',
