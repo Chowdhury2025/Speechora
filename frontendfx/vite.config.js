@@ -8,7 +8,29 @@ export default defineConfig({
     host: true  // Allow access from other devices on the network
   },
   plugins: [
-    react()
+    react(),
+    {
+      name: 'custom-workbox',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          res.setHeader('Service-Worker-Allowed', '/');
+          next();
+        });
+      },
+      config() {
+        return {
+          build: {
+            rollupOptions: {
+              output: {
+                manualChunks: {
+                  workbox: ['workbox-window']
+                }
+              }
+            }
+          }
+        };
+      }
+    }
   ],
   build: {
     sourcemap: true

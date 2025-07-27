@@ -68,9 +68,11 @@ const ImageUpload = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Convert position to integer if the field is position
+    const processedValue = name === 'position' ? parseInt(value) || 0 : value;
     setImageData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
   };
 

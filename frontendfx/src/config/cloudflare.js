@@ -65,7 +65,7 @@ class CloudflareR2Service {
     }
   }
 
-  validateFile(file, allowedTypes = [], maxSize = 5 * 1024 * 1024) {
+  validateFile(file, allowedTypes = [], maxSize = 100 * 1024 * 1024) {
     if (file.size > maxSize) {
       throw new Error(`File size must be less than ${maxSize / (1024 * 1024)}MB`);
     }

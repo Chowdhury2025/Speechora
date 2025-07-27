@@ -1,6 +1,6 @@
 //  export const API_URL = import.meta.env.VITE_API_URL || 'https://book8-backend.vercel.app';
-export const API_URL = import.meta.env.VITE_APP_URL || 'https://book8-backend.vercel.app';
-// export const API_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8000'
+// export const API_URL = import.meta.env.VITE_APP_URL || 'https://book8-backend.vercel.app';
+export const API_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8000'
 
 
 
@@ -23,6 +23,11 @@ class CloudflareR2Service {
         secretAccessKey: this.R2_SECRET_ACCESS_KEY,
       },
       forcePathStyle: true,
+      requestHandler: {
+        abortController: new AbortController(),
+        responseTimeout: 60000, // 60 seconds timeout
+      },
+      customUserAgent: 'Book8App/1.0.0'
     });
   }
 
@@ -71,7 +76,7 @@ class CloudflareR2Service {
     }
   }
 
-  validateFile(file, allowedTypes = [], maxSize = 5 * 1024 * 1024) {
+  validateFile(file, allowedTypes = [], maxSize = 100 * 1024 * 1024) {
     if (file.size > maxSize) {
       throw new Error(`File size must be less than ${maxSize / (1024 * 1024)}MB`);
     }
