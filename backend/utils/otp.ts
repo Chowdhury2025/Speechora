@@ -5,6 +5,6 @@ const generateRandomDigit = (): number => {
 };
 
 export const generateOTP = (): string => {
-  const otp = Array.from({ length: 3 }, generateRandomDigit).join('');
+  const otp = Array.from({ length: 4 }, generateRandomDigit).join('');
   return otp;
 };

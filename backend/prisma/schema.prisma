@@ -61,7 +61,6 @@ model videos {
   id               Int      @id @default(autoincrement())
   linkyoutube_link String
   title            String
-  thumbnail        String?
   category         String?
   position         Int?
   description      String?

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../../config';
-import { r2Service } from '../../config/cloudflare';
-import ImageTabNavigator from '../components/images/ImageTabNavigator';
+import { API_URL } from '../../../config';
+import { r2Service } from '../../../config';
+import ImageEditModal from './ImageEditModal';
+import ImageTabNavigator from '../../components/common/TabNavigator';
 import { useRecoilValue } from 'recoil';
-import { userStates } from '../../atoms';
+import { userStates } from '../../../atoms';
 import { useNavigate } from 'react-router-dom';
 
 const ImagesPage = () => {
@@ -15,6 +16,10 @@ const ImagesPage = () => {
   const [categories, setCategories] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
+  // Add these new states for the edit modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingImage, setEditingImage] = useState(null);
+  
   const user = useRecoilValue(userStates);
   const navigate = useNavigate();
 
@@ -44,6 +49,25 @@ const ImagesPage = () => {
   
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
+  };
+
+  // Add this new function to handle opening the edit modal
+  const handleEdit = (image) => {
+    setEditingImage(image);
+    setEditModalOpen(true);
+  };
+
+  // Add this function to handle image updates from the modal
+  const handleImageUpdated = (updatedImage) => {
+    setImages(prevImages => 
+      prevImages.map(img => 
+        img.id === updatedImage.id ? updatedImage : img
+      )
+    );
+    
+    // Update categories if a new category was added
+    const uniqueCategories = [...new Set(images.map(image => image.category))].filter(Boolean);
+    setCategories(uniqueCategories);
   };
 
   const handleDelete = async (id) => {
@@ -107,27 +131,6 @@ const ImagesPage = () => {
         console.error('File validation error:', error);
         setError(error.message);
       }
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    try {
-      const imageUrl = await r2Service.uploadFile(selectedFile, 'images');
-      
-      const response = await axios.post(`${API_URL}/api/images`, {
-        imageUrl,
-        category: selectedCategory,
-        userId: user.userId
-      });
-
-      setImages(prev => [...prev, response.data]);
-      setSelectedFile(null);
-      setPreviewUrl('');
-    } catch (error) {
-      console.error('Upload error:', error);
-      setError(error.message || 'Failed to upload image');
     }
   };
 
@@ -238,12 +241,20 @@ const ImagesPage = () => {
                     View Full Image
                   </a>
                   {user && (
-                    <button
-                      onClick={() => handleDelete(image.id)}
-                      className="inline-flex items-center justify-center w-full bg-[#ff4b4b] hover:bg-[#e03232] text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 border-[#dc3131] hover:border-[#c01f1f] focus:outline-none focus:ring-2 focus:ring-[#ff4b4b] focus:ring-offset-2"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(image)}
+                        className="inline-flex items-center justify-center flex-1 bg-[#ffa500] hover:bg-[#e69500] text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 border-[#cc8400] hover:border-[#b37300] focus:outline-none focus:ring-2 focus:ring-[#ffa500] focus:ring-offset-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(image.id)}
+                        className="inline-flex items-center justify-center flex-1 bg-[#ff4b4b] hover:bg-[#e03232] text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 border-[#dc3131] hover:border-[#c01f1f] focus:outline-none focus:ring-2 focus:ring-[#ff4b4b] focus:ring-offset-2"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -251,6 +262,18 @@ const ImagesPage = () => {
           ))}
         </div>
       )}
+
+      {/* Add the Edit Modal */}
+      <ImageEditModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingImage(null);
+        }}
+        image={editingImage}
+        onImageUpdated={handleImageUpdated}
+        categories={categories}
+      />
     </div>
   );
 };

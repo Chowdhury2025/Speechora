@@ -10,7 +10,7 @@ import DashboardPage from './app/pages/DashboardPage.jsx';
 import ParentDashboard from './app/pages/ParentDashboard.jsx';
 import UsersPage from './app/pages/UsersPage.jsx';
 import TestsPage from './app/pages/TestsPage.jsx';
-import ImagesPage from './app/pages/ImagesPage.jsx';
+import ImagesPage from './app/pages/Images/ImagesPage.jsx'
 import ImageUploadPage from './components/Images/ImageUpload.jsx';
 import { QuizImagesPage, QuizImageUploadPage, QuizImageEditPage } from './app/pages/QuizImages/QuizImagesPage.jsx';
 

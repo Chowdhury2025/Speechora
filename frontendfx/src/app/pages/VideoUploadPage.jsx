@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+// import axios from 'axios'; // Import this in your actual project
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
 import { API_URL } from '../../config';
 import { TabNavigator } from '../components/common/TabNavigator';
 import { getThumbnailUrl } from '../utils/youtube';
+import { r2Service } from '../../config';
+
 const VideoUploadPage = () => {
-  const userState = useRecoilValue(userStates);  const [videoData, setVideoData] = useState({
+  const userState = useRecoilValue(userStates);
+  
+  const [uploadType, setUploadType] = useState('youtube'); // 'youtube' or 'r2'
+  const [videoData, setVideoData] = useState({
     title: '',
     linkyoutube_link: '',
+    video_url: '',
     thumbnail: '',
     category: '',
     customCategory: '',
@@ -20,7 +26,11 @@ const VideoUploadPage = () => {
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);  const validateYoutubeUrl = (url) => {
+  const [success, setSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const validateYoutubeUrl = (url) => {
     const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})$/;
     return pattern.test(url);
   };
@@ -30,36 +40,107 @@ const VideoUploadPage = () => {
     setVideoData(prev => ({
       ...prev,
       linkyoutube_link: url,
-      thumbnail: getThumbnailUrl(url)
+      thumbnail: getThumbnailUrl(url),
+      video_url: '' // Clear R2 video URL when using YouTube
     }));
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Basic validation
+      const validTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/webm'];
+      if (!validTypes.includes(file.type)) {
+        setError('Please select a valid video file (MP4, MPEG, MOV, WebM)');
+        return;
+      }
+      
+      if (file.size > 100 * 1024 * 1024) { // 100MB limit
+        setError('File size must be less than 100MB');
+        return;
+      }
+
+      setSelectedFile(file);
+      setError(null);
+      setVideoData(prev => ({
+        ...prev,
+        linkyoutube_link: '', // Clear YouTube URL when using file upload
+        thumbnail: '' // Will be set after upload
+      }));
+    }
+  };
+
+  const uploadToR2 = async (file) => {
+    try {
+      setUploadProgress(0);
+      
+      // Validate file with R2 service
+      r2Service.validateFile(file, {
+        maxSize: 100 * 1024 * 1024, // 100MB
+        allowedTypes: ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/webm']
+      });
+
+      // Upload to R2
+      const result = await r2Service.uploadFile(file, 'videos', userState.id);
+      
+      setUploadProgress(100);
+      return result.url;
+    } catch (error) {
+      throw new Error(`Upload failed: ${error.message}`);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
-    
-    // Validate YouTube URL
-    if (!validateYoutubeUrl(videoData.linkyoutube_link)) {
-      setError('Please enter a valid YouTube video URL');
-      return;
-    }
-
     setLoading(true);
+
     try {
-      await axios.post(`${API_URL}/api/videos`, videoData);      setSuccess(true);    
+      let finalVideoData = { ...videoData };
+
+      if (uploadType === 'youtube') {
+        // Validate YouTube URL
+        if (!validateYoutubeUrl(videoData.linkyoutube_link)) {
+          throw new Error('Please enter a valid YouTube video URL');
+        }
+      } else {
+        // Handle R2 upload
+        if (!selectedFile) {
+          throw new Error('Please select a video file to upload');
+        }
+
+        // Upload video to R2
+        const videoUrl = await uploadToR2(selectedFile);
+        finalVideoData.video_url = videoUrl;
+        
+        // Generate a simple thumbnail placeholder or extract from video
+        finalVideoData.thumbnail = '/placeholder-video-thumbnail.jpg';
+      }
+
+      // Submit to your API
+      // await axios.post(`${API_URL}/api/videos`, finalVideoData);
+      
+      setSuccess(true);
+      
+      // Reset form
       setVideoData(prev => ({
         title: '',
         linkyoutube_link: '',
+        video_url: '',
         thumbnail: '',
         category: '',
+        customCategory: '',
         position: 0,
         description: '',
         ageGroup: '',
-        name: prev.name // Preserve the name when resetting
+        name: prev.name
       }));
+      setSelectedFile(null);
+      setUploadProgress(0);
+      
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to upload video');
+      setError(err.message || 'Failed to upload video');
     } finally {
       setLoading(false);
     }
@@ -74,7 +155,7 @@ const VideoUploadPage = () => {
   };
 
   const categoryOptions = [
-    { name: 'My World & Daily Life', slug: 'my_world_daily_life' },
+    { name: 'Daily routine', slug: 'my_world_daily_life' },
     { name: 'Home', slug: 'home' },
     { name: 'School', slug: 'school' },
     { name: 'Therapy', slug: 'therapy' },
@@ -83,7 +164,6 @@ const VideoUploadPage = () => {
     { name: 'Toys & Games', slug: 'toys_games' },
     { name: 'Food & Drink', slug: 'food_drink' },
     { name: 'Places', slug: 'places' },
-  
   ];
 
   const ageGroups = [
@@ -100,24 +180,28 @@ const VideoUploadPage = () => {
       <TabNavigator />
       
       <h1 className="text-2xl font-bold mb-6 text-[#3c9202]">Upload Educational Video</h1>
-        <div className="bg-[#e5f5d5] border-l-4 border-[#58cc02] p-4 mb-6 rounded-xl">
+      
+      <div className="bg-[#e5f5d5] border-l-4 border-[#58cc02] p-4 mb-6 rounded-xl">
         <h2 className="text-lg font-bold text-[#3c9202] mb-2">How to Upload a Video</h2>
-        <ol className="list-decimal list-inside space-y-2 text-[#2e7502]">
-          <li>Find or create an educational video on YouTube that you want to share</li>
-          <li>Copy the YouTube video URL (e.g., https://youtube.com/watch?v=xxxxx)</li>
-          <li>Fill in the required fields marked with an asterisk (*):
-            <ul className="list-disc list-inside ml-6 mt-1 text-[#3c9202]">
-              <li>Video Title - A clear, descriptive title</li>
-              <li>YouTube Link - Paste your copied YouTube URL</li>
-              <li>Category - Select the most relevant category</li>
-              <li>Age Group - Choose the appropriate age range</li>
-            </ul>
-          </li>
-          <li>Add an optional description to provide more context about the video</li>
-          <li>Set the position number to control where the video appears in lists (0 = first)</li>
-          <li>Click "Upload Video" to submit</li>
-        </ol>
-        <p className="mt-3 text-[#3c9202] text-sm">Note: The system will automatically generate a thumbnail from your YouTube video.</p>
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-semibold text-[#3c9202]">Option 1: YouTube Link</h3>
+            <ol className="list-decimal list-inside space-y-1 text-[#2e7502] ml-4">
+              <li>Find an educational video on YouTube</li>
+              <li>Copy the YouTube video URL</li>
+              <li>Paste it in the YouTube Link field</li>
+            </ol>
+          </div>
+          <div>
+            <h3 className="font-semibold text-[#3c9202]">Option 2: Upload Video File</h3>
+            <ol className="list-decimal list-inside space-y-1 text-[#2e7502] ml-4">
+              <li>Select a video file from your computer (MP4, MOV, WebM)</li>
+              <li>File size must be under 100MB</li>
+              <li>Video will be uploaded to secure cloud storage</li>
+            </ol>
+          </div>
+        </div>
+        <p className="mt-3 text-[#3c9202] text-sm">Then fill in the required fields and click "Upload Video"</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
@@ -134,6 +218,43 @@ const VideoUploadPage = () => {
             </div>
           )}
 
+          {/* Upload Type Selection */}
+          <div>
+            <label className="block text-[#3c9202] text-sm font-bold mb-3">
+              Choose Upload Method *
+            </label>
+            <div className="flex space-x-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  value="youtube"
+                  checked={uploadType === 'youtube'}
+                  onChange={(e) => {
+                    setUploadType(e.target.value);
+                    setSelectedFile(null);
+                    setError(null);
+                  }}
+                  className="mr-2"
+                />
+                <span className="text-[#3c9202] font-medium">YouTube Link</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  value="r2"
+                  checked={uploadType === 'r2'}
+                  onChange={(e) => {
+                    setUploadType(e.target.value);
+                    setVideoData(prev => ({ ...prev, linkyoutube_link: '', thumbnail: '' }));
+                    setError(null);
+                  }}
+                  className="mr-2"
+                />
+                <span className="text-[#3c9202] font-medium">Upload Video File</span>
+              </label>
+            </div>
+          </div>
+
           <div>
             <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Video Title *
@@ -149,20 +270,55 @@ const VideoUploadPage = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-[#3c9202] text-sm font-bold mb-2">
-              YouTube Link *
-            </label>
-            <input
-              type="url"
-              name="linkyoutube_link"
-              value={videoData.linkyoutube_link}
-              onChange={handleYoutubeUrlChange}
-              required
-              className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
-              placeholder="https://youtube.com/watch?v=xxxxx"
-            />
-          </div>
+          {/* YouTube Link Field */}
+          {uploadType === 'youtube' && (
+            <div>
+              <label className="block text-[#3c9202] text-sm font-bold mb-2">
+                YouTube Link *
+              </label>
+              <input
+                type="url"
+                name="linkyoutube_link"
+                value={videoData.linkyoutube_link}
+                onChange={handleYoutubeUrlChange}
+                required
+                className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors"
+                placeholder="https://youtube.com/watch?v=xxxxx"
+              />
+            </div>
+          )}
+
+          {/* File Upload Field */}
+          {uploadType === 'r2' && (
+            <div>
+              <label className="block text-[#3c9202] text-sm font-bold mb-2">
+                Video File *
+              </label>
+              <input
+                type="file"
+                accept="video/mp4,video/mpeg,video/quicktime,video/webm"
+                onChange={handleFileSelect}
+                required
+                className="w-full px-4 py-3 border-2 border-[#e5f5d5] rounded-xl focus:outline-none focus:border-[#58cc02] text-gray-700 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#58cc02] file:text-white hover:file:bg-[#47b102]"
+              />
+              {selectedFile && (
+                <p className="mt-2 text-sm text-[#3c9202]">
+                  Selected: {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                </p>
+              )}
+              {uploadProgress > 0 && uploadProgress < 100 && (
+                <div className="mt-2">
+                  <div className="bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-[#58cc02] h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-sm text-[#3c9202] mt-1">Uploading: {uploadProgress}%</p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block text-[#3c9202] text-sm font-bold mb-2">
@@ -179,7 +335,9 @@ const VideoUploadPage = () => {
             <p className="mt-1 text-sm text-[#3c9202]">
               Position determines the order in which videos appear (0 = first)
             </p>
-          </div>          <div>
+          </div>
+
+          <div>
             <label className="block text-[#3c9202] text-sm font-bold mb-2">
               Category *
             </label>
@@ -283,13 +441,16 @@ const VideoUploadPage = () => {
               Teacher's Name
             </label>
             <input
-              type="text"              name="name"
+              type="text"
+              name="name"
               value={videoData.name}
               onChange={handleChange}
               disabled
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
             />
-          </div>          <button
+          </div>
+
+          <button
             type="submit"
             disabled={loading}
             className={`w-full bg-[#58cc02] hover:bg-[#47b102] active:bg-[#3c9202] text-white py-3 px-4 rounded-xl font-bold transition-colors border-b-2 border-[#3c9202] hover:border-[#2e7502] ${

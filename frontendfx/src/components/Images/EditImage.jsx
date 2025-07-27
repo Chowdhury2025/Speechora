@@ -19,7 +19,7 @@ const EditImage = () => {
   });
 
   const categoryOptions = [
-    { name: 'My World & Daily Life', slug: 'my_world_daily_life' },
+    { name: 'Daily routine', slug: 'my_world_daily_life' },
     { name: 'Home', slug: 'home' },
     { name: 'School', slug: 'school' },
     { name: 'Therapy', slug: 'therapy' },
