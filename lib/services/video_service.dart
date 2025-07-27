@@ -73,7 +73,8 @@ class VideoService {
 
 class Video {
   final String title;
-  final String linkyoutube_link;
+  final String? linkyoutube_link;
+  final String? video_url;
   final String? description;
   final String? category;
   final String? ageGroup;
@@ -81,21 +82,28 @@ class Video {
 
   Video({
     required this.title,
-    required this.linkyoutube_link,
+    this.linkyoutube_link,
+    this.video_url,
     this.description,
     this.category,
     this.ageGroup,
     this.name,
   });
 
-  String get thumbnailUrl => getThumbnailUrl(linkyoutube_link);
+  String get thumbnailUrl =>
+      linkyoutube_link != null && linkyoutube_link!.isNotEmpty
+          ? getThumbnailUrl(linkyoutube_link!)
+          : '/assets/video_placeholder.png';
   String get fallbackThumbnailUrl =>
-      getThumbnailUrl(linkyoutube_link, quality: 'hqdefault');
+      linkyoutube_link != null && linkyoutube_link!.isNotEmpty
+          ? getThumbnailUrl(linkyoutube_link!, quality: 'hqdefault')
+          : '/assets/video_placeholder.png';
 
   factory Video.fromJson(Map<String, dynamic> json) {
     return Video(
       title: json['title'] as String,
-      linkyoutube_link: json['linkyoutube_link'] as String,
+      linkyoutube_link: json['linkyoutube_link'] as String?,
+      video_url: json['video_url'] as String?,
       description: json['description'] as String?,
       category: json['category'] as String?,
       ageGroup: json['ageGroup'] as String?,

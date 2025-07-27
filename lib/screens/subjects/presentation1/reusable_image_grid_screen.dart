@@ -48,6 +48,12 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
         if (mounted) {
           setState(() {
             images = List<Map<String, dynamic>>.from(data);
+            // Sort images by position if available, fallback to id
+            images.sort(
+              (a, b) => (a['position'] ?? double.infinity).compareTo(
+                b['position'] ?? double.infinity,
+              ),
+            );
             isLoading = false;
           });
         }
@@ -68,9 +74,18 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
     await _ttsService.speak(text);
   }
 
-  void _showFullScreenImage(BuildContext context, Map<String, dynamic> image) {
+  void _showFullScreenImage(
+    BuildContext context,
+    Map<String, dynamic> image,
+    int index,
+  ) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => ImageDetailScreen(image: image)),
+      MaterialPageRoute(
+        builder: (context) => ImageDetailScreen(image: image),
+        settings: RouteSettings(
+          arguments: {'imagesList': images, 'currentIndex': index},
+        ),
+      ),
     );
   }
 
@@ -213,7 +228,7 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
         itemBuilder: (context, index) {
           final image = images[index];
           return GestureDetector(
-            onTap: () => _showFullScreenImage(context, image),
+            onTap: () => _showFullScreenImage(context, image, index),
             child: Card(
               elevation: 8,
               shape: RoundedRectangleBorder(

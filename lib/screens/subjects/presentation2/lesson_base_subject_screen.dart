@@ -82,6 +82,12 @@ class _PresentationTwoState extends State<PresentationTwo> {
                                 lesson: lesson,
                                 backgroundColor: widget.backgroundColor,
                               ),
+                          settings: RouteSettings(
+                            arguments: {
+                              'lessonsList': lessons,
+                              'currentIndex': index,
+                            },
+                          ),
                         ),
                       ),
                   child: Card(

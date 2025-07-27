@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/quiz_image_service.dart';
+import 'package:lottie/lottie.dart';
 
 class ImageQuizScreen extends StatefulWidget {
   const ImageQuizScreen({Key? key}) : super(key: key);
@@ -10,7 +11,8 @@ class ImageQuizScreen extends StatefulWidget {
   State<ImageQuizScreen> createState() => _ImageQuizScreenState();
 }
 
-class _ImageQuizScreenState extends State<ImageQuizScreen> {
+class _ImageQuizScreenState extends State<ImageQuizScreen>
+    with TickerProviderStateMixin {
   final TTSService _ttsService = TTSService();
   final QuizImageService _quizImageService = QuizImageService();
   final Random random = Random();
@@ -20,9 +22,16 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
   bool showSuccess = false;
   bool showError = false;
   bool isLoading = true;
+  int consecutiveCorrectAnswers = 0;
+  bool showCompletionAnimation = false;
+  late final AnimationController _completionController;
   @override
   void initState() {
     super.initState();
+    _completionController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
     _initTTS();
   }
 
@@ -75,6 +84,23 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
       setState(() {
         showSuccess = true;
         showError = false;
+        consecutiveCorrectAnswers++;
+
+        // Show completion animation after 5 correct answers
+        if (consecutiveCorrectAnswers == 5) {
+          showCompletionAnimation = true;
+          _completionController.forward().then((_) {
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) {
+                setState(() {
+                  showCompletionAnimation = false;
+                  consecutiveCorrectAnswers = 0;
+                });
+                _completionController.reset();
+              }
+            });
+          });
+        }
       });
 
       // Speak success message
@@ -92,6 +118,7 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
       setState(() {
         showError = true;
         showSuccess = false;
+        consecutiveCorrectAnswers = 0; // Reset streak on wrong answer
       });
 
       // Speak error message
@@ -206,6 +233,25 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
                 child: Icon(Icons.close, color: Colors.white, size: 100),
               ),
             ),
+          if (showCompletionAnimation)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black54,
+                child: Center(
+                  child: Lottie.asset(
+                    'assets/animations/completed_a_task.json',
+                    controller: _completionController,
+                    width: 300,
+                    height: 300,
+                    fit: BoxFit.contain,
+                    repeat: false,
+                    onLoaded: (composition) {
+                      _completionController.duration = composition.duration;
+                    },
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -214,6 +260,7 @@ class _ImageQuizScreenState extends State<ImageQuizScreen> {
   @override
   void dispose() {
     _ttsService.stop();
+    _completionController.dispose();
     super.dispose();
   }
 }

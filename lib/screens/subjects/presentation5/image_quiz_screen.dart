@@ -4,14 +4,14 @@ import 'package:lottie/lottie.dart';
 import '../../../services/tts_service.dart';
 import '../../../services/quiz_image_service.dart';
 
-class ImageQuizScreen extends StatefulWidget {
-  const ImageQuizScreen({Key? key}) : super(key: key);
+class Find_the_Item extends StatefulWidget {
+  const Find_the_Item({Key? key}) : super(key: key);
 
   @override
-  State<ImageQuizScreen> createState() => _ImageQuizScreenState();
+  State<Find_the_Item> createState() => _Find_the_ItemState();
 }
 
-class _ImageQuizScreenState extends State<ImageQuizScreen>
+class _Find_the_ItemState extends State<Find_the_Item>
     with SingleTickerProviderStateMixin {
   final TTSService _ttsService = TTSService();
   final QuizImageService _quizImageService = QuizImageService();
@@ -27,6 +27,8 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
   // celebration state
   late final AnimationController _celebrationController;
   bool showCelebration = false;
+  int consecutiveCorrectAnswers = 0;
+  bool showBigCelebration = false;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
       isCorrect = null;
       selectedImage = null;
       showCelebration = false;
+      showBigCelebration = false;
     });
 
     try {
@@ -81,10 +84,21 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
     });
 
     if (isCorrect == true) {
-      // show celebration overlay
-      setState(() => showCelebration = true);
+      setState(() {
+        consecutiveCorrectAnswers++;
+        if (consecutiveCorrectAnswers >= 5) {
+          showBigCelebration = true;
+          consecutiveCorrectAnswers = 0; // Reset after big celebration
+        } else {
+          showCelebration = true;
+        }
+      });
       await _ttsService.speak('That is a ${image.name}!');
+      if (showBigCelebration) {
+        await _ttsService.speak('Amazing! You got 5 correct answers in a row!');
+      }
     } else {
+      setState(() => consecutiveCorrectAnswers = 0);
       await _ttsService.speak('That is not a ${correctImage!.name}.');
     }
 
@@ -109,9 +123,9 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
                       padding: const EdgeInsets.all(16.0),
                       child: GridView.count(
                         crossAxisCount: 2,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 0.8,
+                        mainAxisSpacing: 32,
+                        crossAxisSpacing: 32,
+                        childAspectRatio: 0.85,
                         children:
                             displayedImages.map((image) {
                               final isSelected = selectedImage?.id == image.id;
@@ -123,22 +137,22 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 300),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
+                                    color: const Color(0xFFE3F6F5),
+                                    borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
                                       color:
                                           isSelected
                                               ? (isCorrect == true
                                                   ? Colors.green
                                                   : Colors.red)
-                                              : Colors.grey.shade300,
-                                      width: 3,
+                                              : const Color(0xFFBEE9E8),
+                                      width: 4,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
@@ -146,19 +160,18 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
                                     children: [
                                       Column(
                                         children: [
+                                          const SizedBox(height: 18),
                                           Expanded(
-                                            flex: 3,
-                                            child: Container(
-                                              width: double.infinity,
-                                              padding: const EdgeInsets.all(12),
+                                            flex: 4,
+                                            child: Center(
                                               child: ClipRRect(
                                                 borderRadius:
-                                                    BorderRadius.circular(12),
+                                                    BorderRadius.circular(16),
                                                 child: Image.network(
                                                   image.imageUrl,
-                                                  fit: BoxFit.cover,
-                                                  width: double.infinity,
-                                                  height: double.infinity,
+                                                  fit: BoxFit.contain,
+                                                  width: 110,
+                                                  height: 110,
                                                   errorBuilder:
                                                       (
                                                         context,
@@ -180,30 +193,8 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
                                               ),
                                             ),
                                           ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              width: double.infinity,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                  ),
-                                              child: Center(
-                                                child: Text(
-                                                  image.name,
-                                                  style: const TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF223A5E),
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                          // Removed animal name below image for a cleaner look
+                                          const SizedBox(height: 22),
                                         ],
                                       ),
                                       if (showFeedback)
@@ -234,17 +225,51 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
                     ),
 
                     // Celebration overlay
-                    if (showCelebration)
+                    if (showCelebration || showBigCelebration)
                       Center(
-                        child: Lottie.asset(
-                          'assets/animations/confetti_single.json',
-                          controller: _celebrationController,
-                          onLoaded: (composition) {
-                            _celebrationController.duration =
-                                composition.duration;
-                            _celebrationController.forward();
-                          },
-                          fit: BoxFit.cover,
+                        child: Stack(
+                          children: [
+                            if (showBigCelebration) ...[
+                              Lottie.asset(
+                                'assets/animations/Animation - 1749309499190.json', // Special animation for 5 correct answers
+                                controller: _celebrationController,
+                                onLoaded: (composition) {
+                                  _celebrationController.duration =
+                                      composition.duration;
+                                  _celebrationController.forward();
+                                },
+                                fit: BoxFit.cover,
+                              ),
+                              Center(
+                                child: Text(
+                                  '🌟 Amazing! 🌟\n5 in a row!',
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    shadows: [
+                                      Shadow(
+                                        offset: Offset(2, 2),
+                                        blurRadius: 3,
+                                        color: Colors.black.withOpacity(0.5),
+                                      ),
+                                    ],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ] else
+                              Lottie.asset(
+                                'assets/animations/confetti_single.json',
+                                controller: _celebrationController,
+                                onLoaded: (composition) {
+                                  _celebrationController.duration =
+                                      composition.duration;
+                                  _celebrationController.forward();
+                                },
+                                fit: BoxFit.cover,
+                              ),
+                          ],
                         ),
                       ),
                   ],

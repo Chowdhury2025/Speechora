@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import '../../../models/lesson_models.dart';
 import '../../../services/tts_service.dart';
 
@@ -24,7 +25,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
   int? _selectedIndex;
   String? _selectedItem;
   late AnimationController _pulseController;
+  late AnimationController _successController;
   late Animation<double> _pulseAnimation;
+  List<Lesson>? lessonsList;
+  int? currentIndex;
+  bool showSuccess = false;
 
   @override
   void initState() {
@@ -35,26 +40,31 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
+    _successController = AnimationController(vsync: this);
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-
-    // Auto-play the main question on load
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final statement = widget.lesson.statement['content'];
-      if (statement != null && statement is String) {
-        _tts.speak(statement);
-      }
-    });
   }
 
   void _handleOptionTap(Map<String, dynamic> option, int index) async {
     // Stop any current TTS
     await _tts.stop();
 
+    String ttsText = (option['label'] ?? option['description']) ?? '';
+    if (ttsText.isEmpty) {
+      // Only use content if it's not a URL
+      final content = option['content'] ?? '';
+      if (content is String &&
+          !(content.startsWith('http://') || content.startsWith('https://'))) {
+        ttsText = content;
+      } else {
+        ttsText = 'Selected item';
+      }
+    }
+
     setState(() {
       _selectedIndex = index;
-      _selectedItem = option['label'] ?? option['content'];
+      _selectedItem = ttsText;
     });
 
     // Trigger pulse animation
@@ -69,12 +79,81 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
     await Future.delayed(const Duration(milliseconds: 800));
     final fullSentence = "I want $_selectedItem";
     await _tts.speak(fullSentence);
+
+    // Wait 3 seconds after content is fully read
+    await Future.delayed(const Duration(seconds: 3));
+
+    // Check if we're at the last lesson
+    if (lessonsList != null &&
+        currentIndex != null &&
+        currentIndex == lessonsList!.length - 1) {
+      // Show success animation
+      setState(() => showSuccess = true);
+      await Future.delayed(const Duration(seconds: 5));
+      setState(() => showSuccess = false);
+      Navigator.of(context).pop(); // Return to grid after completion
+    } else if (lessonsList != null && currentIndex != null) {
+      // Go to next lesson automatically
+      if (!mounted) return; // Check if widget is still mounted
+
+      // Ensure TTS is stopped before navigation
+      await _tts.stop();
+
+      // Create next screen data
+      final nextIndex = currentIndex! + 1;
+      final nextLesson = lessonsList![nextIndex];
+
+      if (mounted) {
+        // Check again before navigation
+        await Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder:
+                (context, animation1, animation2) => LessonDetailScreen(
+                  lesson: nextLesson,
+                  backgroundColor: widget.backgroundColor,
+                ),
+            settings: RouteSettings(
+              arguments: {
+                'lessonsList': lessonsList,
+                'currentIndex': nextIndex,
+              },
+            ),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          ),
+        );
+      }
+    }
+  }
+
+  bool _hasStartedReading = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasStartedReading) {
+      if (ModalRoute.of(context)?.settings.arguments is Map) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map;
+        lessonsList = args['lessonsList'] as List<Lesson>?;
+        currentIndex = args['currentIndex'] as int?;
+      }
+      _hasStartedReading = true;
+      // Use Future.microtask to ensure we're fully mounted before starting
+      Future.microtask(() {
+        final statement = widget.lesson.statement['content'];
+        if (statement != null && statement is String) {
+          _tts.speak(statement);
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _tts.stop();
     _pulseController.dispose();
+    _successController.dispose();
     super.dispose();
   }
 
@@ -94,6 +173,18 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
     ];
 
     final cardColor = colors[index % colors.length];
+
+    // Never show image URL as label
+    String labelText = option['label'] ?? option['description'] ?? '';
+    // If label is empty and content is a URL, don't show it
+    if (labelText.isEmpty &&
+        option['content'] is String &&
+        (option['content'].startsWith('http://') ||
+            option['content'].startsWith('https://'))) {
+      labelText = '';
+    } else if (labelText.isEmpty) {
+      labelText = option['content'] ?? '';
+    }
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
@@ -129,21 +220,76 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
                   Expanded(
                     flex: 3,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(
+                        0,
+                      ), // Remove padding for full coverage
                       child:
                           option['type'] == 'image_url'
                               ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  option['content'],
-                                  fit: BoxFit.contain,
-                                  errorBuilder:
-                                      (context, error, stackTrace) => Icon(
-                                        Icons.image,
-                                        size: 40,
-                                        color: Colors.grey[400],
-                                      ),
-                                ),
+                                child:
+                                    option['content'] != null
+                                        ? Image.network(
+                                          option['content'],
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          loadingBuilder: (
+                                            context,
+                                            child,
+                                            loadingProgress,
+                                          ) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value:
+                                                    loadingProgress
+                                                                .expectedTotalBytes !=
+                                                            null
+                                                        ? loadingProgress
+                                                                .cumulativeBytesLoaded /
+                                                            loadingProgress
+                                                                .expectedTotalBytes!
+                                                        : null,
+                                              ),
+                                            );
+                                          },
+                                          errorBuilder:
+                                              (
+                                                context,
+                                                error,
+                                                stackTrace,
+                                              ) => Container(
+                                                color: Colors.grey[200],
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.image_not_supported,
+                                                      size: 40,
+                                                      color: Colors.grey[400],
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      'Image not found',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.grey[600],
+                                                      ),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                        )
+                                        : Icon(
+                                          Icons.image_not_supported,
+                                          size: 40,
+                                          color: Colors.grey[400],
+                                        ),
                               )
                               : Icon(
                                 Icons.help_outline,
@@ -158,7 +304,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
-                        option['label'] ?? option['content'] ?? '',
+                        labelText,
                         style: GoogleFonts.nunito(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -181,7 +327,6 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Filter options to only show image_url types
@@ -206,90 +351,135 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
         backgroundColor: widget.backgroundColor,
         elevation: 0,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top question section
-            Expanded(
-              flex: 2,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 20,
-                ),
-                child: Center(
-                  child: Text(
-                    widget.lesson.statement['content'] ?? 'What do you want?',
-                    style: GoogleFonts.nunito(
-                      fontSize: screenWidth < 400 ? 32 : 42,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF2E7D7D), // Dark teal
-                      height: 1.2,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                // Top question section
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 20,
                     ),
-                    textAlign: TextAlign.center,
+                    child: Center(
+                      child: Text(
+                        widget.lesson.statement['content'] ??
+                            'What do you want?',
+                        style: GoogleFonts.nunito(
+                          fontSize: screenWidth < 400 ? 32 : 42,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF2E7D7D), // Dark teal
+                          height: 1.2,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // Middle grid section (2x3)
-            Expanded(
-              flex: 5,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.1,
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
+                // Middle grid section (2x3)
+                Expanded(
+                  flex: 5,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 1.1,
+                            crossAxisSpacing: 4,
+                            mainAxisSpacing: 4,
+                          ),
+                      itemCount: imageOptions.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, gridIndex) {
+                        final entry = imageOptions[gridIndex];
+                        return _buildOptionCard(entry.value, entry.key);
+                      },
+                    ),
                   ),
-                  itemCount: imageOptions.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, gridIndex) {
-                    final entry = imageOptions[gridIndex];
-                    return _buildOptionCard(entry.value, entry.key);
-                  },
                 ),
-              ),
-            ),
 
-            // Bottom sentence section
-            Expanded(
-              flex: 1,
-              child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF8DC), // Light cream
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                // Bottom sentence section
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8DC), // Light cream
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ],
+                    child: Center(
+                      child: Text(
+                        _selectedItem != null
+                            ? 'I want $_selectedItem'
+                            : 'Tap an item above',
+                        style: GoogleFonts.nunito(
+                          fontSize: screenWidth < 400 ? 24 : 32,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF2E7D7D),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
                 ),
-                child: Center(
-                  child: Text(
-                    _selectedItem != null
-                        ? 'I want $_selectedItem'
-                        : 'Tap an item above',
-                    style: GoogleFonts.nunito(
-                      fontSize: screenWidth < 400 ? 24 : 32,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF2E7D7D),
-                    ),
-                    textAlign: TextAlign.center,
+              ],
+            ),
+          ),
+          if (showSuccess)
+            Container(
+              color: Colors.black.withOpacity(0.7),
+              child: Center(
+                child: SizedBox(
+                  width: 300,
+                  height: 300,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Lottie.asset(
+                            'assets/animations/completed_a_task.json',
+                            controller: _successController,
+                            onLoaded: (composition) {
+                              _successController.duration =
+                                  composition.duration;
+                              _successController.forward();
+                            },
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        'Task Completed!',
+                        style: TextStyle(
+                          fontSize: 32,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

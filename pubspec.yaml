@@ -55,6 +55,7 @@ dependencies:
   photo_view: ^0.15.0
   provider: ^6.1.5
   google_fonts: ^6.2.1
+  video_player: ^2.10.0
   # Use with the CupertinoIcons class for iOS style icons.
   
 
@@ -98,6 +99,8 @@ flutter:
     - assets/appbg.png
     - assets/appIcon.png
     - assets/items/
+    - assets/animations/
+    - assets/animations/completed_a_task.json
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

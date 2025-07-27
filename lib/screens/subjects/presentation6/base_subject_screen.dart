@@ -60,7 +60,8 @@ class _BaseSubjectScreenState extends State<BaseSubjectScreen> {
       MaterialPageRoute(
         builder:
             (context) => VideoPlayerScreen(
-              videoUrl: video.linkyoutube_link,
+              youtubeUrl: video.linkyoutube_link,
+              r2VideoUrl: video.video_url,
               title: video.title,
               description: video.description,
               teacherName: video.name,

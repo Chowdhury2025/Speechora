@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,6 +33,22 @@ class TTSService {
     }
   }
 
+  Future<void> speakAndWait(String text) async {
+    await init();
+    await _flutterTts.stop();
+
+    Completer<void> completer = Completer<void>();
+
+    _flutterTts.setCompletionHandler(() {
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+    });
+
+    await _flutterTts.speak(text);
+    return completer.future;
+  }
+
   Future<void> setAccent(String accent) async {
     final language = accentLanguages[accent] ?? 'en-US';
     // Stop any ongoing speech
@@ -46,7 +63,20 @@ class TTSService {
   Future<void> speak(String text) async {
     await init();
     await _flutterTts.stop();
-    await _flutterTts.speak(text);
+    // Remove symbols and punctuation from text
+    final filteredText = text
+        .replaceAll(RegExp(r'[\p{P}\p{S}]', unicode: true), '')
+        .replaceAll(RegExp(r'\s+'), ' ');
+    await _flutterTts.speak(filteredText.trim());
+  }
+
+  Future<bool> isSpeaking() async {
+    try {
+      final speaking = await _flutterTts.getEngines;
+      return speaking.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<void> stop() async {

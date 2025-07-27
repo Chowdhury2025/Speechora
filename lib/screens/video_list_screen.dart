@@ -64,7 +64,7 @@ class VideoListScreen extends StatelessWidget {
                         child: Text(video.description!),
                       )
                       : null,
-              onTap: () => _launchUrl(video.linkyoutube_link),
+              onTap: () => _launchUrl(video.linkyoutube_link!),
             ),
           );
         },

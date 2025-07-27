@@ -3,6 +3,7 @@ import 'package:book8/services/quiz_image_service.dart';
 import 'package:book8/services/tts_service.dart';
 import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lottie/lottie.dart';
 
 class FruitQuizApp extends StatelessWidget {
   @override
@@ -63,9 +64,13 @@ class _TrueOrFalseState extends State<TrueOrFalse>
   int totalQuestions = 0;
   bool isLoading = true;
   String errorMessage = '';
+  int consecutiveCorrectAnswers = 0;
+  bool showCompletionAnimation = false;
 
   AnimationController? _bounceController;
   AnimationController? _fadeController;
+  AnimationController? _completionController;
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +86,10 @@ class _TrueOrFalseState extends State<TrueOrFalse>
     );
     _fadeController = AnimationController(
       duration: Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _completionController = AnimationController(
+      duration: Duration(milliseconds: 2000),
       vsync: this,
     );
   }
@@ -155,6 +164,21 @@ class _TrueOrFalseState extends State<TrueOrFalse>
       await _speakFeedback(true);
       setState(() {
         score++;
+        consecutiveCorrectAnswers++;
+
+        // Show completion animation after 5 correct answers in a row
+        if (consecutiveCorrectAnswers == 5) {
+          showCompletionAnimation = true;
+          _completionController?.forward().then((_) {
+            Future.delayed(Duration(seconds: 2), () {
+              setState(() {
+                showCompletionAnimation = false;
+                consecutiveCorrectAnswers = 0;
+              });
+              _completionController?.reset();
+            });
+          });
+        }
       });
       await _speakScore();
       _generateNewQuestion();
@@ -162,6 +186,7 @@ class _TrueOrFalseState extends State<TrueOrFalse>
       await _speakFeedback(false);
       setState(() {
         showOopsMessage = true;
+        consecutiveCorrectAnswers = 0; // Reset consecutive correct answers
       });
     }
   }
@@ -176,9 +201,7 @@ class _TrueOrFalseState extends State<TrueOrFalse>
     if (isCorrect) {
       await _ttsService.speak('Yes! This is ${currentFruit!.name}');
     } else {
-      await _ttsService.speak(
-        'Wrong! Try again! This is not ${askedFruitName}',
-      );
+      await _ttsService.speak('Wrong! Try again! This is not ');
     }
   }
 
@@ -191,221 +214,246 @@ class _TrueOrFalseState extends State<TrueOrFalse>
     _ttsService.stop();
     _bounceController?.dispose();
     _fadeController?.dispose();
+    _completionController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: widget.backgroundColor,
-      appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: widget.backgroundColor,
-        elevation: 0,
-        actions: [
-          if (currentFruit != null)
-            IconButton(
-              icon: const Icon(Icons.volume_up),
-              onPressed: _speakQuestion,
-              tooltip: 'Repeat question',
-            ),
-        ],
-      ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : errorMessage.isNotEmpty
-              ? Center(child: Text(errorMessage))
-              : fruits.isEmpty
-              ? const Center(child: Text('No quiz images available'))
-              : SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // Question
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-                      child: Text(
-                        'Is this a $askedFruitName?',
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF223A5E),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    // Fruit image with rounded background
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(32),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      padding: const EdgeInsets.all(24),
-                      child: SizedBox(
-                        width: 280,
-                        height: 280,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child:
-                              currentFruit != null
-                                  ? CachedNetworkImage(
-                                    imageUrl: currentFruit!.imageUrl,
-                                    fit: BoxFit.contain,
-                                    placeholder:
-                                        (context, url) => const Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                    errorWidget:
-                                        (context, url, error) =>
-                                            const Icon(Icons.error),
-                                  )
-                                  : const SizedBox.shrink(),
-                        ),
-                      ),
-                    ),
-                    // Oops/feedback message
-                    if (showOopsMessage)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Text('😕', style: TextStyle(fontSize: 28)),
-                              SizedBox(width: 10),
-                              Text(
-                                'Oops, try again!',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF223A5E),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    // Yes/No buttons
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 8.0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _handleAnswer(true),
-                              icon: const Icon(
-                                Icons.check,
-                                size: 36,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                'Yes',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF8ED081),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 20,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _handleAnswer(false),
-                              icon: const Icon(
-                                Icons.close,
-                                size: 36,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                'No',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF8C8C),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 20,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Bottom feedback/answer
-                    if (showOopsMessage)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          top: 16.0,
-                          left: 24,
-                          right: 24,
-                        ),
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 12,
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: widget.backgroundColor,
+          appBar: AppBar(
+            title: Text(widget.title),
+            backgroundColor: widget.backgroundColor,
+            elevation: 0,
+            actions: [
+              if (currentFruit != null)
+                IconButton(
+                  icon: const Icon(Icons.volume_up),
+                  onPressed: _speakQuestion,
+                  tooltip: 'Repeat question',
+                ),
+            ],
+          ),
+          body:
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : errorMessage.isNotEmpty
+                  ? Center(child: Text(errorMessage))
+                  : fruits.isEmpty
+                  ? const Center(child: Text('No quiz images available'))
+                  : SafeArea(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        // Question
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 24.0,
+                            bottom: 8.0,
                           ),
                           child: Text(
-                            'No, this is ${currentFruit?.name ?? ''}',
+                            'Is this a $askedFruitName?',
                             style: const TextStyle(
-                              fontSize: 22,
-                              color: Color(0xFF223A5E),
+                              fontSize: 32,
                               fontWeight: FontWeight.bold,
+                              color: Color(0xFF223A5E),
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ),
-                      ),
-                  ],
+                        // Fruit image with rounded background
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(32),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.all(24),
+                          child: SizedBox(
+                            width: 280,
+                            height: 280,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child:
+                                  currentFruit != null
+                                      ? CachedNetworkImage(
+                                        imageUrl: currentFruit!.imageUrl,
+                                        fit: BoxFit.contain,
+                                        placeholder:
+                                            (context, url) => const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
+                                        errorWidget:
+                                            (context, url, error) =>
+                                                const Icon(Icons.error),
+                                      )
+                                      : const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                        // Oops/feedback message
+                        if (showOopsMessage)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Text('😕', style: TextStyle(fontSize: 28)),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Oops, try again!',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF223A5E),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        // Yes/No buttons
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24.0,
+                            vertical: 8.0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => _handleAnswer(true),
+                                  icon: const Icon(
+                                    Icons.check,
+                                    size: 36,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    'Yes',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF8ED081),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => _handleAnswer(false),
+                                  icon: const Icon(
+                                    Icons.close,
+                                    size: 36,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    'No',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFF8C8C),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Bottom feedback/answer
+                        if (showOopsMessage)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 16.0,
+                              left: 24,
+                              right: 24,
+                            ),
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                'No, this is ${currentFruit?.name ?? ''}',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  color: Color(0xFF223A5E),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+        ),
+        if (showCompletionAnimation)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black54,
+              child: Center(
+                child: Lottie.asset(
+                  'assets/animations/completed_a_task.json',
+                  controller: _completionController,
+                  width: 300,
+                  height: 300,
+                  fit: BoxFit.contain,
+                  repeat: true,
                 ),
               ),
+            ),
+          ),
+      ],
     );
   }
 }

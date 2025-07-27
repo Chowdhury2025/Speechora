@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
-  final String videoUrl;
+  final String? youtubeUrl;
+  final String? r2VideoUrl;
   final String title;
   final String? description;
   final String? teacherName;
 
   const VideoPlayerScreen({
     Key? key,
-    required this.videoUrl,
+    this.youtubeUrl,
+    this.r2VideoUrl,
     required this.title,
     this.description,
     this.teacherName,
@@ -20,41 +23,61 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late YoutubePlayerController _controller;
+  YoutubePlayerController? _youtubeController;
+  VideoPlayerController? _r2Controller;
   bool _isReady = false;
   bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
-    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
-    if (videoId != null) {
-      _controller = YoutubePlayerController.fromVideoId(
-        videoId: videoId,
-        autoPlay: true,
-        params: const YoutubePlayerParams(
-          mute: false,
-          showControls: true,
-          showFullscreenButton: true,
-          enableCaption: true,
-          captionLanguage: 'en',
-        ),
+    if (widget.youtubeUrl != null) {
+      final videoId = YoutubePlayerController.convertUrlToId(
+        widget.youtubeUrl!,
       );
+      if (videoId != null) {
+        _youtubeController = YoutubePlayerController.fromVideoId(
+          videoId: videoId,
+          autoPlay: true,
+          params: const YoutubePlayerParams(
+            mute: false,
+            showControls: true,
+            showFullscreenButton: true,
+            enableCaption: true,
+            captionLanguage: 'en',
+          ),
+        );
+        _youtubeController!.listen((event) {
+          if (event.playerState == PlayerState.playing && !_isReady) {
+            setState(() {
+              _isReady = true;
+            });
+          }
+          if (event.error is String) {
+            setState(() {
+              _hasError = true;
+            });
+          }
+        });
+      } else {
+        setState(() {
+          _hasError = true;
+        });
+      }
+    } else if (widget.r2VideoUrl != null) {
+      _initializeR2Player();
+    }
+  }
 
-      // Add listener for player state changes
-      _controller.listen((event) {
-        if (event.playerState == PlayerState.playing && !_isReady) {
-          setState(() {
-            _isReady = true;
-          });
-        }
-        if (event.error != null && !_hasError) {
-          setState(() {
-            _hasError = true;
-          });
-        }
+  Future<void> _initializeR2Player() async {
+    try {
+      _r2Controller = VideoPlayerController.network(widget.r2VideoUrl!);
+      await _r2Controller!.initialize();
+      setState(() {
+        _isReady = true;
       });
-    } else {
+      _r2Controller!.play();
+    } catch (e) {
       setState(() {
         _hasError = true;
       });
@@ -63,7 +86,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
-    _controller.close();
+    _youtubeController?.close();
+    _r2Controller?.dispose();
     super.dispose();
   }
 
@@ -78,7 +102,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(aspectRatio: 16 / 9, child: _buildYoutubePlayer()),
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child:
+                  widget.r2VideoUrl != null
+                      ? _buildR2Player()
+                      : _buildYoutubePlayer(),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -125,13 +155,25 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget _buildYoutubePlayer() {
-    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
-    if (videoId == null) {
+    if (_youtubeController == null) {
       return const Center(
         child: Text('Invalid YouTube URL', style: TextStyle(color: Colors.red)),
       );
     }
+    return YoutubePlayer(controller: _youtubeController!, aspectRatio: 16 / 9);
+  }
 
-    return YoutubePlayer(controller: _controller, aspectRatio: 16 / 9);
+  Widget _buildR2Player() {
+    if (_r2Controller == null || !_r2Controller!.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return _hasError
+        ? const Center(
+          child: Text(
+            'Error loading R2 video',
+            style: TextStyle(color: Colors.red),
+          ),
+        )
+        : VideoPlayer(_r2Controller!);
   }
 }
