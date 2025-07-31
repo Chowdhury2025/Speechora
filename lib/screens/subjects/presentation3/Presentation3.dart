@@ -1,274 +1,174 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../../services/tts_service.dart';
-import '../../../services/quiz_image_service.dart';
+import '../../../config/config.dart';
+
+class QuizItem {
+  final String subject;
+  final String imageUrl;
+  final String imageName;
+  final String description;
+  final String ageGroup;
+
+  QuizItem({
+    required this.subject,
+    required this.imageUrl,
+    required this.imageName,
+    required this.description,
+    required this.ageGroup,
+  });
+
+  factory QuizItem.fromJson(Map<String, dynamic> json) => QuizItem(
+    subject: json['subject'],
+    imageUrl: json['imageUrl'],
+    imageName: json['imageName'],
+    description: json['description'],
+    ageGroup: json['ageGroup'],
+  );
+}
 
 class Presentation3 extends StatefulWidget {
-  final String title;
-  final Color backgroundColor;
-
-  const Presentation3({
-    Key? key,
-    required this.title,
-    this.backgroundColor = const Color(0xFF58CC02),
-  }) : super(key: key);
+  const Presentation3({Key? key}) : super(key: key);
 
   @override
-  State<Presentation3> createState() => _Presentation3State();
+  _Presentation3State createState() => _Presentation3State();
 }
 
 class _Presentation3State extends State<Presentation3> {
-  final TTSService _ttsService = TTSService();
-  final QuizImageService _quizImageService = QuizImageService();
-  final Random random = Random();
-
-  List<QuizImage> displayedImages = [];
-  QuizImage? correctImage;
-  bool showSuccess = false;
-  bool showError = false;
-  bool isLoading = true;
-  QuizImage? selectedImage;
+  final TTSService _tts = TTSService();
+  final List<QuizItem> _items = [];
+  int _currentIndex = 0;
+  QuizItem? _selected;
 
   @override
   void initState() {
     super.initState();
-    _initTTS();
+    _loadData();
   }
 
-  Future<void> _initTTS() async {
-    await _ttsService.init();
-    _setupNewRound();
-  }
-
-  Future<void> _setupNewRound() async {
-    setState(() {
-      isLoading = true;
-    });
-
+  Future<void> _loadData() async {
     try {
-      // Fetch quiz images from the API
-      final List<QuizImage> images = await _quizImageService.getQuizImages();
-      final List<QuizImage> imageQuizImages =
-          images
-              .where((image) => image.quizTypes.contains('image_quiz'))
-              .toList();
-
-      if (imageQuizImages.isEmpty) {
-        throw Exception('No quiz images available');
-      } // Shuffle all images and take first 6
-      final shuffledImages = List<QuizImage>.from(imageQuizImages)
-        ..shuffle(random);
-      displayedImages = shuffledImages.take(6).toList();
-      // Pick one random image from the 6 as correct answer
-      correctImage = displayedImages[random.nextInt(displayedImages.length)];
-      // Speak the name of the correct image
-      _speakWord();
+      final response = await http.get(Uri.parse('${Config.apiUrl}/api/presentation3'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() => _items.addAll(data.map((e) => QuizItem.fromJson(e))));
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load quiz images: ${e.toString()}')),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      print('Error loading presentation items: $e');
     }
+    // once loaded, ask first question
+    WidgetsBinding.instance.addPostFrameCallback((_) => _askQuestion());
   }
 
-  Future<void> _speakWord() async {
-    if (correctImage != null) {
-      await _ttsService.speak("Can you find the ss ${correctImage!.name}?");
-    }
+  Future<void> _askQuestion() async {
+    final a = _items[_currentIndex];
+    final b = _items[(_currentIndex + 1) % _items.length];
+    await _tts.speak("Do you want ${a.imageName} or ${b.imageName}?");
   }
 
-  Future<void> _handleImageTap(QuizImage selectedImage) async {
-    if (selectedImage.id == correctImage?.id) {
-      setState(() {
-        showSuccess = true;
-        showError = false;
-      });
-
-      // Speak success message
-      await _ttsService.speak("Correct! That's the ${selectedImage.name}!");
-
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            showSuccess = false;
-            _setupNewRound();
-          });
-        }
-      });
-    } else {
-      setState(() {
-        showError = true;
-        showSuccess = false;
-      });
-
-      // Speak error message
-      await _ttsService.speak(
-        "Try again! That's not the ${correctImage?.name}",
-      );
-
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            showError = false;
-          });
-        }
-      });
-    }
+  Future<void> _onSelect(QuizItem choice) async {
+    if (_selected != null) return;
+    setState(() => _selected = choice);
+    await _tts.speak("I want ${choice.imageName}");
+    // after a short delay, advance
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      _currentIndex = (_currentIndex + 2) % _items.length;
+      _selected = null;
+    });
+    _askQuestion();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFBEE9E8),
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text('Image Quiz'),
-        elevation: 0,
-      ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 32.0, bottom: 16.0),
-                      child: Text(
-                        correctImage != null ? 'Can I play?' : '',
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF223A5E),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Expanded(
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
-                        mainAxisSpacing: 24,
-                        crossAxisSpacing: 24,
-                        children:
-                            displayedImages.map((image) {
-                              final isSelected = selectedImage?.id == image.id;
-                              final cardColor =
-                                  isSelected
-                                      ? const Color(0xFFFFF3C7)
-                                      : (displayedImages.indexOf(image) % 2 == 0
-                                          ? const Color(0xFFFFF3C7)
-                                          : const Color(0xFFFFE0B2));
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedImage = image;
-                                  });
-                                  _ttsService.speak(image.name);
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  decoration: BoxDecoration(
-                                    color: cardColor,
-                                    borderRadius: BorderRadius.circular(28),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.12),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                    border:
-                                        isSelected
-                                            ? Border.all(
-                                              color: Colors.blue,
-                                              width: 3,
-                                            )
-                                            : null,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 18,
-                                    horizontal: 8,
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            18,
-                                          ),
-                                          child: Image.network(
-                                            image.imageUrl,
-                                            fit: BoxFit.contain,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    const Icon(Icons.error),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        image.name,
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF223A5E),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: 32.0,
-                        left: 16,
-                        right: 16,
-                        top: 16,
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3C7),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 20,
-                          horizontal: 12,
-                        ),
-                        child: Text(
-                          selectedImage != null
-                              ? 'I want to play with ${selectedImage!.name}'
-                              : 'I want to play with ...',
-                          style: const TextStyle(
-                            fontSize: 26,
-                            color: Color(0xFF223A5E),
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+  Widget _buildOptionCard(QuizItem item) {
+    final isSelected = item == _selected;
+    return GestureDetector(
+      onTap: () => _onSelect(item),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color:
+              isSelected ? Colors.orangeAccent.withOpacity(0.7) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow:
+              isSelected
+                  ? [BoxShadow(color: Colors.black26, blurRadius: 8)]
+                  : [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        ),
+        child: Column(
+          children: [
+            Image.network(item.imageUrl, height: 120),
+            const SizedBox(height: 12),
+            Text(
+              item.imageName,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: Colors.teal[800],
               ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
-  void dispose() {
-    _ttsService.stop();
-    super.dispose();
+  Widget build(BuildContext context) {
+    if (_items.length < 2) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final first = _items[_currentIndex];
+    final second = _items[(_currentIndex + 1) % _items.length];
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFE0F7FA),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            // Question text
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                "Do you want juice or water?", // you can dynamically swap "juice" & "water" wording here if you like
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.teal,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Two option cards
+            _buildOptionCard(first),
+            _buildOptionCard(second),
+            const Spacer(),
+            // Bottom sentence
+            if (_selected != null)
+              Container(
+                width: double.infinity,
+                color: Colors.yellow[200],
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: Text(
+                    "I want ${_selected!.imageName}",
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

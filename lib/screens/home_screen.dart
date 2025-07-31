@@ -1,5 +1,5 @@
 import 'package:book8/screens/settings_screen.dart';
-import 'package:book8/screens/subjects/presentation5/image_quiz_screen.dart';
+import 'package:book8/screens/subjects/presentation5/presentation5.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -132,11 +132,11 @@ class _MyHomePageState extends State<MyHomePage> {
       icon: Icons.more_horiz,
       color: Color(0xFF1CB0F6),
     ),
-    SubjectCard(
-      title: 'yes or no ', // 21
-      icon: Icons.check_circle_outline,
-      color: Color(0xFF58CC02),
-    ),
+    // SubjectCard(
+    //   title: 'yes or no ', // 21
+    //   icon: Icons.check_circle_outline,
+    //   color: Color(0xFF58CC02),
+    // ),
     SubjectCard(
       title: 'Find the Item', // 21
       icon: Icons.check_circle_outline,
@@ -169,7 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _navigateToScreen(BuildContext context, String title, Color color) {
-    if (title == 'How To') {
+    if (title == 'Video Learning') {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -303,8 +303,11 @@ class _MyHomePageState extends State<MyHomePage> {
       case 'Select the Item':
         screen = TrueOrFalse(backgroundColor: color, title: 'Select the Item');
         break;
-      case 'yes or no ':
-        screen = const Find_the_Item();
+      case 'Find the Item':
+        screen = const presentation5();
+        break;
+      case 'Choice Questions':
+        screen = const Presentation3();
         break;
       case 'How Questions':
         screen = (backgroundColor: color) as Widget;
@@ -320,9 +323,6 @@ class _MyHomePageState extends State<MyHomePage> {
         screen = VideoCategoriesScreen(backgroundColor: color);
         break;
 
-      case 'Find the Item':
-        screen = TrueOrFalse(backgroundColor: color, title: 'Find the Item');
-        break;
       case 'Games':
         screen = const LearningGamesScreen(backgroundColor: Color(0xFF58CC02));
         break;
