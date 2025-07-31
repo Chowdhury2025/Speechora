@@ -34,12 +34,14 @@ import LessonsListPage from './app/pages/lessons/LessonsListPage.jsx';
 import CreateLessonPage from './app/pages/lessons/CreateLessonPage.jsx';
 import EditLessonPage from './app/pages/lessons/EditLessonPage.jsx';
 import PromoCodesPage from './app/pages/PromoCodesPage.jsx';
+import Presentation3List from './components/Presentation3List';
+import Presentation3Form from './components/Presentation3Form';
 
 // Define which menu items are accessible to each role
-const ROLE_PERMISSIONS = {  
-  SUPERUSER: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Videos-Upload', 'Promo Codes'],
-  ADMIN: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Promo Codes'],
-  CONTENTMANAGER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds'],
+const ROLE_PERMISSIONS = {
+  SUPERUSER: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Videos-Upload', 'Promo Codes', 'Presentation3'],
+  ADMIN: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Promo Codes', 'Presentation3'],
+  CONTENTMANAGER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds', 'Presentation3'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds', 'Promo Codes'],
   GUARDIAN_PARENT: ['Parent Dashboard', 'Premium',],
   TEACHER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Quiz Images'],
@@ -49,6 +51,9 @@ const ROLE_PERMISSIONS = {
 const APP_ROUTES = [
   { name: 'Dashboard', path: 'dashboard', element: DashboardPage },
   { name: 'Parent Dashboard', path: 'parent-dashboard', element: ParentDashboard },
+  { name: 'Presentation3', path: 'Presentation3', element: Presentation3List },
+
+
   { name: 'Users', path: 'users', element: UsersPage },
   { name: 'Tests', path: 'tests', element: TestsPage },
   { name: 'Lessons', path: 'lessons/*', element: LessonsListPage },
@@ -74,6 +79,8 @@ const APP_ROUTES = [
   { name: 'Premium',   path: 'premium',   element: PremiumSalesPage },
   { name: 'Settings',  path: 'settings',  element: SettingsPage },
   { name: 'Promo Codes', path: 'promo-codes', element: PromoCodesPage },
+  { name: 'Presentation3', path: 'presentation3', element: Presentation3List },
+  { name: 'Presentation3', path: 'presentation3/new', element: Presentation3Form },
   
   // Sub-routes
   { name: 'Videos',    path: 'videos/upload', element: VideoUploadPage },

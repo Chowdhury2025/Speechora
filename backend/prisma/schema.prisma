@@ -32,6 +32,7 @@ model User {
   images                 images[]  @relation("ImageUploader")
   tests                  Test[]    @relation("TestCreator")
   quizImages            QuizImage[] @relation("QuizImageUploader")
+  presentation3         Presentation3[] @relation("Presentation3Creator")
   //  usedPromoCodes        UsedPromoCode[] @relation("UserUsedPromoCodes")
 
   Lesson Lesson[]
@@ -45,6 +46,8 @@ model User {
   isTrialUsed      Boolean  @default(false)
 
   UsedPromoCode UsedPromoCode[] @relation("UserUsedPromoCodes")
+
+  Presentation3 Presentation3[]
 }
 
 model SystemSettings {
@@ -142,6 +145,21 @@ model QuizImage {
   uploader    User?    @relation("QuizImageUploader", fields: [userId], references: [id])
   @@index([category])
   @@index([ageGroup])
+}
+
+model Presentation3 {
+  id          Int       @id @default(autoincrement())
+  subject     String
+  imageUrl    String
+  imageName   String
+  description String
+  ageGroup    String
+  userId      Int
+  createdBy   User      @relation("Presentation3Creator", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  User User[]
 }
 
 model PromoCode {

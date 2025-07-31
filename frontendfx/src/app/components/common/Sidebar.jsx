@@ -37,8 +37,8 @@ const Sidebar = () => {
     // Parent Dashboard
     { path: 'parent-dashboard', label: 'Parent Dashboard', icon: LayoutDashboard, roles: ['GUARDIAN_PARENT', 'SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
     { path: 'images', label: 'Presentation 1', icon: Image, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
-    { path: 'lessons', label: 'presentation 2', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
-    { path: 'lessons', label: 'presentation 3', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
+    { path: 'lessons', label: 'Presentation 2', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
+    { path: 'presentation3', label: 'Presentation 3', icon: BookOpen, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'quiz-images', label: 'presentation 4,5', icon: ImagePlus, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER'] },
     { path: 'videos', label: 'presentation 6', icon: PlaySquare, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'TEACHER'] },
     { path: 'premium', label: 'Premium', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },

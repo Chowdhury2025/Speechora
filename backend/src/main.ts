@@ -16,6 +16,7 @@ import quizImageRouter from "./QuizImage/router";
 import parentRouter from "./app/Parent/router";  // Add parent router import
 import systemSettingsRouter from './SystemSettings/router';
 import promoCodeRouter from './app/PromoCode/router';  // Add promo code router import
+import presentation3Router from './app/Presentation3/router';  // Add presentation3 router import
 
 
 const app: Express = express();
@@ -77,6 +78,7 @@ app.use("/api/quiz-images", quizImageRouter);
 app.use("/api", parentRouter);  // Add parent routes
 app.use('/api/system', systemSettingsRouter); // Premium Pricing uses POST for update
 app.use('/api/promo-codes', promoCodeRouter); // Add promo code routes
+app.use('/api/presentation3', presentation3Router); // Add presentation3 routes
 
 // Add email configuration router
 
@@ -100,4 +102,3 @@ app.listen(8000, '0.0.0.0', () => {
     console.log(`- Network: http://${ip}:8000`);
   });
 });
-//  SSS

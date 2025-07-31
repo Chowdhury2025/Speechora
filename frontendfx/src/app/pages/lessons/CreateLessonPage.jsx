@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../../../config';
@@ -299,6 +299,7 @@ export default function CreateLesson() {
                 <option value="who_questions">Who Questions</option>
                 <option value="when_questions">When Questions</option>
                 <option value="why_questions">Why Questions</option>
+                 <option value="Choice_Questions">Choice Questions</option>
               </select>
             </div>
 
