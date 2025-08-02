@@ -11,7 +11,7 @@ export const createPresentation3Item = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "userId is required" });
     }
 
-    const newItem = await prisma.Presentation3.create({
+    const newItem = await prisma.presentation3.create({
       data: {
         subject,
         imageUrl,
@@ -31,7 +31,7 @@ export const createPresentation3Item = async (req: Request, res: Response) => {
 
 export const getAllPresentation3Items = async (_req: Request, res: Response) => {
   try {
-    const items = await prisma.Presentation3.findMany({
+    const items = await prisma.presentation3.findMany({
       orderBy: {
         createdAt: "desc",
       },
@@ -48,7 +48,7 @@ export const updatePresentation3Item = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { subject, imageUrl, imageName, description, ageGroup } = req.body;
 
-    const updatedItem = await prisma.Presentation3.update({
+    const updatedItem = await prisma.presentation3.update({
       where: { id: parseInt(id) },
       data: {
         subject,
@@ -69,7 +69,7 @@ export const updatePresentation3Item = async (req: Request, res: Response) => {
 export const deletePresentation3Item = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await prisma.Presentation3.delete({
+    await prisma.presentation3.delete({
       where: { id: parseInt(id) },
     });
     res.json({ message: "Item deleted successfully" });
