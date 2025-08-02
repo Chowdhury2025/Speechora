@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config';
+import Presentation3EditModal from './Presentation3Edit';
 
 const Presentation3List = () => {
   const [items, setItems] = useState([]);
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editItemId, setEditItemId] = useState(null);
+  const [editItemData, setEditItemData] = useState(null);
 
   const fetchItems = async () => {
     try {
@@ -19,6 +19,10 @@ const Presentation3List = () => {
     }
   };
 
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
@@ -28,6 +32,19 @@ const Presentation3List = () => {
         console.error('Error deleting item:', error);
       }
     }
+  };
+
+  const handleEditClick = (id) => {
+    const item = items.find(i => i.id === id);
+    setEditItemId(id);
+    setEditItemData(item || null);
+    setEditModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setEditModalOpen(false);
+    setEditItemId(null);
+    setEditItemData(null);
   };
 
   return (
@@ -66,14 +83,14 @@ const Presentation3List = () => {
                     <div className="max-w-xs truncate">{item.description}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <Link
-                      to={`/app/presentation3/edit/${item.id}`}
+                    <button
+                      onClick={() => handleEditClick(item.id)}
                       className="text-[#3c9202] hover:text-[#47b102] transition-colors duration-200"
                     >
                       <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                    </Link>
+                    </button>
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="text-red-600 hover:text-red-800 transition-colors duration-200"
@@ -88,6 +105,13 @@ const Presentation3List = () => {
             </tbody>
           </table>
         </div>
+        <Presentation3EditModal
+          open={editModalOpen}
+          onClose={handleModalClose}
+          itemId={editItemId}
+          itemData={editItemData}
+          onSaved={fetchItems}
+        />
       </div>
     </div>
   );

@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { userStates } from '../atoms';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
 import { r2Service } from '../config/cloudflare';
 
+const subjectOptions = [
+  { name: 'When Questions', slug: 'When_Questions' },
+  { name: 'Choice Questions', slug: 'Choice_Questions' },
+
+];
+
 const Presentation3Form = () => {
   const navigate = useNavigate();
+  const user = useRecoilValue(userStates);
   const [formData, setFormData] = useState({
     subject: '',
     imageUrl: '',
@@ -32,7 +41,8 @@ const Presentation3Form = () => {
       const response = await axios.post(`${API_URL}/api/presentation3`, {
         ...formData,
         imageUrl,
-        imageName: formData.imageName || selectedFile?.name || ''
+        imageName: formData.imageName || selectedFile?.name || '',
+        userId: user?.userId
       });
 
       if (response.status === 201) {
@@ -65,15 +75,21 @@ const Presentation3Form = () => {
             <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
               Subject
             </label>
-            <input
-              type="text"
+            <select
               id="subject"
               name="subject"
               value={formData.subject}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent"
-            />
+            >
+              <option value="">Select a subject</option>
+              {subjectOptions.map((option) => (
+                <option key={option.slug} value={option.slug}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
