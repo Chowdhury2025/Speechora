@@ -5,11 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/lesson_base_subject_screen.dart';
-import 'subjects/presentation3/Presentation3.dart';
-import 'subjects/presentation6/how_questions_screen.dart';
-import 'others_screen.dart';
+
+import 'subjects/presentation3/presentation3_list.dart';
 import 'subjects/presentation4/trueorfalse.dart';
 import 'subjects/presentation5/learning_games_screen.dart';
+import 'subjects/presentation6/how_questions_screen.dart';
+import 'others_screen.dart';
+
 import 'subjects/presentation6/video_categories_screen.dart';
 
 class SubjectCard {
@@ -287,11 +289,7 @@ class _MyHomePageState extends State<MyHomePage> {
         );
         break;
       case 'When Questions':
-        screen = PresentationTwo(
-          title: 'When Questions',
-          backgroundColor: color,
-          subject: 'when_questions',
-        );
+        screen = const Presentation3List(subject: 'when_questions');
         break;
       case 'Why Questions':
         screen = PresentationTwo(
@@ -307,10 +305,10 @@ class _MyHomePageState extends State<MyHomePage> {
         screen = const presentation5();
         break;
       case 'Choice Questions':
-        screen = const Presentation3();
+        screen = const Presentation3List(subject: 'choice_questions');
         break;
       case 'How Questions':
-        screen = (backgroundColor: color) as Widget;
+        screen = VideoCategoriesScreen(backgroundColor: color);
         break;
       case 'Learning Games':
         screen = LearningGamesScreen(backgroundColor: color);
