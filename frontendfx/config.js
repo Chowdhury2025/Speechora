@@ -46,7 +46,7 @@ export const PWA_CONFIG = {
             type: 'image/png'
         },
         {
-            src: '/icons/icon-144x144.png',
+            src: '/icons/appIcon-removebg-preview.png',
             sizes: '144x144',
             type: 'image/png'
         },

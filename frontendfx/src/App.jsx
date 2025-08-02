@@ -51,9 +51,6 @@ const ROLE_PERMISSIONS = {
 const APP_ROUTES = [
   { name: 'Dashboard', path: 'dashboard', element: DashboardPage },
   { name: 'Parent Dashboard', path: 'parent-dashboard', element: ParentDashboard },
-  { name: 'Presentation3', path: 'Presentation3', element: Presentation3List },
-
-
   { name: 'Users', path: 'users', element: UsersPage },
   { name: 'Tests', path: 'tests', element: TestsPage },
   { name: 'Lessons', path: 'lessons/*', element: LessonsListPage },
