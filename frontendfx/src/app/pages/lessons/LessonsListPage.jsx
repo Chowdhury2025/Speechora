@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_URL } from '../../../config';
 import { useNavigate } from 'react-router-dom';
 import LessonReviewModal from '../../modals/LessonReviewModal';
+import LessonEditModal from '../../modals/LessonEditModal';
 import { r2Service } from '../../../config/cloudflare';
 
 export default function LessonsPage() {
@@ -14,6 +15,7 @@ export default function LessonsPage() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     subject: '',
     ageGroup: '',
@@ -50,7 +52,8 @@ export default function LessonsPage() {
   };
 
   const handleEdit = (lesson) => {
-    navigate(`/app/lessons/edit/${lesson.id}`);
+    setSelectedLesson(lesson);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = async () => {
@@ -241,6 +244,13 @@ export default function LessonsPage() {
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}
         lesson={selectedLesson}
+      />
+
+      <LessonEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        lesson={selectedLesson}
+        onUpdate={fetchLessons}
       />
       </div>
   );

@@ -39,7 +39,7 @@ import Presentation3Form from './components/Presentation3Form';
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
-  SUPERUSER: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Videos-Upload', 'Promo Codes', 'Presentation3'],
+  SUPERUSER: ['Dashboard', 'Lessonscreate','Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Videos-Upload', 'Promo Codes', 'Presentation3'],
   ADMIN: ['Dashboard', 'Parent Dashboard', 'Users', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'Premium', 'Analytics', 'Settings', 'IWantNeeds', 'Promo Codes', 'Presentation3'],
   CONTENTMANAGER: ['Parent Dashboard', 'Videos', 'Tests', 'Lessons', 'Images', 'Quiz Images', 'IWantNeeds', 'Presentation3'],
   SUPPORT: ['Users', 'Premium', 'IWantNeeds', 'Promo Codes'],

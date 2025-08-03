@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios'; // Import this in your actual project
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
-import { API_URL } from '../../config';
+import { API_URL, r2Service } from '../../config';
 import { TabNavigator } from '../components/common/TabNavigator';
 import { getThumbnailUrl } from '../utils/youtube';
-import { r2Service } from '../../config';
+
 
 const VideoUploadPage = () => {
   const userState = useRecoilValue(userStates);
@@ -68,11 +68,27 @@ const VideoUploadPage = () => {
     try {
       setUploadProgress(0);
       r2Service.validateFile(file, { maxSize: 100 * 1024 * 1024, allowedTypes: ['video/mp4','video/mpeg','video/quicktime','video/webm'] });
-      const result = await r2Service.uploadFile(file, 'videos', userState.id);
+      
+      // Create upload progress handler
+      const onProgress = (progress) => {
+        setUploadProgress(Math.round((progress.loaded / progress.total) * 100));
+      };
+      
+      const result = await r2Service.uploadFile(file, 'videos', userState.id, onProgress);
+      console.log('R2 upload result:', result); // Debug full result
+
+      if (!result || !result.url) {
+        console.error('Invalid response from R2:', result);
+        throw new Error('Upload successful but no URL in response');
+      }
+
       setUploadProgress(100);
+      console.log('R2 upload successful, URL:', result.url);
       return result.url;
     } catch (err) {
-      throw new Error(`Upload failed: ${err.message}`);
+      console.error('R2 Upload Error:', err);
+      setUploadProgress(0);
+      throw new Error(err.message || 'Failed to upload video file');
     }
   };
 
@@ -82,20 +98,75 @@ const VideoUploadPage = () => {
     setSuccess(false);
     setLoading(true);
     try {
-      let payload = {...videoData};
+      let payload = {
+        ...videoData,
+        linkyoutube_link: '',
+        video_url: '',
+        thumbnail: ''
+      };
+
       if (uploadType === 'youtube') {
-        if (!validateYoutubeUrl(payload.linkyoutube_link)) throw new Error('Please enter a valid YouTube video URL');
+        if (!validateYoutubeUrl(videoData.linkyoutube_link)) {
+          throw new Error('Please enter a valid YouTube video URL');
+        }
+        payload.linkyoutube_link = videoData.linkyoutube_link;
+        payload.thumbnail = getThumbnailUrl(videoData.linkyoutube_link);
       } else {
-        if (!selectedFile) throw new Error('Please select a video file to upload');
-        const videoUrl = await uploadToR2(selectedFile);
-        payload.video_url = videoUrl;
-        payload.thumbnail = '/placeholder-video-thumbnail.jpg';
+        if (!selectedFile) {
+          throw new Error('Please select a video file to upload');
+        }
+        try {
+          const videoUrl = await uploadToR2(selectedFile);
+          if (!videoUrl) {
+            throw new Error('No URL returned from storage service');
+          }
+          console.log('Setting video URL in payload:', videoUrl);
+          
+          payload = {
+            ...payload,
+            video_url: videoUrl, // The URL from R2 is already properly formatted
+            thumbnail: '/placeholder-video-thumbnail.jpg'
+          };
+          
+          console.log('Final payload after setting URL:', payload);
+        } catch (uploadError) {
+          console.error('R2 Upload Error Details:', uploadError);
+          setError('Failed to upload video file: ' + (uploadError.message || 'Unknown error'));
+          throw uploadError;
+        }
       }
-      await axios.post(`${API_URL}/api/videos`, payload);
-      setSuccess(true);
-      setVideoData(prev => ({...prev, title:'', linkyoutube_link:'', video_url:'', thumbnail:'', category:'', customCategory:'', position:0, description:'', ageGroup:''}));
-      setSelectedFile(null);
-      setUploadProgress(0);
+
+      // If using custom category, set it as the category
+      if (isCustomCategory && videoData.customCategory) {
+        payload.category = videoData.customCategory;
+      }
+
+      // Clean up payload
+      delete payload.customCategory;
+      
+      console.log('Submitting payload:', payload); // Debug log
+
+      try {
+        await axios.post(`${API_URL}/api/videos`, payload);
+        setSuccess(true);
+        setVideoData(prev => ({
+          ...prev, 
+          title: '',
+          linkyoutube_link: '',
+          video_url: '',
+          thumbnail: '',
+          category: '',
+          customCategory: '',
+          position: 0,
+          description: '',
+          ageGroup: ''
+        }));
+        setSelectedFile(null);
+        setUploadProgress(0);
+      } catch (apiError) {
+        console.error('API Error Details:', apiError.response?.data || apiError);
+        throw new Error(apiError.response?.data?.message || 'Failed to save video information');
+      }
     } catch (err) {
       setError(err.message || 'Failed to upload video');
     } finally {
@@ -182,8 +253,29 @@ const VideoUploadPage = () => {
           {uploadType==='r2' && (
             <div>
               <label className="block font-bold mb-2 text-[#3c9202]">Select File *</label>
-              <input type="file" accept="video/*" onChange={handleFileSelect} required className="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-[#58cc02] file:text-white hover:file:bg-[#47b102]"/>
-              {uploadProgress>0 && uploadProgress<100 && <p className="mt-1 text-sm">Uploading... {uploadProgress}%</p>}
+              <input 
+                type="file" 
+                accept="video/mp4,video/mpeg,video/quicktime,video/webm" 
+                onChange={handleFileSelect} 
+                required 
+                className="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-[#58cc02] file:text-white hover:file:bg-[#47b102]"
+              />
+              {selectedFile && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Selected file: {selectedFile.name} ({Math.round(selectedFile.size / 1024 / 1024)}MB)
+                </p>
+              )}
+              {uploadProgress > 0 && (
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-[#58cc02] h-2.5 rounded-full transition-all duration-300" 
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="mt-1 text-sm text-[#3c9202]">Uploading... {uploadProgress}%</p>
+                </div>
+              )}
             </div>
           )}
 
