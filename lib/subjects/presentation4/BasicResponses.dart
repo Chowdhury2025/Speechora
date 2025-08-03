@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-class TrueOrFalse extends StatelessWidget {
+class BasicResponses extends StatelessWidget {
   final Color backgroundColor;
-  const TrueOrFalse({Key? key, this.backgroundColor = const Color(0xFF58CC02)})
-    : super(key: key);
+  const BasicResponses({
+    Key? key,
+    this.backgroundColor = const Color(0xFF58CC02),
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

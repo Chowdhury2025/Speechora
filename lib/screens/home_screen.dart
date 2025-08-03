@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
-import 'subjects/presentation2/lesson_base_subject_screen.dart';
+import 'subjects/presentation2/PresentationTwo.dart';
 
 import 'subjects/presentation3/presentation3_list.dart';
-import 'subjects/presentation4/trueorfalse.dart';
+import 'subjects/presentation4/BasicResponses.dart';
 import 'subjects/presentation5/learning_games_screen.dart';
 import 'subjects/presentation6/how_questions_screen.dart';
 import 'others_screen.dart';
@@ -251,6 +251,8 @@ class _MyHomePageState extends State<MyHomePage> {
           title: 'I Want / Needs',
           backgroundColor: color,
           subject: 'wants_and_needs_expression',
+          question: '',
+          response: '',
         );
         break;
       case 'Actions / Verbs':
@@ -258,6 +260,8 @@ class _MyHomePageState extends State<MyHomePage> {
           title: 'Actions / Verbs',
           backgroundColor: color,
           subject: 'action_words_and_verbs',
+          question: '',
+          response: '',
         );
         break;
       case 'What Questions':
@@ -265,6 +269,8 @@ class _MyHomePageState extends State<MyHomePage> {
           title: 'What Questions',
           backgroundColor: color,
           subject: 'what_questions',
+          question: '',
+          response: '',
         );
         break;
       case 'Action Verbs':
@@ -272,6 +278,8 @@ class _MyHomePageState extends State<MyHomePage> {
           title: 'Action Verbs',
           backgroundColor: color,
           subject: 'what_questions',
+          question: '',
+          response: '',
         );
         break;
       case 'Where Questions':
@@ -279,6 +287,8 @@ class _MyHomePageState extends State<MyHomePage> {
           title: 'Where Questions',
           backgroundColor: color,
           subject: 'where_questions',
+          question: '',
+          response: '',
         );
         break;
       case 'Who Questions':
@@ -286,6 +296,8 @@ class _MyHomePageState extends State<MyHomePage> {
           title: 'Who Questions',
           backgroundColor: color,
           subject: 'who_questions',
+          question: '',
+          response: '',
         );
         break;
       case 'When Questions':
@@ -295,11 +307,16 @@ class _MyHomePageState extends State<MyHomePage> {
         screen = PresentationTwo(
           title: 'Why Questions',
           backgroundColor: color,
+          question: 'Why Questions',
           subject: 'why_questions',
+          response: '',
         );
         break;
       case 'Select the Item':
-        screen = TrueOrFalse(backgroundColor: color, title: 'Select the Item');
+        screen = BasicResponses(
+          backgroundColor: color,
+          title: 'Select the Item',
+        );
         break;
       case 'Find the Item':
         screen = const presentation5();
@@ -314,7 +331,10 @@ class _MyHomePageState extends State<MyHomePage> {
         screen = LearningGamesScreen(backgroundColor: color);
         break;
       case 'Basic Responses':
-        screen = OthersScreen(backgroundColor: color);
+        screen = BasicResponses(
+          backgroundColor: color,
+          title: 'Basic Responses',
+        );
         break;
 
       case 'Video Learning':

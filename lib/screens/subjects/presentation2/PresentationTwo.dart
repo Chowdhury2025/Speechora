@@ -13,6 +13,8 @@ class PresentationTwo extends StatefulWidget {
     required this.title,
     required this.backgroundColor,
     required this.subject,
+    required String question,
+    required String response,
   });
 
   @override

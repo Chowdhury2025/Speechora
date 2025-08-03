@@ -11,7 +11,7 @@ class FruitQuizApp extends StatelessWidget {
     return MaterialApp(
       title: 'YES OR NO Quiz',
       theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Roboto'),
-      home: TrueOrFalse(),
+      home: BasicResponses(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -37,21 +37,21 @@ class Fruit {
   }
 }
 
-class TrueOrFalse extends StatefulWidget {
+class BasicResponses extends StatefulWidget {
   final Color backgroundColor;
   final String title;
 
-  const TrueOrFalse({
+  const BasicResponses({
     Key? key,
     this.backgroundColor = const Color(0xFF58CC02),
     this.title = 'Yes or No Quiz',
   }) : super(key: key);
 
   @override
-  _TrueOrFalseState createState() => _TrueOrFalseState();
+  _BasicResponsesState createState() => _BasicResponsesState();
 }
 
-class _TrueOrFalseState extends State<TrueOrFalse>
+class _BasicResponsesState extends State<BasicResponses>
     with TickerProviderStateMixin {
   final QuizImageService _quizImageService = QuizImageService();
   final TTSService _ttsService = TTSService();
