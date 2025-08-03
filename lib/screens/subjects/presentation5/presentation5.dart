@@ -307,98 +307,147 @@ class _presentation5State extends State<presentation5>
     );
   }
 
+  Future<bool> _onWillPop() async {
+    // Stop TTS when leaving
+    await _ttsService.stop();
+
+    // Show confirmation dialog
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Exit Quiz'),
+            content: const Text('Are you sure you want to exit the quiz?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Color(0xFF4A9B9B)),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Exit', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+    );
+
+    return shouldExit ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFB8E6E6),
-      body:
-          isLoading
-              ? _buildLoadingScreen()
-              : SafeArea(
-                child: Stack(
-                  children: [
-                    // Main content
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 24.0,
-                      ),
-                      child: GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 1.0,
-                              crossAxisSpacing: 8,
-                              mainAxisSpacing: 8,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFB8E6E6),
+        body:
+            isLoading
+                ? _buildLoadingScreen()
+                : SafeArea(
+                  child: Stack(
+                    children: [
+                      // Main content - CENTERED
+                      Center(
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            maxWidth:
+                                600, // Optional: limit max width for larger screens
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 24.0,
                             ),
-                        itemCount: displayedImages.length,
-                        itemBuilder:
-                            (context, index) =>
-                                _buildImageCard(displayedImages[index]),
-                      ),
-                    ),
-
-                    // Celebration overlay
-                    if (showCelebration || showBigCelebration)
-                      Container(
-                        color: Colors.black.withOpacity(0.3),
-                        child: Center(
-                          child: Stack(
-                            children: [
-                              if (showBigCelebration) ...[
-                                Lottie.asset(
-                                  'assets/animations/Animation - 1749309499190.json',
-                                  controller: _celebrationController,
-                                  onLoaded: (composition) {
-                                    _celebrationController.duration =
-                                        composition.duration;
-                                    _celebrationController.forward();
-                                  },
-                                  fit: BoxFit.cover,
-                                ),
-                                Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Text(
-                                      '🌟 Amazing! 🌟\n5 in a row!',
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF4A9B9B),
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
+                            child: GridView.builder(
+                              shrinkWrap: true, // Allow grid to size itself
+                              physics:
+                                  const NeverScrollableScrollPhysics(), // Disable scrolling since we're centering
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 1.0,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
                                   ),
-                                ),
-                              ] else
-                                Lottie.asset(
-                                  'assets/animations/confetti_single.json',
-                                  controller: _celebrationController,
-                                  onLoaded: (composition) {
-                                    _celebrationController.duration =
-                                        composition.duration;
-                                    _celebrationController.forward();
-                                  },
-                                  fit: BoxFit.cover,
-                                ),
-                            ],
+                              itemCount: displayedImages.length,
+                              itemBuilder:
+                                  (context, index) =>
+                                      _buildImageCard(displayedImages[index]),
+                            ),
                           ),
                         ),
                       ),
-                  ],
+
+                      // Celebration overlay
+                      if (showCelebration || showBigCelebration)
+                        Container(
+                          color: Colors.black.withOpacity(0.3),
+                          child: Center(
+                            child: Stack(
+                              children: [
+                                if (showBigCelebration) ...[
+                                  Lottie.asset(
+                                    'assets/animations/Animation - 1749309499190.json',
+                                    controller: _celebrationController,
+                                    onLoaded: (composition) {
+                                      _celebrationController.duration =
+                                          composition.duration;
+                                      _celebrationController.forward();
+                                    },
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.2,
+                                            ),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Text(
+                                        '🌟 Amazing! 🌟\n5 in a row!',
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4A9B9B),
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                ] else
+                                  Lottie.asset(
+                                    'assets/animations/completed_a_task.json',
+                                    controller: _celebrationController,
+                                    onLoaded: (composition) {
+                                      _celebrationController.duration =
+                                          composition.duration;
+                                      _celebrationController.forward();
+                                    },
+                                    fit: BoxFit.cover,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
+      ),
     );
   }
 

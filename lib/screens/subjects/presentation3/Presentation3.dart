@@ -140,10 +140,49 @@ class _Presentation3State extends State<Presentation3>
           children: [
             Hero(
               tag: 'image_${item.imageName}',
-              child: Image.network(
-                item.imageUrl,
-                height: 150,
-                fit: BoxFit.contain,
+              child: Container(
+                width: double.infinity,
+                height: 200, // Increased height for better visibility
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    item.imageUrl,
+                    fit: BoxFit.cover, // Changed to cover for full coverage
+                    width: double.infinity,
+                    height: double.infinity,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value:
+                              loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                        ),
+                      );
+                    },
+                    errorBuilder:
+                        (context, error, stackTrace) => Container(
+                          color: Colors.grey[200],
+                          child: Icon(
+                            Icons.error_outline,
+                            size: 40,
+                            color: Colors.red[300],
+                          ),
+                        ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 16),
