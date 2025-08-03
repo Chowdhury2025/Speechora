@@ -56,15 +56,30 @@ class _BaseSubjectScreenState extends State<BaseSubjectScreen> {
   }
 
   void _playVideo(BuildContext context, Video video) {
+    // Check if we have either a YouTube link or an R2 video URL
+    bool hasYoutubeUrl = video.linkyoutube_link?.isNotEmpty ?? false;
+    bool hasR2Url = video.video_url?.isNotEmpty ?? false;
+
+    if (!hasYoutubeUrl && !hasR2Url) {
+      // Show error if no valid URL is found
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: No valid video URL found'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder:
             (context) => VideoPlayerScreen(
-              youtubeUrl: video.linkyoutube_link,
-              r2VideoUrl: video.video_url,
+              youtubeUrl: video.linkyoutube_link ?? '',
+              r2VideoUrl: video.video_url ?? '',
               title: video.title,
-              description: video.description,
-              teacherName: video.name,
+              description: video.description ?? '',
+              teacherName: video.name ?? 'Unknown Teacher',
             ),
       ),
     );
@@ -153,23 +168,14 @@ class _BaseSubjectScreenState extends State<BaseSubjectScreen> {
                                   video.thumbnailUrl,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return Image.network(
-                                      video.fallbackThumbnailUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return Container(
-                                          color: Colors.grey[200],
-                                          child: Icon(
-                                            Icons.play_circle_outline,
-                                            size: 50,
-                                            color: widget.backgroundColor,
-                                          ),
-                                        );
-                                      },
+                                    // Default fallback for any thumbnail error
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      child: Icon(
+                                        Icons.play_circle_outline,
+                                        size: 50,
+                                        color: widget.backgroundColor,
+                                      ),
                                     );
                                   },
                                 ),

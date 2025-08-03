@@ -9,7 +9,6 @@ import 'subjects/presentation2/PresentationTwo.dart';
 import 'subjects/presentation3/presentation3_list.dart';
 import 'subjects/presentation4/BasicResponses.dart';
 import 'subjects/presentation5/learning_games_screen.dart';
-import 'subjects/presentation6/how_questions_screen.dart';
 import 'others_screen.dart';
 
 import 'subjects/presentation6/video_categories_screen.dart';

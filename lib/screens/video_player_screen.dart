@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:chewie/chewie.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String? youtubeUrl;
@@ -25,6 +26,7 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   YoutubePlayerController? _youtubeController;
   VideoPlayerController? _r2Controller;
+  ChewieController? _chewieController;
   bool _isReady = false;
   bool _hasError = false;
 
@@ -73,11 +75,30 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     try {
       _r2Controller = VideoPlayerController.network(widget.r2VideoUrl!);
       await _r2Controller!.initialize();
+
+      _chewieController = ChewieController(
+        videoPlayerController: _r2Controller!,
+        aspectRatio: 16 / 9,
+        autoPlay: true,
+        looping: false,
+        showControls: true,
+        allowFullScreen: true,
+        allowMuting: true,
+        errorBuilder: (context, errorMessage) {
+          return Center(
+            child: Text(
+              errorMessage,
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        },
+      );
+
       setState(() {
         _isReady = true;
       });
-      _r2Controller!.play();
     } catch (e) {
+      print('R2 player initialization error: $e');
       setState(() {
         _hasError = true;
       });
@@ -160,20 +181,30 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         child: Text('Invalid YouTube URL', style: TextStyle(color: Colors.red)),
       );
     }
-    return YoutubePlayer(controller: _youtubeController!, aspectRatio: 16 / 9);
+    return YoutubePlayerScaffold(
+      controller: _youtubeController!,
+      aspectRatio: 16 / 9,
+      builder: (context, player) {
+        return player;
+      },
+    );
   }
 
   Widget _buildR2Player() {
     if (_r2Controller == null || !_r2Controller!.value.isInitialized) {
       return const Center(child: CircularProgressIndicator());
     }
-    return _hasError
-        ? const Center(
-          child: Text(
-            'Error loading R2 video',
-            style: TextStyle(color: Colors.red),
-          ),
-        )
-        : VideoPlayer(_r2Controller!);
+    if (_hasError) {
+      return const Center(
+        child: Text(
+          'Error loading R2 video',
+          style: TextStyle(color: Colors.red),
+        ),
+      );
+    }
+    if (_chewieController != null) {
+      return Chewie(controller: _chewieController!);
+    }
+    return const Center(child: CircularProgressIndicator());
   }
 }
