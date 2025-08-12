@@ -4,8 +4,6 @@ import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
 
 class Presentation6VideoFilePlayer extends StatefulWidget {
   final String videoFilePath;
@@ -131,7 +129,6 @@ class _Presentation6VideoFilePlayerState
       );
 
       // Copy the downloaded file to our local path
-      final localFile = File(localPath);
       await downloadedFile.copy(localPath);
 
       setState(() {

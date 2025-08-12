@@ -120,17 +120,19 @@ class _Presentation3State extends State<Presentation3>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         width: double.infinity,
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color:
-              isSelected ? Colors.orangeAccent.withOpacity(0.7) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? const Color(0xFFFFF6D6) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF58CC02) : Colors.transparent,
+            width: 3,
+          ),
           boxShadow: [
             BoxShadow(
-              color:
-                  isSelected ? Colors.orange.withOpacity(0.5) : Colors.black12,
-              blurRadius: isSelected ? 12 : 4,
+              color: isSelected ? const Color(0xFF58CC02).withOpacity(0.3) : Colors.black12,
+              blurRadius: isSelected ? 15 : 8,
               spreadRadius: isSelected ? 2 : 0,
             ),
           ],
@@ -221,37 +223,50 @@ class _Presentation3State extends State<Presentation3>
     final second = _items[(_currentIndex + 1) % _items.length];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE0F7FA),
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F1F1F)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 40),
-            // Question text with animation
+            const SizedBox(height: 20),
+            // Top Question Text with animation and visual feedback
             ScaleTransition(
               scale: _questionAnimation,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF6D6),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF58CC02).withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: Text(
                   "Do you want ${first.imageName} or ${second.imageName}?",
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
+                  style: const TextStyle(
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.teal[700],
-                    height: 1.2,
-                    shadows: [
-                      Shadow(
-                        offset: const Offset(0, 1),
-                        blurRadius: 2,
-                        color: Colors.black.withOpacity(0.2),
-                      ),
-                    ],
+                    color: Color(0xFF1F1F1F),
+                    height: 1.3,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 40),
-            // Two option cards with Expanded to take equal space
+            const SizedBox(height: 30),
+            // Middle Options (Two Pictures)
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -264,39 +279,35 @@ class _Presentation3State extends State<Presentation3>
                 ),
               ),
             ),
-            // Bottom sentence with animation
+            // Bottom Sentence with animation
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child:
-                  _selected != null
-                      ? Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.yellow[100],
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, -2),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 24,
-                          horizontal: 16,
-                        ),
-                        child: Text(
-                          "I want ${_selected!.imageName}",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.teal[800],
-                            letterSpacing: 0.5,
+              duration: const Duration(milliseconds: 400),
+              child: _selected != null
+                  ? Container(
+                      margin: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF58CC02),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF58CC02).withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
+                        ],
+                      ),
+                      child: Text(
+                        "I want ${_selected!.imageName}",
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                      )
-                      : const SizedBox(height: 76),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : const SizedBox(height: 80),
             ),
           ],
         ),

@@ -188,7 +188,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black12,
@@ -197,8 +197,8 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                             ),
                           ],
                         ),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.all(4),
                         child: Stack(
                           children: [
                             ClipRRect(
@@ -210,8 +210,8 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                                         fit: BoxFit.cover,
                                         width:
                                             MediaQuery.of(context).size.width *
-                                            0.8,
-                                        height: 240,
+                                            0.9,
+                                        height: 280,
                                       )
                                       : (widget.image['imageUrl'] != null &&
                                           widget.image['imageUrl']
@@ -222,8 +222,8 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                                         fit: BoxFit.cover,
                                         width:
                                             MediaQuery.of(context).size.width *
-                                            0.8,
-                                        height: 240,
+                                            0.9,
+                                        height: 280,
                                         errorBuilder: (
                                           context,
                                           error,
@@ -234,8 +234,8 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                                                 MediaQuery.of(
                                                   context,
                                                 ).size.width *
-                                                0.8,
-                                            height: 240,
+                                                0.9,
+                                            height: 280,
                                             color: Colors.grey[300],
                                             child: const Icon(
                                               Icons.broken_image,
@@ -274,6 +274,44 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _navigateToPrevious,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E4147),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Previous',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: _navigateToNext,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E4147),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Next',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 32),
                       Padding(

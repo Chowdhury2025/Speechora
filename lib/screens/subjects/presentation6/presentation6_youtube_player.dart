@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class Presentation6YouTubePlayer extends StatefulWidget {
@@ -25,16 +26,31 @@ class _Presentation6YouTubePlayerState
   YoutubePlayerController? _controller;
   bool _isLoading = true;
   String? _errorMessage;
-
   @override
   void initState() {
     super.initState();
     _initializePlayer();
+    // Hide system UI for full screen experience
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    // Force landscape mode
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
   @override
   void dispose() {
     _controller?.close();
+    // Restore system UI when leaving
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    // Restore all orientations when leaving
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     super.dispose();
   }
 
@@ -85,14 +101,16 @@ class _Presentation6YouTubePlayerState
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
-        body: const Center(child: CircularProgressIndicator()),
+        backgroundColor: Colors.black,
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
       );
     }
 
     if (_errorMessage != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
+        backgroundColor: Colors.black,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -104,7 +122,7 @@ class _Presentation6YouTubePlayerState
                 Text(
                   _errorMessage!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -124,50 +142,14 @@ class _Presentation6YouTubePlayerState
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: Column(
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child:
-                _controller != null
-                    ? YoutubePlayer(controller: _controller!)
-                    : const Center(child: Icon(Icons.error)),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.description.isNotEmpty) ...[
-                    const Text(
-                      'Description:',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(widget.description),
-                    const SizedBox(height: 16),
-                  ],
-                  if (widget.teacherName.isNotEmpty) ...[
-                    const Text(
-                      'Teacher:',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(widget.teacherName),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
+      backgroundColor: Colors.black,
+      body: SizedBox.expand(
+        child:
+            _controller != null
+                ? YoutubePlayer(controller: _controller!)
+                : const Center(
+                  child: Icon(Icons.error, color: Colors.white, size: 64),
+                ),
       ),
     );
   }

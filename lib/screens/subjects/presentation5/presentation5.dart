@@ -90,7 +90,6 @@ class _presentation5State extends State<presentation5>
 
     // Show progress during preloading
     int loadedCount = 0;
-    final totalCount = allQuizImages.length;
 
     final futures =
         allQuizImages.map((image) async {
