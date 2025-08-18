@@ -3,6 +3,7 @@ import { API_URL } from '../config';
 import axios from 'axios';
 import AddUserModal from './AddUserModal.jsx';
 import EditUserModal from '../../src/app/components/users/EditUserModal.jsx';
+import UserDetailsModal from './UserDetailsModal.jsx';
 
 const UserManagementScreen = () => {
   const [users, setUsers] = useState([]);
@@ -18,6 +19,8 @@ const UserManagementScreen = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [detailsUserId, setDetailsUserId] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -229,7 +232,16 @@ const UserManagementScreen = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <button
+                        onClick={() => {
+                          setDetailsUserId(user.id);
+                          setIsDetailsOpen(true);
+                        }}
+                        className="text-primary hover:text-primary-dark font-bold"
+                      >
+                        View
+                      </button>
                       <button
                         onClick={() => {
                           setSelectedUser(user);
@@ -315,6 +327,12 @@ const UserManagementScreen = () => {
           setSelectedUser(null);
         }}
         user={selectedUser}
+      />
+
+      <UserDetailsModal
+        isOpen={isDetailsOpen}
+        userId={detailsUserId}
+        onClose={() => { setIsDetailsOpen(false); setDetailsUserId(null); }}
       />
     </div>
   );

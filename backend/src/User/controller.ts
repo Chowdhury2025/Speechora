@@ -604,6 +604,60 @@ export const getAllUsersController = async (req: Request, res: Response) => {
   }
 };
 
+// Get single user with full details and relations
+export const getUserDetailsController = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.userId || req.query.userId || req.body.userId);
+    if (!userId) return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Missing userId' });
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        videos: true,
+        images: true,
+        tests: true,
+        quizImages: true,
+        presentation3: true,
+        UsedPromoCode: true,
+        Lesson: true,
+      },
+    });
+
+    if (!user) return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' });
+
+    // Normalize dates to ISO strings for the frontend
+    const normalizeDate = (d: any) => (d ? new Date(d).toISOString() : null);
+
+    res.json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      group: user.group,
+      isEmailVerified: user.isEmailVerified,
+      createdAt: user.createdAt,
+      trialStartDate: normalizeDate(user.trialStartDate),
+      trialExpiry: normalizeDate(user.trialExpiry),
+      isTrialUsed: user.isTrialUsed,
+      premiumActive: user.premiumActive,
+      premiumBalance: user.premiumBalance,
+      premiumDeduction: user.premiumDeduction,
+      premiumExpiry: normalizeDate(user.premiumExpiry),
+      // relations
+      videos: user.videos || [],
+      images: user.images || [],
+      tests: user.tests || [],
+      quizImages: user.quizImages || [],
+      presentations: user.presentation3 || [],
+      usedPromoCodes: user.UsedPromoCode || [],
+      lessons: user.Lesson || [],
+    });
+  } catch (error: any) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch user details', error: error?.message || error });
+  }
+};
+
 export const deleteUserController = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -764,5 +818,115 @@ export const sendPremiumEmail = async (req: Request, res: Response) => {
     res.json({ message: "Premium email sent" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send premium email", error: (error as any)?.message || String(error) });
+  }
+};
+
+// ---- Subscription Status Endpoint ----
+export const subscriptionStatusController = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.query.userId || req.body.userId);
+    if (!userId) return res.status(400).json({ message: "Missing userId" });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const now = new Date();
+    let state: 'trial' | 'premium' | 'expired' | 'free' = 'free';
+    let expiry: Date | null = null;
+
+    // Helper to persist any status transitions
+    const persistUpdates: any = {};
+
+    // Trial active?
+    if (user.trialExpiry && !user.isTrialUsed && user.trialExpiry > now) {
+      state = 'trial';
+      expiry = user.trialExpiry;
+    } else {
+      // If trial period passed and not yet marked used
+      if (user.trialExpiry && !user.isTrialUsed && user.trialExpiry <= now) {
+        persistUpdates.isTrialUsed = true;
+      }
+      // Premium active? (expiry null means indefinite)
+      if (user.premiumActive) {
+        if (user.premiumExpiry) {
+          if (user.premiumExpiry > now) {
+            state = 'premium';
+            expiry = user.premiumExpiry;
+          } else {
+            // premium expired
+            persistUpdates.premiumActive = false;
+            persistUpdates.premiumExpiry = null;
+            state = user.isTrialUsed || user.trialExpiry ? 'expired' : 'free';
+          }
+        } else {
+          // Indefinite premium
+            state = 'premium';
+            expiry = null;
+        }
+      } else {
+        // Not premium active
+        if (user.trialExpiry && user.trialExpiry <= now) {
+          state = 'expired';
+        } else {
+          state = 'free';
+        }
+      }
+    }
+
+    // Persist transitions if any
+    if (Object.keys(persistUpdates).length) {
+      await prisma.user.update({ where: { id: user.id }, data: persistUpdates });
+    }
+
+    let daysRemaining: number | null = null;
+    if (expiry) {
+      const diffMs = expiry.getTime() - now.getTime();
+      if (diffMs > 0) {
+        daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      } else {
+        daysRemaining = 0;
+      }
+    }
+
+    res.json({ state, daysRemaining, expiry });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to get subscription status', error: (error as any)?.message || String(error) });
+  }
+};
+
+// ---- Purchase / Activate Premium Endpoint ----
+export const purchasePremiumController = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.body.userId);
+    const months = req.body.months ? Number(req.body.months) : null;
+    const days = req.body.days ? Number(req.body.days) : null;
+    if (!userId) return res.status(400).json({ message: 'Missing userId' });
+    if ((!months || months <= 0) && (!days || days <= 0)) {
+      return res.status(400).json({ message: 'Provide a positive months or days value' });
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const now = new Date();
+    let baseDate = now;
+    if (user.premiumExpiry && user.premiumExpiry > now) {
+      baseDate = user.premiumExpiry;
+    }
+    const newExpiry = new Date(baseDate);
+    if (months && months > 0) {
+      newExpiry.setMonth(newExpiry.getMonth() + months);
+    } else if (days && days > 0) {
+      newExpiry.setDate(newExpiry.getDate() + days);
+    }
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        premiumActive: true,
+        premiumExpiry: newExpiry,
+        isTrialUsed: true,
+      }
+    });
+    res.json({ message: 'Premium activated', expiry: newExpiry });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to purchase premium', error: (error as any)?.message || String(error) });
   }
 };

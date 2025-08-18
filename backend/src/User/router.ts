@@ -72,6 +72,9 @@ userRouter.post('/premium/add', userController.addPremiumFunds);
 userRouter.post('/premium/cancel', userController.cancelPremium);
 userRouter.post('/premium/upgrade', userController.upgradePremium);
 // userRouter.post('/premium/send-email', userController.sendPremiumEmail);
+userRouter.get('/subscription-status', userController.subscriptionStatusController);
+userRouter.post('/premium/purchase', userController.purchasePremiumController);
+userRouter.get('/details/:userId', userController.getUserDetailsController);
 
 
 export default userRouter;
