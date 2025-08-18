@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'drag_drop_game.dart';
 
 class LearningGamesScreen extends StatelessWidget {
   final Color backgroundColor;
@@ -48,12 +49,13 @@ class LearningGamesScreen extends StatelessWidget {
     required IconData icon,
     required String description,
     required BuildContext context,
+    VoidCallback? onTap,
   }) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: () => _showComingSoonDialog(context, title),
+        onTap: onTap ?? () => _showComingSoonDialog(context, title),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -109,6 +111,18 @@ class LearningGamesScreen extends StatelessWidget {
         childAspectRatio: 0.85,
         children: [
           _buildGameCard(
+            title: 'Drag & Drop',
+            icon: Icons.touch_app,
+            description: 'Match words to pictures by dragging them',
+            context: context,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DragDropGame()),
+              );
+            },
+          ),
+          _buildGameCard(
             title: 'Memory Match',
             icon: Icons.grid_view,
             description: 'Match pairs of images or words to improve memory',
@@ -130,12 +144,6 @@ class LearningGamesScreen extends StatelessWidget {
             title: 'Simple Quiz',
             icon: Icons.quiz,
             description: 'Interactive questions with visual aids',
-            context: context,
-          ),
-          _buildGameCard(
-            title: 'Sequence Game',
-            icon: Icons.sort,
-            description: 'Arrange pictures in the correct order',
             context: context,
           ),
         ],

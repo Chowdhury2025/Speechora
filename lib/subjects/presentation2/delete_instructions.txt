@@ -1,6 +1,0 @@
-Delete the following files:
-who_questions_screen.dart
-where_questions_screen.dart
-when_questions_screen.dart
-what_questions_screen.dart
-wants_and_needs_screen.dart

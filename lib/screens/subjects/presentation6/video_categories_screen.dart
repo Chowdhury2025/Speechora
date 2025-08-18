@@ -16,67 +16,20 @@ class VideoCategoriesScreen extends StatefulWidget {
   State<VideoCategoriesScreen> createState() => _VideoCategoriesScreenState();
 }
 
-class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
-    with TickerProviderStateMixin {
+class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
   List<VideoModel> videos = [];
   List<String> categories = [];
   String selectedCategory = '';
   bool isLoading = true;
   String? errorMessage;
-  late AnimationController _animationController;
-  late Animation<double> _bounceAnimation;
 
   // Replace with your actual API URL
   static const String apiUrl = Constants.baseUrl;
 
-  // Fun category icons for kids
-  final Map<String, IconData> categoryIcons = {
-    'Math': Icons.calculate_rounded,
-    'Science': Icons.science_rounded,
-    'English': Icons.abc_rounded,
-    'Art': Icons.palette_rounded,
-    'Music': Icons.music_note_rounded,
-    'Sports': Icons.sports_soccer_rounded,
-    'Stories': Icons.menu_book_rounded,
-    'Animals': Icons.pets_rounded,
-    'Colors': Icons.color_lens_rounded,
-    'Numbers': Icons.pin_rounded,
-  };
-
-  // Fun colors for different categories
-  final List<Color> categoryColors = [
-    Colors.pink.shade300,
-    Colors.blue.shade300,
-    Colors.green.shade300,
-    Colors.orange.shade300,
-    Colors.purple.shade300,
-    Colors.teal.shade300,
-    Colors.indigo.shade300,
-    Colors.amber.shade300,
-  ];
-
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _bounceAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
     fetchVideos();
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> fetchVideos() async {
@@ -123,7 +76,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Oops! Something went wrong. Let\'s try again!';
+        errorMessage = 'Failed to fetch videos: $e';
         isLoading = false;
       });
     }
@@ -165,7 +118,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Oops! Something went wrong. Let\'s try again!';
+        errorMessage = 'Failed to fetch videos: $e';
         isLoading = false;
       });
     }
@@ -176,53 +129,22 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
   Future<void> deleteVideo(String videoId) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            Icon(Icons.delete_outline_rounded, color: Colors.red.shade300, size: 28),
-            const SizedBox(width: 8),
-            const Text(
-              'Delete Video?',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Video'),
+            content: const Text('Are you sure you want to delete this video?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
               ),
-            ),
-          ],
-        ),
-        content: const Text(
-          'Are you sure you want to remove this video from your library?',
-          style: TextStyle(fontSize: 16, color: Colors.black54),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.grey.shade200,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text('Keep It', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600)),
-            ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.red.shade300,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text('Remove', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-            ),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
@@ -236,22 +158,6 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
           setState(() {
             videos.removeWhere((video) => video.id == videoId);
           });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 8),
-                    const Text('Video removed successfully!'),
-                  ],
-                ),
-                backgroundColor: Colors.green.shade400,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            );
-          }
         } else {
           throw Exception('Failed to delete video');
         }
@@ -259,16 +165,8 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 8),
-                  const Text('Oops! Couldn\'t remove the video'),
-                ],
-              ),
-              backgroundColor: Colors.red.shade400,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              content: Text('Failed to delete video: $e'),
+              backgroundColor: Colors.red,
             ),
           );
         }
@@ -279,47 +177,40 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
   Future<void> playVideo(VideoModel video) async {
     try {
       if (video.youtubeLink.isNotEmpty) {
+        // Play YouTube video in-app
         Navigator.push(
           context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                Presentation6YouTubePlayer(
-              youtubeUrl: video.youtubeLink,
-              title: video.title,
-              description: video.description,
-              teacherName: video.name,
-            ),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: animation.drive(Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)),
-                child: child,
-              );
-            },
+          MaterialPageRoute(
+            builder:
+                (context) => Presentation6YouTubePlayer(
+                  youtubeUrl: video.youtubeLink,
+                  title: video.title,
+                  description: video.description,
+                  teacherName: video.name,
+                ),
           ),
         );
       } else if (video.videoUrl.isNotEmpty) {
+        // Prepare local video path
         final directory = await getApplicationDocumentsDirectory();
-        final videoHash = sha256.convert(utf8.encode(video.videoUrl)).toString();
+        final videoHash =
+            sha256.convert(utf8.encode(video.videoUrl)).toString();
         final localPath = '${directory.path}/videos/$videoHash.mp4';
 
+        // Navigate to video player (it will handle download if needed)
         if (mounted) {
           Navigator.push(
             context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  Presentation6VideoFilePlayer(
-                videoFilePath: localPath,
-                title: video.title,
-                description: video.description,
-                teacherName: video.name,
-                videoUrl: video.videoUrl,
-              ),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                return SlideTransition(
-                  position: animation.drive(Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)),
-                  child: child,
-                );
-              },
+            MaterialPageRoute(
+              builder:
+                  (context) => Presentation6VideoFilePlayer(
+                    videoFilePath: localPath,
+                    title: video.title,
+                    description: video.description,
+                    teacherName: video.name,
+                    videoUrl:
+                        video.videoUrl, // Pass the original URL for downloading
+                  ),
             ),
           );
         }
@@ -330,16 +221,8 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 8),
-                const Text('Oops! Can\'t play this video right now'),
-              ],
-            ),
-            backgroundColor: Colors.orange.shade400,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            content: Text('Error playing video: $e'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -357,6 +240,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
     final match = regExp.firstMatch(youtubeUrl);
     if (match != null) {
       final videoId = match.group(1);
+      // Try maxresdefault first, hqdefault will be used as fallback in CachedNetworkImage
       return 'https://img.youtube.com/vi/$videoId/maxresdefault.jpg';
     }
     return 'https://via.placeholder.com/150?text=No+Thumbnail';
@@ -366,33 +250,42 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.blue.shade200, Colors.purple.shade200],
-            ),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(
-                  strokeWidth: 6,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        backgroundColor: const Color(0xFF58CC02), // Duolingo green
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(40),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Loading awesome videos for you! 🎬',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF58CC02)),
+                    strokeWidth: 3,
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Loading videos...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -400,45 +293,92 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
 
     if (errorMessage != null) {
       return Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.orange.shade200, Colors.red.shade200],
+        backgroundColor: const Color(0xFF58CC02),
+        body: Center(
+          child: Container(
+            margin: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ),
-          child: Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.sentiment_dissatisfied_rounded, size: 80, color: Colors.white),
-                const SizedBox(height: 24),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF4B4B),
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Oops! Something went wrong',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Text(
                   errorMessage!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: fetchVideos,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.orange.shade600,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.refresh_rounded),
-                      const SizedBox(width: 8),
-                      const Text('Try Again', style: TextStyle(fontWeight: FontWeight.bold)),
+                Container(
+                  width: double.infinity,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF58CC02), Color(0xFF4FB800)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4FB800).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: fetchVideos,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: const Text(
+                      'Try Again',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -449,375 +389,299 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen>
     }
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.blue.shade100,
-              Colors.purple.shade100,
-              Colors.pink.shade100,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Fun Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(Icons.arrow_back_rounded, color: Colors.blue.shade600),
+      backgroundColor: const Color(0xFF58CC02),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 20,
                       ),
+                      padding: EdgeInsets.zero,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ScaleTransition(
-                        scale: _bounceAnimation,
-                        child: Text(
-                          '🎬 Fun Learning Videos',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade800,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/videos-upload'),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.green.shade300, Colors.teal.shade300],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.green.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(Icons.add_rounded, color: Colors.white, size: 28),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Category Filter with Fun Design
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 15,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: DropdownButtonFormField<String>(
-                  value: selectedCategory.isEmpty ? null : selectedCategory,
-                  decoration: InputDecoration(
-                    labelText: '🌈 Pick a Category',
-                    labelStyle: TextStyle(
-                      color: Colors.purple.shade600,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    prefixIcon: Icon(Icons.category_rounded, color: Colors.purple.shade400),
                   ),
-                  dropdownColor: Colors.white,
-                  items: [
-                    DropdownMenuItem<String>(
-                      value: '',
-                      child: Row(
-                        children: [
-                          Icon(Icons.all_inclusive_rounded, color: Colors.grey.shade600),
-                          const SizedBox(width: 8),
-                          const Text('All Videos', style: TextStyle(fontWeight: FontWeight.w500)),
-                        ],
+                  const Expanded(
+                    child: Text(
+                      'Educational Videos',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    ...categories.asMap().entries.map(
-                      (entry) {
-                        int index = entry.key;
-                        String category = entry.value;
-                        return DropdownMenuItem<String>(
-                          value: category,
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: categoryColors[index % categoryColors.length],
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  categoryIcons[category] ?? Icons.play_circle_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                category,
-                                style: const TextStyle(fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                  ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCategory = value ?? '';
-                    });
-                    fetchVideosByCategory(selectedCategory);
-                  },
-                ),
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/videos-upload');
+                      },
+                      icon: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(height: 20),
+            // Category Filter with Duolingo style
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: DropdownButtonFormField<String>(
+                value: selectedCategory.isEmpty ? null : selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'Choose Category',
+                  labelStyle: TextStyle(
+                    color: Color(0xFF777777),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                ),
+                style: const TextStyle(
+                  color: Color(0xFF333333),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: '',
+                    child: Text('🎯 All Categories'),
+                  ),
+                  ...categories.map(
+                    (category) => DropdownMenuItem<String>(
+                      value: category,
+                      child: Text('📚 $category'),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedCategory = value ?? '';
+                  });
+                  fetchVideosByCategory(selectedCategory);
+                },
+              ),
+            ),
 
-              // Video Grid
-              Expanded(
+            const SizedBox(height: 20),
+
+            // Video List/Grid
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF7F7F7),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(30),
+                  ),
+                ),
                 child: filteredVideos.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.video_library_outlined,
-                              size: 80,
-                              color: Colors.blue.shade300,
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE5E5E5),
+                                borderRadius: BorderRadius.circular(60),
+                              ),
+                              child: const Icon(
+                                Icons.video_library_outlined,
+                                size: 60,
+                                color: Color(0xFF777777),
+                              ),
                             ),
                             const SizedBox(height: 20),
                             Text(
                               selectedCategory.isEmpty
-                                  ? '🎪 No videos to show yet!'
-                                  : '🔍 No videos in this category',
-                              style: TextStyle(
-                                color: Colors.blue.shade600,
+                                  ? '🎬 No videos available yet!'
+                                  : '📂 No videos in this category',
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
+                                color: Color(0xFF777777),
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              'Check back soon for more fun!',
+                            const Text(
+                              'Check back later for new content',
                               style: TextStyle(
-                                color: Colors.blue.shade400,
                                 fontSize: 14,
+                                color: Color(0xFF999999),
                               ),
                             ),
                           ],
                         ),
                       )
-                    : GridView.builder(
+                    : ListView.builder(
                         padding: const EdgeInsets.all(20),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.75,
-                        ),
                         itemCount: filteredVideos.length,
                         itemBuilder: (context, index) {
                           final video = filteredVideos[index];
-                          return AnimatedContainer(
-                            duration: Duration(milliseconds: 300 + (index * 50)),
-                            curve: Curves.easeOutBack,
-                            child: FunVideoCard(
-                              video: video,
-                              onPlay: () => playVideo(video),
-                              onDelete: () => deleteVideo(video.id),
-                              getThumbnail: getYoutubeThumbnail,
-                              colorIndex: index % categoryColors.length,
-                              categoryColors: categoryColors,
-                            ),
+                          return VideoCard(
+                            video: video,
+                            onPlay: () => playVideo(video),
+                            onDelete: () => deleteVideo(video.id),
+                            getThumbnail: getYoutubeThumbnail,
                           );
                         },
                       ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class FunVideoCard extends StatefulWidget {
+class VideoCard extends StatelessWidget {
   final VideoModel video;
   final VoidCallback onPlay;
   final VoidCallback onDelete;
   final String Function(String) getThumbnail;
-  final int colorIndex;
-  final List<Color> categoryColors;
 
-  const FunVideoCard({
+  const VideoCard({
     super.key,
     required this.video,
     required this.onPlay,
     required this.onDelete,
     required this.getThumbnail,
-    required this.colorIndex,
-    required this.categoryColors,
   });
 
   @override
-  State<FunVideoCard> createState() => _FunVideoCardState();
-}
-
-class _FunVideoCardState extends State<FunVideoCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: GestureDetector(
-        onTapDown: (_) {
-          setState(() => _isPressed = true);
-          _controller.forward();
-        },
-        onTapUp: (_) {
-          setState(() => _isPressed = false);
-          _controller.reverse();
-          Future.delayed(const Duration(milliseconds: 100), widget.onPlay);
-        },
-        onTapCancel: () {
-          setState(() => _isPressed = false);
-          _controller.reverse();
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white,
-                widget.categoryColors[widget.colorIndex].withOpacity(0.1),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.categoryColors[widget.colorIndex].withOpacity(0.3),
-                blurRadius: _isPressed ? 5 : 15,
-                offset: Offset(0, _isPressed ? 2 : 8),
-              ),
-            ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        ],
+      ),
+      child: InkWell(
+        onTap: onPlay,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
             children: [
-              Expanded(
-                flex: 3,
+              // Thumbnail
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF58CC02), Color(0xFF4FB800)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
                 child: Stack(
-                  fit: StackFit.expand,
                   children: [
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
+                      borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
-                        imageUrl: widget.getThumbnail(widget.video.youtubeLink),
+                        imageUrl: getThumbnail(video.youtubeLink),
+                        width: 80,
+                        height: 80,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                widget.categoryColors[widget.colorIndex].withOpacity(0.3),
-                                widget.categoryColors[widget.colorIndex].withOpacity(0.6),
-                              ],
-                            ),
+                            color: const Color(0xFF58CC02),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(
                             child: CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth: 2,
                             ),
                           ),
                         ),
                         errorWidget: (context, url, error) {
+                          // If maxresdefault fails, try hqdefault
                           if (url.contains('maxresdefault')) {
                             final regExp = RegExp(
                               r'(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)',
                             );
-                            final match = regExp.firstMatch(widget.video.youtubeLink);
+                            final match = regExp.firstMatch(video.youtubeLink);
                             if (match != null) {
                               final videoId = match.group(1);
                               return CachedNetworkImage(
-                                imageUrl: 'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
+                                imageUrl:
+                                    'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
+                                width: 80,
+                                height: 80,
                                 fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF58CC02),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
                                 errorWidget: (context, url, error) => Container(
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        widget.categoryColors[widget.colorIndex].withOpacity(0.3),
-                                        widget.categoryColors[widget.colorIndex].withOpacity(0.6),
-                                      ],
-                                    ),
+                                    color: const Color(0xFF58CC02),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Center(
                                     child: Icon(
-                                      Icons.play_circle_outline_rounded,
-                                      size: 48,
+                                      Icons.play_circle_filled,
+                                      size: 32,
                                       color: Colors.white,
                                     ),
                                   ),
@@ -827,17 +691,13 @@ class _FunVideoCardState extends State<FunVideoCard>
                           }
                           return Container(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  widget.categoryColors[widget.colorIndex].withOpacity(0.3),
-                                  widget.categoryColors[widget.colorIndex].withOpacity(0.6),
-                                ],
-                              ),
+                              color: const Color(0xFF58CC02),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Center(
                               child: Icon(
-                                Icons.play_circle_outline_rounded,
-                                size: 48,
+                                Icons.play_circle_filled,
+                                size: 32,
                                 color: Colors.white,
                               ),
                             ),
@@ -845,51 +705,18 @@ class _FunVideoCardState extends State<FunVideoCard>
                         },
                       ),
                     ),
-                    // Play Button Overlay
-                    Center(
+                    // Play button overlay
+                    Positioned.fill(
                       child: Container(
-                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          Icons.play_arrow_rounded,
-                          size: 32,
-                          color: widget.categoryColors[widget.colorIndex],
-                        ),
-                      ),
-                    ),
-                    // Delete Button
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: widget.onDelete,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade300,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.close_rounded,
+                        child: const Center(
+                          child: Icon(
+                            Icons.play_arrow,
+                            size: 32,
                             color: Colors.white,
-                            size: 16,
                           ),
                         ),
                       ),
@@ -897,34 +724,123 @@ class _FunVideoCardState extends State<FunVideoCard>
                   ],
                 ),
               ),
-              // Video Info
-              Padding(
-                padding: const EdgeInsets.all(12),
+              
+              const SizedBox(width: 16),
+              
+              // Content
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.video.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      video.title,
+                      style: const TextStyle(
                         fontSize: 16,
-                        color: Colors.grey.shade800,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF333333),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    if (widget.video.name.isNotEmpty)
-                      Text(
-                        'by ${widget.video.name}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: widget.categoryColors[widget.colorIndex],
-                          fontWeight: FontWeight.w500,
+                    const SizedBox(height: 8),
+                    if (video.name.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person_outline,
+                            size: 14,
+                            color: Color(0xFF777777),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              video.name,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF777777),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    if (video.category.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF58CC02).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          video.category,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF58CC02),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                   ],
                 ),
+              ),
+              
+              // Options button
+              PopupMenuButton<String>(
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: Color(0xFF777777),
+                  size: 20,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'play',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.play_arrow,
+                          size: 16,
+                          color: Colors.grey[700],
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Play Video'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.delete_outline,
+                          size: 16,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Delete',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value == 'play') {
+                    onPlay();
+                  } else if (value == 'delete') {
+                    onDelete();
+                  }
+                },
               ),
             ],
           ),
@@ -978,246 +894,61 @@ class VideoPlayerScreen extends StatefulWidget {
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
 }
 
-class _VideoPlayerScreenState extends State<VideoPlayerScreen>
-    with TickerProviderStateMixin {
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late VideoPlayerController _controller;
-  late AnimationController _playButtonController;
-  late Animation<double> _playButtonAnimation;
   bool _isInitialized = false;
-  bool _showControls = true;
 
   @override
   void initState() {
     super.initState();
-    
-    _playButtonController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    
-    _playButtonAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _playButtonController,
-      curve: Curves.elasticOut,
-    ));
-
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     _controller.initialize().then((_) {
       setState(() {
         _isInitialized = true;
       });
       _controller.play();
-      _playButtonController.forward();
-      
-      // Auto-hide controls after 3 seconds
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _showControls = false;
-          });
-        }
-      });
     });
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _playButtonController.dispose();
     super.dispose();
-  }
-
-  void _togglePlayPause() {
-    setState(() {
-      _controller.value.isPlaying ? _controller.pause() : _controller.play();
-      _showControls = true;
-    });
-    
-    // Auto-hide controls after 3 seconds if playing
-    if (_controller.value.isPlaying) {
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted && _controller.value.isPlaying) {
-          setState(() {
-            _showControls = false;
-          });
-        }
-      });
-    }
-  }
-
-  void _toggleControls() {
-    setState(() {
-      _showControls = !_showControls;
-    });
-    
-    if (_showControls && _controller.value.isPlaying) {
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted && _controller.value.isPlaying) {
-          setState(() {
-            _showControls = false;
-          });
-        }
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.purple.shade900.withOpacity(0.3),
-              Colors.black,
-              Colors.blue.shade900.withOpacity(0.3),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // Video Player
-              Center(
-                child: _isInitialized
-                    ? GestureDetector(
-                        onTap: _toggleControls,
-                        child: AspectRatio(
-                          aspectRatio: _controller.value.aspectRatio,
-                          child: VideoPlayer(_controller),
-                        ),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            strokeWidth: 6,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Getting your video ready! 🎬',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-              
-              // Controls Overlay
-              if (_showControls)
-                AnimatedOpacity(
-                  opacity: _showControls ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.7),
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        // Top Bar
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Icon(
-                                    Icons.arrow_back_rounded,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  'Fun Video Player 🎉',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        const Spacer(),
-                        
-                        // Bottom Controls
-                        if (_isInitialized)
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Play/Pause Button
-                                ScaleTransition(
-                                  scale: _playButtonAnimation,
-                                  child: GestureDetector(
-                                    onTap: _togglePlayPause,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.pink.shade400,
-                                            Colors.purple.shade400,
-                                          ],
-                                        ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.purple.withOpacity(0.4),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        _controller.value.isPlaying
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
-                                        color: Colors.white,
-                                        size: 32,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
+      appBar: AppBar(
+        title: const Text('Video Player'),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
       ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child:
+            _isInitialized
+                ? AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                )
+                : const CircularProgressIndicator(),
+      ),
+      floatingActionButton:
+          _isInitialized
+              ? FloatingActionButton(
+                onPressed: () {
+                  setState(() {
+                    _controller.value.isPlaying
+                        ? _controller.pause()
+                        : _controller.play();
+                  });
+                },
+                child: Icon(
+                  _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                ),
+              )
+              : null,
     );
   }
+}

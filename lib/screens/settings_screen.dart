@@ -1,8 +1,10 @@
 import 'package:book8/screens/staticscreens/about_screen.dart';
 import 'package:book8/widgets/premium_payment_dialog.dart';
 import 'package:book8/services/premium_guard.dart';
+import 'package:book8/services/subscription_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -23,6 +25,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   bool isTrialUsed = false;
   DateTime? trialExpiry;
   String premiumStatus = ''; // can be '', 'trial', or 'premium'
+  bool isDefaultLauncher = false;
 
   final List<String> languages = [
     'English',
@@ -57,6 +60,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     _loadPreferences();
     _loadUserInfo();
     _loadSettingsAccess();
+    _syncSubscriptionFromServer();
   }
 
   Future<void> _checkAuthentication() async {
@@ -73,6 +77,9 @@ class SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final lang = prefs.getString('selectedLanguage');
     final accent = prefs.getString('selectedVoiceAccent');
+    final defaultLauncher = prefs.getBool('isDefaultLauncher');
+    final defaultLauncherFlutter = prefs.getBool('flutter.isDefaultLauncher');
+
     if (lang != null) {
       setState(() {
         selectedLanguage = lang;
@@ -85,12 +92,24 @@ class SettingsScreenState extends State<SettingsScreen> {
         SettingsScreenState.selectedVoiceAccent = accent;
       });
     }
+    if (defaultLauncherFlutter != null) {
+      setState(() {
+        isDefaultLauncher = defaultLauncherFlutter;
+      });
+    } else if (defaultLauncher != null) {
+      setState(() {
+        isDefaultLauncher = defaultLauncher;
+      });
+    }
   }
 
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedLanguage', selectedLanguage);
     await prefs.setString('selectedVoiceAccent', selectedVoiceAccent);
+    await prefs.setBool('isDefaultLauncher', isDefaultLauncher);
+    // Also write the flutter-prefixed key so the native Android code can read it directly
+    await prefs.setBool('flutter.isDefaultLauncher', isDefaultLauncher);
   }
 
   Future<void> _loadUserInfo() async {
@@ -139,6 +158,85 @@ class SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _syncSubscriptionFromServer() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userId');
+    if (userId == null) return;
+    final status = await SubscriptionService.fetchStatus(userId);
+    if (status == null) return;
+    final state = status['state'] as String?; // trial|premium|expired|free
+    final expiry = status['expiry'];
+    if (state != null) {
+      final now = DateTime.now();
+      switch (state) {
+        case 'trial':
+          if (expiry != null) {
+            await prefs.setString('trialExpiry', expiry);
+          }
+          await prefs.setBool('isPremium', true);
+          await prefs.setString('premiumStatus', 'trial');
+          await prefs.setBool('hasUsedTrial', false);
+          break;
+        case 'premium':
+          if (expiry != null) {
+            await prefs.setString('premiumExpiry', expiry);
+          } else {
+            await prefs.setString('premiumExpiry', '');
+          }
+          await prefs.setBool('isPremium', true);
+          await prefs.setString('premiumStatus', 'premium');
+          await prefs.setBool('hasUsedTrial', true);
+          break;
+        case 'expired':
+          await prefs.setBool('isPremium', false);
+          await prefs.setString('premiumStatus', '');
+          await prefs.setBool('hasUsedTrial', true);
+          break;
+        default: // free
+          await prefs.setBool('isPremium', false);
+          await prefs.setString('premiumStatus', '');
+          final trialExpStr = prefs.getString('trialExpiry');
+          if (trialExpStr != null) {
+            try {
+              final t = DateTime.parse(trialExpStr);
+              if (t.isBefore(now)) await prefs.setBool('hasUsedTrial', true);
+            } catch (_) {}
+          }
+      }
+      // Reload UI state
+      if (mounted) {
+        _loadUserInfo();
+      }
+    }
+  }
+
+  String _buildAccountStatusDescription() {
+    final now = DateTime.now();
+    if (premiumStatus == 'trial') {
+      if (trialExpiry != null) {
+        final diff = trialExpiry!.difference(now).inDays + 1;
+        final left = diff < 0 ? 0 : diff;
+        final dateStr = trialExpiry!.toIso8601String().split('T').first;
+        return 'Trial (expires $dateStr, $left day${left == 1 ? '' : 's'} left)';
+      }
+      return 'Trial';
+    }
+    if (premiumStatus == 'premium' || (isPremium && premiumStatus.isEmpty)) {
+      if (premiumExpiry.isNotEmpty) {
+        final expiryDate = DateTime.tryParse(premiumExpiry);
+        if (expiryDate != null) {
+          final diff = expiryDate.difference(now).inDays + 1;
+          final left = diff < 0 ? 0 : diff;
+          final dateStr = expiryDate.toIso8601String().split('T').first;
+          return 'Premium (expires $dateStr, $left day${left == 1 ? '' : 's'} left)';
+        }
+      }
+      return 'Premium (no expiry)';
+    }
+    if (isTrialUsed) return 'Trial expired';
+    return 'Free';
+  }
+
   Future<void> _loadSettingsAccess() async {
     final access = await PremiumGuard.getSettingsAccess();
     setState(() {
@@ -180,33 +278,23 @@ class SettingsScreenState extends State<SettingsScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getAccountStatusText(),
-                    style: TextStyle(
-                      color: _getAccountStatusColor(),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (premiumStatus == 'trial' && trialExpiry != null)
-                    Text(
-                      'Trial expires in ${trialExpiry!.difference(DateTime.now()).inDays + 1} days',
-                      style: const TextStyle(color: Colors.amber, fontSize: 12),
-                    ),
-                  if (premiumStatus == 'premium' && premiumExpiry.isNotEmpty)
-                    Text(
-                      'Premium expires: ${DateTime.parse(premiumExpiry).toString().split(' ')[0]}',
-                      style: const TextStyle(color: Colors.green, fontSize: 12),
-                    ),
-                ],
+              subtitle: Text(
+                _buildAccountStatusDescription(),
+                style: TextStyle(
+                  color: _getAccountStatusColor(),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               onTap: () {
                 Navigator.of(context).pushNamed('/profile').then((_) {
                   _loadUserInfo();
                 });
               },
+              trailing: IconButton(
+                tooltip: 'Refresh subscription',
+                icon: const Icon(Icons.refresh, color: Colors.white70),
+                onPressed: _syncSubscriptionFromServer,
+              ),
             ),
           ),
 
@@ -331,29 +419,37 @@ class SettingsScreenState extends State<SettingsScreen> {
                             letterSpacing: 1.2,
                           ),
                         ),
-                        if (premiumStatus == 'trial' && trialExpiry != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              'Days remaining: ${trialExpiry!.difference(DateTime.now()).inDays + 1}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        if (premiumStatus == 'premium' &&
+                        // PREMIUM: show expiry date first
+                        if (((premiumStatus == 'premium') ||
+                                (isPremium && premiumStatus.isEmpty)) &&
                             premiumExpiry.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              'Expires: ${DateTime.parse(premiumExpiry).toString().split(' ')[0]}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
+                            child: Builder(
+                              builder: (context) {
+                                final expiryDate = DateTime.tryParse(
+                                  premiumExpiry,
+                                );
+                                if (expiryDate == null) {
+                                  return const Text(
+                                    'Expires: Unknown date',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  );
+                                }
+                                return Text(
+                                  'Expires: ${expiryDate.toIso8601String().split('T')[0]}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                );
+                              },
                             ),
                           ),
+                        // BALANCE (if any) appears before days remaining
                         if (premiumBalance > 0)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
@@ -362,6 +458,70 @@ class SettingsScreenState extends State<SettingsScreen> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        // DAYS REMAINING LAST (trial)
+                        if (premiumStatus == 'trial' && trialExpiry != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Builder(
+                              builder: (context) {
+                                final daysLeft =
+                                    trialExpiry!
+                                        .difference(DateTime.now())
+                                        .inDays +
+                                    1;
+                                final safeDays = daysLeft < 0 ? 0 : daysLeft;
+                                return Text(
+                                  'Days remaining: $safeDays',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        // DAYS REMAINING LAST (premium)
+                        if (((premiumStatus == 'premium') ||
+                                (isPremium && premiumStatus.isEmpty)) &&
+                            premiumExpiry.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Builder(
+                              builder: (context) {
+                                final expiryDate = DateTime.tryParse(
+                                  premiumExpiry,
+                                );
+                                if (expiryDate == null)
+                                  return const SizedBox.shrink();
+                                final daysLeft =
+                                    expiryDate
+                                        .difference(DateTime.now())
+                                        .inDays +
+                                    1;
+                                final safeDays = daysLeft < 0 ? 0 : daysLeft;
+                                return Text(
+                                  'Days remaining: $safeDays',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        if (((premiumStatus == 'premium') ||
+                                (isPremium && premiumStatus.isEmpty)) &&
+                            premiumExpiry.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              'Days remaining: Unlimited',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
                               ),
                             ),
                           ),
@@ -392,6 +552,37 @@ class SettingsScreenState extends State<SettingsScreen> {
                 _settingsCard(Icons.download, 'Downloads'),
                 _settingsCard(Icons.cleaning_services, 'Clear Cache'),
                 const Divider(color: Colors.white24, height: 32),
+                // Default launcher toggle
+                Card(
+                  color: Theme.of(context).primaryColor.withOpacity(0.7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 7),
+                  child: SwitchListTile(
+                    title: const Text(
+                      'Set as Default Launcher',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Make Book8 your default home screen app',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    value: isDefaultLauncher,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setState(() {
+                        isDefaultLauncher = value;
+                      });
+                      _setDefaultLauncher();
+                    },
+                    secondary: const Icon(Icons.home, color: Colors.white),
+                  ),
+                ),
                 _settingsCard(Icons.copyright, 'Copyright'),
                 _settingsCard(Icons.privacy_tip, 'Privacy'),
                 _settingsCard(Icons.star_rate, 'Rate Us'),
@@ -419,18 +610,6 @@ class SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
-  }
-
-  String _getAccountStatusText() {
-    if (premiumStatus == 'premium') {
-      return 'Premium Account';
-    } else if (premiumStatus == 'trial') {
-      return 'Trial Account';
-    } else if (isTrialUsed) {
-      return 'Trial Expired';
-    } else {
-      return 'Free Account';
-    }
   }
 
   Color _getAccountStatusColor() {
@@ -612,5 +791,30 @@ class SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/login');
     }
+  }
+
+  void _setDefaultLauncher() async {
+    if (isDefaultLauncher) {
+      // Use a platform channel to open the Android home settings screen
+      const channel = MethodChannel('com.book8/app');
+      try {
+        await channel.invokeMethod('openHomeSettings');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select Book8 as your default home app'),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      } on PlatformException catch (e) {
+        print('PlatformException opening home settings: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open home settings'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+    await _savePreferences();
   }
 }

@@ -131,7 +131,10 @@ class _Presentation3State extends State<Presentation3>
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected ? const Color(0xFF58CC02).withOpacity(0.3) : Colors.black12,
+              color:
+                  isSelected
+                      ? const Color(0xFF58CC02).withOpacity(0.3)
+                      : Colors.black12,
               blurRadius: isSelected ? 15 : 8,
               spreadRadius: isSelected ? 2 : 0,
             ),
@@ -241,7 +244,10 @@ class _Presentation3State extends State<Presentation3>
               scale: _questionAnimation,
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 24),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF6D6),
                   borderRadius: BorderRadius.circular(20),
@@ -282,32 +288,36 @@ class _Presentation3State extends State<Presentation3>
             // Bottom Sentence with animation
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),
-              child: _selected != null
-                  ? Container(
-                      margin: const EdgeInsets.all(24),
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF58CC02),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF58CC02).withOpacity(0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        "I want ${_selected!.imageName}",
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+              child:
+                  _selected != null
+                      ? Container(
+                        margin: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 24,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  : const SizedBox(height: 80),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF58CC02),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF58CC02).withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          "I want ${_selected!.imageName}",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                      : const SizedBox(height: 80),
             ),
           ],
         ),

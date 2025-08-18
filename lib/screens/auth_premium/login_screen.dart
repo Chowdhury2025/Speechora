@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../constants/constants.dart';
 import '../../models/user_model.dart';
 import '../../services/premium_guard.dart';
+import '../../services/subscription_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -87,6 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('userData', jsonEncode(user.toJson()));
           await prefs.setBool('isLoggedIn', true);
+          await prefs.setInt('userId', user.id);
 
           // Save individual user fields for app-wide access
           await prefs.setString('userName', user.username ?? '');
@@ -104,38 +106,98 @@ class _LoginScreenState extends State<LoginScreen> {
             user.emergencyContact ?? '',
           );
 
-          // Handle premium status
+          // Handle premium / trial from login response (new backend shape)
           if (responseData['premium'] != null) {
             final premiumData = responseData['premium'];
-            await prefs.setBool('isPremium', premiumData['isActive'] ?? false);
-            await prefs.setString('premiumStatus', premiumData['status'] ?? '');
-            await prefs.setString(
-              'premiumExpiry',
-              premiumData['expiryDate'] ?? '',
-            );
-            await prefs.setDouble(
-              'premiumBalance',
-              (premiumData['balance'] ?? 0.0).toDouble(),
-            );
+            final bool isActive = premiumData['isActive'] ?? false;
+            final String? expiryStr = premiumData['expiry'];
+            final String? trialExpiryStr = premiumData['trialExpiry'];
+            final DateTime now = DateTime.now();
+            String premiumStatus = '';
 
-            if (premiumData['trial'] != null) {
-              await prefs.setBool(
-                'hasUsedTrial',
-                premiumData['trial']['used'] ?? false,
-              );
-              await prefs.setString(
-                'trialExpiry',
-                premiumData['trial']['expiryDate'] ?? '',
-              );
+            if (trialExpiryStr != null) {
+              DateTime? tExp;
+              try {
+                tExp = DateTime.parse(trialExpiryStr);
+              } catch (_) {}
+              if (tExp != null && tExp.isAfter(now)) {
+                premiumStatus = 'trial';
+                await prefs.setString('trialExpiry', tExp.toIso8601String());
+                await prefs.setBool('hasUsedTrial', false);
+                await prefs.setBool('isPremium', true);
+              } else if (tExp != null && tExp.isBefore(now)) {
+                await prefs.setBool('hasUsedTrial', true);
+              }
+            }
+
+            if (premiumStatus != 'trial' && isActive) {
+              premiumStatus = 'premium';
+              if (expiryStr != null) {
+                await prefs.setString('premiumExpiry', expiryStr);
+              } else {
+                await prefs.setString('premiumExpiry', '');
+              }
+              await prefs.setBool('isPremium', true);
+            }
+
+            if (premiumStatus.isEmpty) {
+              await prefs.setBool('isPremium', false);
+              await prefs.setString('premiumExpiry', '');
+            }
+
+            await prefs.setString('premiumStatus', premiumStatus);
+            if (premiumData['balance'] != null) {
+              final bal = (premiumData['balance'] as num).toDouble();
+              await prefs.setDouble('premiumBalance', bal);
             }
           }
 
-          print('=== DEBUG: Data saved to SharedPreferences ===');
-
-          if (mounted) {
-            // Navigate based on premium status
-            final initialRoute = await PremiumGuard.getInitialRoute();
-            Navigator.of(context).pushReplacementNamed(initialRoute);
+          // Fetch authoritative subscription status
+          final status = await SubscriptionService.fetchStatus(user.id);
+          if (status != null) {
+            final state =
+                status['state'] as String?; // trial|premium|expired|free
+            final expiry = status['expiry'];
+            if (state != null) {
+              final now = DateTime.now();
+              switch (state) {
+                case 'trial':
+                  await prefs.setBool('isPremium', true);
+                  await prefs.setString('premiumStatus', 'trial');
+                  if (expiry != null) {
+                    await prefs.setString('trialExpiry', expiry);
+                  }
+                  await prefs.setBool('hasUsedTrial', false);
+                  break;
+                case 'premium':
+                  await prefs.setBool('isPremium', true);
+                  await prefs.setString('premiumStatus', 'premium');
+                  if (expiry != null) {
+                    await prefs.setString('premiumExpiry', expiry);
+                  } else {
+                    await prefs.setString('premiumExpiry', '');
+                  }
+                  await prefs.setBool('hasUsedTrial', true);
+                  break;
+                case 'expired':
+                  await prefs.setBool('isPremium', false);
+                  await prefs.setString('premiumStatus', '');
+                  await prefs.setBool('hasUsedTrial', true);
+                  break;
+                default:
+                  await prefs.setBool('isPremium', false);
+                  await prefs.setString('premiumStatus', '');
+                  final trialExpStr = prefs.getString('trialExpiry');
+                  if (trialExpStr != null) {
+                    try {
+                      final t = DateTime.parse(trialExpStr);
+                      if (t.isBefore(now)) {
+                        await prefs.setBool('hasUsedTrial', true);
+                      }
+                    } catch (_) {}
+                  }
+              }
+            }
           }
         } catch (userModelError) {
           print('=== DEBUG: Error creating UserModel ===');
