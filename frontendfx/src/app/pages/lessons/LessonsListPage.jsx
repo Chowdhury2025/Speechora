@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from '../../components/lessons/Table';
 import axios from 'axios';
-import { API_URL } from '../../../config';
+import { API_URL, r2Service } from '../../../config';
 import { useNavigate } from 'react-router-dom';
 import LessonReviewModal from '../../modals/LessonReviewModal';
 import LessonEditModal from '../../modals/LessonEditModal';
-import { r2Service } from '../../../config/cloudflare';
 
 export default function LessonsPage() {
   const navigate = useNavigate();

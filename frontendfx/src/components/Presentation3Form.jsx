@@ -3,8 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { userStates } from '../atoms';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../config';
-import { r2Service } from '../config/cloudflare';
+import { API_URL, r2Service } from '../config';
 
 const subjectOptions = [
   { name: 'When Questions', slug: 'When_Questions' },

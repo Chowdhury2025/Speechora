@@ -40,20 +40,34 @@ function getLocalIpAddresses(): string[] {
 }
 
 // middleware
+// Allowlist static origins and a local-network pattern for convenience when
+// developing from other devices on the LAN (e.g. 192.168.x.x:8800).
+const allowedOrigins = [
+  "https://book8.vercel.app",
+  "http://localhost:5173",
+  "http://192.168.43.204:8000",
+  "http://localhost:8800",
+  "http://192.168.43.204:8800",
+];
+
+const localNetworkRegex = /^https?:\/\/192\.168\.(?:\d{1,3})\.(?:\d{1,3}):8800$/;
+
 const corsOptions: cors.CorsOptions = {
-  origin: [
-    "https://book8.vercel.app", 
-    "http://localhost:5173",
-    "http://192.168.43.204:8000",
-    "http://localhost:8800"  // Add your current development port
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, mobile apps, same-origin)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || localNetworkRegex.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
+    'Content-Type',
+    'Authorization',
     'X-Requested-With',
     'Accept',
-    'Origin'
+    'Origin',
   ],
   credentials: true,
   maxAge: 86400, // Cache preflight request results for 24 hours

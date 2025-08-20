@@ -3,8 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
-import { API_URL } from '../../config';
-import { r2Service } from '../../config/cloudflare';
+import { API_URL, r2Service } from '../../config';
 
 const QuizImageUpload = () => {
   const user = useRecoilValue(userStates);

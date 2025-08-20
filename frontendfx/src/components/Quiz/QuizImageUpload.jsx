@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { r2Service } from '../../config/cloudflare';
+import { r2Service } from '../../config';
 import { API_BASE_URL } from '../../config/constants';
 
 const QuizImageUpload = () => {

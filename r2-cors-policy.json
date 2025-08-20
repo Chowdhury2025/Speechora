@@ -1,0 +1,23 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://book8.vercel.app",
+      "http://localhost:5173",
+      "http://localhost:8800"
+    ],
+    "AllowedMethods": [
+      "GET",
+      "PUT",
+      "POST",
+      "DELETE",
+      "HEAD"
+    ],
+    "AllowedHeaders": [
+      "*"
+    ],
+    "ExposeHeaders": [
+      "ETag"
+    ],
+    "MaxAgeSeconds": 3600
+  }
+]

@@ -1,10 +1,9 @@
 import  { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../../../config';
+import { API_URL, r2Service } from '../../../config';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../../atoms';
-import { r2Service } from '../../../config/cloudflare';
 
 const steps = ['Basic Information', 'Content', 'Options', 'Review'];
 
