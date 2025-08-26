@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { userStates } from '../atoms';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { API_URL, r2Service } from '../config';
+import { API_URL, uploadService } from '../config';
 
 const subjectOptions = [
   { name: 'When Questions', slug: 'When_Questions' },
@@ -31,10 +31,8 @@ const Presentation3Form = () => {
       let imageUrl = formData.imageUrl;
       
       if (selectedFile) {
-        // Validate file
-        r2Service.validateFile(selectedFile, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
         // Upload file to R2
-        imageUrl = await r2Service.uploadFile(selectedFile, 'presentation3');
+        imageUrl = await uploadService.uploadFile(selectedFile, 'presentation3');
       }
 
       const response = await axios.post(`${API_URL}/api/presentation3`, {

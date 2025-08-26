@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../../../config';
-import { r2Service } from '../../../config';
+import { API_URL, uploadService } from '../../../config';
 import ImageEditModal from './ImageEditModal';
 import ImageTabNavigator from '../../components/common/TabNavigator';
 import { useRecoilValue } from 'recoil';
@@ -95,7 +94,7 @@ const ImagesPage = () => {
       if (imageToDelete.imageUrl && imageToDelete.imageUrl.includes('r2.dev')) {
         try {
           // Try to delete from R2 first
-          await r2Service.deleteFile(imageToDelete.imageUrl);
+          await uploadService.deleteFile(imageToDelete.imageUrl);
         } catch (r2Error) {
           // If R2 deletion fails, show error and don't proceed with backend deletion
           setError('Failed to delete image from storage. Please try again.');
@@ -128,7 +127,7 @@ const ImagesPage = () => {
     const file = event.target.files[0];
     if (file) {
       try {
-        r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
+        uploadService.validateFile(file);
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
       } catch (error) {

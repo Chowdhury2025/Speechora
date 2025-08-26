@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios'; // Import this in your actual project
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
-import { API_URL, r2Service } from '../../config';
+import { API_URL, uploadService } from '../../config';
 import { TabNavigator } from '../components/common/TabNavigator';
 import { getThumbnailUrl } from '../utils/youtube';
 
@@ -48,45 +48,47 @@ const VideoUploadPage = () => {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const validTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/webm'];
-      if (!validTypes.includes(file.type)) {
-        setError('Please select a valid video file (MP4, MPEG, MOV, WebM)');
-        return;
+      try {
+        uploadService.validateFile(file);
+        setSelectedFile(file);
+        setError(null);
+        setVideoData(prev => ({...prev, linkyoutube_link: '', thumbnail: ''}));
+      } catch (error) {
+        setError(error.message);
+        setSelectedFile(null);
       }
-      const maxSize = 100 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setError(`File size must be less than ${maxSize / (1024 * 1024)}MB`);
-        return;
-      }
-      setSelectedFile(file);
-      setError(null);
-      setVideoData(prev => ({...prev, linkyoutube_link: '', thumbnail: ''}));
     }
   };
 
   const uploadToR2 = async (file) => {
     try {
       setUploadProgress(0);
-      r2Service.validateFile(file, { maxSize: 100 * 1024 * 1024, allowedTypes: ['video/mp4','video/mpeg','video/quicktime','video/webm'] });
+      uploadService.validateFile(file);
       
-      // Create upload progress handler
-      const onProgress = (progress) => {
-        setUploadProgress(Math.round((progress.loaded / progress.total) * 100));
-      };
+      // Simulate progress for user feedback
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const newProgress = prev + 10;
+          if (newProgress >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return newProgress;
+        });
+      }, 200);
       
-      const result = await r2Service.uploadFile(file, 'videos', userState.id, onProgress);
-      console.log('R2 upload result:', result); // Debug full result
-
-      if (!result || !result.url) {
-        console.error('Invalid response from R2:', result);
-        throw new Error('Upload successful but no URL in response');
+      const result = await uploadService.uploadFile(file, 'videos');
+      clearInterval(progressInterval);
+      
+      if (!result) {
+        throw new Error('Upload successful but no URL returned');
       }
 
       setUploadProgress(100);
-      console.log('R2 upload successful, URL:', result.url);
-      return result.url;
+      console.log('Upload successful, URL:', result);
+      return result;
     } catch (err) {
-      console.error('R2 Upload Error:', err);
+      console.error('Upload Error:', err);
       setUploadProgress(0);
       throw new Error(err.message || 'Failed to upload video file');
     }
@@ -124,13 +126,13 @@ const VideoUploadPage = () => {
           
           payload = {
             ...payload,
-            video_url: videoUrl, // The URL from R2 is already properly formatted
+            video_url: videoUrl,
             thumbnail: '/placeholder-video-thumbnail.jpg'
           };
           
           console.log('Final payload after setting URL:', payload);
         } catch (uploadError) {
-          console.error('R2 Upload Error Details:', uploadError);
+          console.error('Upload Error Details:', uploadError);
           setError('Failed to upload video file: ' + (uploadError.message || 'Unknown error'));
           throw uploadError;
         }

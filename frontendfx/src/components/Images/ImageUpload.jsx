@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
-import { API_URL, r2Service } from '../../config';
+import { API_URL, uploadService } from '../../config';
 import ImageTabNavigator from '../../app/components/images/ImageTabNavigator';
 
 const ImageUpload = () => {
@@ -55,7 +55,7 @@ const ImageUpload = () => {
     const file = event.target.files[0];
     if (file) {
       try {
-        r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
+        uploadService.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
       } catch (error) {
@@ -95,8 +95,8 @@ const ImageUpload = () => {
         throw new Error('Please select an image to upload');
       }
 
-      // Upload image to R2
-      const imageUrl = await r2Service.uploadFile(selectedFile, 'images');
+      // Upload image to R2 via backend
+      const imageUrl = await uploadService.uploadFile(selectedFile, 'images');
       setImageData(prev => ({ ...prev, imageUrl }));
       
       // Create image record with R2 URL

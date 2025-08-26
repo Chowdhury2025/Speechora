@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../../../config';
-import { r2Service } from '../../config';
+import { API_URL, uploadService } from '../../config';
 
+// Fixed: Updated to use uploadService instead of r2Service
 export default function LessonEditModal({ isOpen, onClose, lesson, onUpdate }) {
   const [formData, setFormData] = useState({
     title: '',
@@ -118,19 +118,14 @@ export default function LessonEditModal({ isOpen, onClose, lesson, onUpdate }) {
       // Handle image upload if a new image was selected
       if (imageFile) {
         try {
-          // Create form data for image upload
-          const imageFormData = new FormData();
-          imageFormData.append('image', imageFile);
-          
-          // First upload the new image
-          const uploadResult = await r2Service.uploadFile(imageFile);
-          imageUrl = uploadResult.url;
+          // Upload the new image
+          const imageUrl = await uploadService.uploadFile(imageFile, 'lessons');
           changedFields.imageUrl = imageUrl;
           
           // Only delete the old image after successful upload
           if (lesson.imageUrl && lesson.imageUrl !== imageUrl) {
             try {
-              await r2Service.deleteFile(lesson.imageUrl);
+              await uploadService.deleteFile(lesson.imageUrl);
             } catch (deleteError) {
               console.error('Error deleting old image:', deleteError);
               // Don't block the update if delete fails

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL } from '../../../config';
-import { r2Service } from '../../../config';
+import { API_URL, uploadService } from '../../../config';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../../atoms';
 
@@ -97,12 +96,14 @@ const ImageEditModal = ({
     const file = event.target.files[0];
     if (file) {
       try {
-        // Validate file using your r2Service
-        r2Service.validateFile(
-          file, 
-          ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 
-          5 * 1024 * 1024 // 5MB max size
-        );
+        // Simple client-side validation (backend will do full validation)
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error('File too large (max 5MB)');
+        }
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error('Invalid file type');
+        }
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
         setError('');
@@ -135,20 +136,20 @@ const ImageEditModal = ({
 
   const uploadToR2 = async (file) => {
     try {
-      // Upload to R2 using the images folder
-      const uploadUrl = await r2Service.uploadFile(file, 'images');
+      // Upload via backend API
+      const uploadUrl = await uploadService.uploadFile(file, 'images');
       return uploadUrl;
     } catch (error) {
-      console.error('R2 upload error:', error);
-      throw new Error('Failed to upload image to storage: ' + (error.message || 'Unknown error'));
+      console.error('Upload error:', error);
+      throw new Error('Failed to upload image: ' + (error.message || 'Unknown error'));
     }
   };
 
   const deleteOldImageFromR2 = async (imageUrl) => {
     if (imageUrl && (imageUrl.includes('r2.dev') || imageUrl.includes('r2.cloudflarestorage.com'))) {
       try {
-        await r2Service.deleteFile(imageUrl);
-        console.log('Successfully deleted old image from R2:', imageUrl);
+        await uploadService.deleteFile(imageUrl);
+        console.log('Successfully deleted old image:', imageUrl);
       } catch (error) {
         console.warn('Failed to delete old image from R2:', error);
         // Don't throw error here as the main update should still proceed

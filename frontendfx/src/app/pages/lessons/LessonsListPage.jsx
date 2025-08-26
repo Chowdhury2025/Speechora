@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from '../../components/lessons/Table';
 import axios from 'axios';
-import { API_URL, r2Service } from '../../../config';
+import { API_URL, uploadService } from '../../../config';
 import { useNavigate } from 'react-router-dom';
 import LessonReviewModal from '../../modals/LessonReviewModal';
 import LessonEditModal from '../../modals/LessonEditModal';
@@ -62,11 +62,11 @@ export default function LessonsPage() {
       // First, delete any R2 files associated with the lesson
       if (selectedLesson.imageUrl) {
         try {
-          await r2Service.deleteFile(selectedLesson.imageUrl);
+          await uploadService.deleteFile(selectedLesson.imageUrl);
         } catch (error) {
-          console.error('Error deleting image from R2:', error);
+          console.error('Error deleting image from storage:', error);
           setError('Failed to delete image from storage. Please try again.');
-          return; // Stop the deletion process if R2 deletion fails
+          return; // Stop the deletion process if deletion fails
         }
       }
 

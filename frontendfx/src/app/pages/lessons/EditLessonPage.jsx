@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL, r2Service } from '../../../config';
+import { API_URL, uploadService } from '../../../config';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../../atoms';
 
@@ -403,7 +403,7 @@ export default function EditLesson() {
 
     try {
       // Validate file
-      r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
+      uploadService.validateFile(file);
 
       // Show preview
       const preview = URL.createObjectURL(file);
@@ -412,8 +412,8 @@ export default function EditLesson() {
         content: preview
       }));
 
-      // Upload to R2
-      const imageUrl = await r2Service.uploadFile(file, 'lessons');
+      // Upload to storage
+      const imageUrl = await uploadService.uploadFile(file, 'lessons');
       setLessonData(prev => ({
         ...prev,
         statement: imageUrl
@@ -430,7 +430,7 @@ export default function EditLesson() {
 
     try {
       // Validate file
-      r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif'], 5 * 1024 * 1024);
+      uploadService.validateFile(file);
 
       // Show preview
       const preview = URL.createObjectURL(file);
@@ -442,8 +442,8 @@ export default function EditLesson() {
         }
       }));
 
-      // Upload to R2
-      const imageUrl = await r2Service.uploadFile(file, 'options');
+      // Upload to storage
+      const imageUrl = await uploadService.uploadFile(file, 'options');
       const newOptions = [...lessonData.options];
       newOptions[index] = imageUrl;
       setLessonData(prev => ({

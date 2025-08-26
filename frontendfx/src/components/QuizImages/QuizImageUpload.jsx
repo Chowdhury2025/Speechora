@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
-import { API_URL, r2Service } from '../../config';
+import { API_URL, uploadService } from '../../config';
 
 const QuizImageUpload = () => {
   const user = useRecoilValue(userStates);
@@ -30,7 +30,7 @@ const QuizImageUpload = () => {
     const file = event.target.files[0];
     if (file) {
       try {
-        r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 5 * 1024 * 1024);
+        uploadService.validateFile(file);
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
       } catch (error) {
@@ -60,7 +60,7 @@ const QuizImageUpload = () => {
       }
 
       // Upload image to R2
-      const imageUrl = await r2Service.uploadFile(selectedFile, 'quiz-images');
+      const imageUrl = await uploadService.uploadFile(selectedFile, 'quiz-images');
       
       // Create quiz image record
       const response = await axios.post(`${API_URL}/api/quiz-images`, {

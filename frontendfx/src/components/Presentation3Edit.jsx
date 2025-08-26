@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_URL, r2Service } from '../config';
+import { API_URL, uploadService } from '../config';
 
 const ageGroups = [
   '3-5 years',
@@ -56,11 +56,11 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
     setUploading(true);
     try {
       // Validate and upload
-      r2Service.validateFile(file, ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-      const newUrl = await r2Service.uploadFile(file);
-      // Delete old image if exists and is R2
-      if (formData.imageUrl && formData.imageUrl.includes(r2Service.R2_PUBLIC_URL)) {
-        await r2Service.deleteFile(formData.imageUrl);
+      uploadService.validateFile(file);
+      const newUrl = await uploadService.uploadFile(file);
+      // Delete old image if exists and is from cloud storage
+      if (formData.imageUrl && formData.imageUrl.includes('r2.dev')) {
+        await uploadService.deleteFile(formData.imageUrl);
       }
       setFormData({ ...formData, imageUrl: newUrl, imageName: file.name });
     } catch (err) {

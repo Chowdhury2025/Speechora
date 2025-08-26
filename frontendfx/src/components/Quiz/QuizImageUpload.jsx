@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { r2Service } from '../../config';
+import { uploadService } from '../../config';
 import { API_BASE_URL } from '../../config/constants';
 
 const QuizImageUpload = () => {
@@ -52,7 +52,7 @@ const QuizImageUpload = () => {
 
       // Upload image to R2
       const imageFile = data.image[0];
-      const imageUrl = await r2Service.uploadFile(imageFile, 'quiz-images');
+      const imageUrl = await uploadService.uploadFile(imageFile, 'quiz-images');
 
       // Create quiz image record
       const response = await fetch(`${API_BASE_URL}/api/quiz-images`, {
