@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import {API_URL} from '../../../config'
+import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../../../config'
 
 const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
+  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('mobile');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('');
@@ -102,6 +104,14 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   };
 
   const handlePayment = async () => {
+    // Get user authentication token
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!user.id) {
+      alert('Please log in to make a purchase');
+      navigate('/login');
+      return;
+    }
+
     let paymentAmount = finalAmount;
     
     // If promo code is applied, use the apply endpoint to increment usage
@@ -129,9 +139,36 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
       }
     }
 
-    // Simulate payment processing
-    alert(`Payment of K${paymentAmount.toFixed(2)} processed successfully!`);
-    onClose();
+    try {
+      // Call the backend premium purchase endpoint
+      const response = await fetch(`${API_URL}/api/user/premium/purchase`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          months: planName.includes('Child Plan') ? 1 : 12, // Basic plan = 1 month, Premium = 12 months
+          paymentMethod: paymentMethod,
+          amount: paymentAmount,
+          planName: planName
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Payment successful! Your premium subscription has been activated.`);
+        onClose();
+        // Navigate to login screen after successful purchase
+        navigate('/login');
+      } else {
+        alert(`Payment failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert('Payment processing failed. Please try again.');
+      console.error('Payment error:', error);
+    }
   };
 
   return (

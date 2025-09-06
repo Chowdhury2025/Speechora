@@ -289,7 +289,6 @@ function App() {
           <Route path='/update/password' element={<UpdatePassword />} />
          <Route path='/verify-email' element={<EmailVerification />} />
           <Route path='/verify/email/:token' element={<EmailVerification />} />
-          <Route path='/premium-purchase' element={<PremiumSalesPage />} />
           {/* <Route path='/no-role' element={<NoRoleAssigned />} /> */}
           <Route path='/test' element={<UserManagementScreen />} />          
               {/* Authenticated app routes under /app */}
