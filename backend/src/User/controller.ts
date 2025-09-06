@@ -132,12 +132,12 @@ export const loginController = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(StatusCodes.NOT_FOUND).json("User not found");
+      return res.status(StatusCodes.NOT_FOUND).json({ message: "User not found" });
     }
 
     const verifyPassword = await compare(password, user.password);
     if (!verifyPassword) {
-      return res.status(StatusCodes.UNAUTHORIZED).send("Invalid Password");
+      return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid password" });
     }
 
     if (!user.isEmailVerified) {

@@ -1,10 +1,8 @@
 import axios from 'axios';
+import { API_URL } from '../config';
 
 class BackendUploadService {
-  constructor() {
-    // Get API URL from environment or use default
-    this.API_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8000';
-  }
+
 
   async uploadFile(file, folder = 'images') {
     try {
@@ -14,7 +12,7 @@ class BackendUploadService {
       formData.append('folder', folder);
 
       // Send to backend upload endpoint
-      const response = await axios.post(`${this.API_URL}/api/upload/upload`, formData, {
+      const response = await axios.post(`${API_URL}/api/upload/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

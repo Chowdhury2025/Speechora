@@ -52,7 +52,7 @@ const Presentation3List = () => {
       <div className="bg-white rounded-xl shadow-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-[#3c9202]">
-            Presentation Items
+            Presentation Items 3
           </h2>
           <Link
             to="/app/presentation3/new"
