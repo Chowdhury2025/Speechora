@@ -109,7 +109,7 @@ class _PremiumPaymentDialogState extends State<PremiumPaymentDialog> {
   Future<void> _launchPurchaseWebsite() async {
     setState(() => _isProcessing = true);
 
-    final Uri url = Uri.parse('https://book8.vercel.app/premium-purchase');
+    final Uri url = Uri.parse('https://book8.vercel.app/app/premium');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
