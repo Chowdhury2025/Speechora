@@ -73,4 +73,16 @@ class Lesson {
       options: optionsList.cast<Map<String, dynamic>>(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      if (description != null) 'description': description,
+      'subject': subject,
+      'ageGroup': ageGroup,
+      'statement': statement,
+      'options': options,
+    };
+  }
 }

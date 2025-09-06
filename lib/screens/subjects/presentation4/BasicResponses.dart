@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lottie/lottie.dart';
 
-class FruitQuizApp extends StatelessWidget {
+class itemQuizApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,19 +17,15 @@ class FruitQuizApp extends StatelessWidget {
   }
 }
 
-class Fruit {
+class item {
   final String name;
   final String imageUrl;
   final Color color;
 
-  const Fruit({
-    required this.name,
-    required this.imageUrl,
-    required this.color,
-  });
+  const item({required this.name, required this.imageUrl, required this.color});
 
-  factory Fruit.fromQuizImage(dynamic quizImage) {
-    return Fruit(
+  factory item.fromQuizImage(dynamic quizImage) {
+    return item(
       name: quizImage.name ?? '',
       imageUrl: quizImage.imageUrl ?? '',
       color: Colors.blue, // Default color since we're using actual images now
@@ -53,11 +49,11 @@ class BasicResponses extends StatefulWidget {
 
 class _BasicResponsesState extends State<BasicResponses>
     with TickerProviderStateMixin {
-  final QuizImageService _quizImageService = QuizImageService();
+  QuizImageService? _quizImageService;
   final TTSService _ttsService = TTSService();
-  List<Fruit> fruits = [];
-  Fruit? currentFruit;
-  String? askedFruitName;
+  List<item> items = [];
+  item? currentitem;
+  String? askeditemName;
   bool showOopsMessage = false;
   bool isCorrect = false;
   int score = 0;
@@ -76,6 +72,11 @@ class _BasicResponsesState extends State<BasicResponses>
     super.initState();
     _setupAnimations();
     _initializeTTS();
+    _initializeService();
+  }
+
+  Future<void> _initializeService() async {
+    _quizImageService = await QuizImageService.instance;
     _loadQuizImages();
   }
 
@@ -99,13 +100,15 @@ class _BasicResponsesState extends State<BasicResponses>
   }
 
   Future<void> _loadQuizImages() async {
+    if (_quizImageService == null) return;
+
     try {
       setState(() {
         isLoading = true;
         errorMessage = '';
       });
 
-      final images = await _quizImageService.getQuizImages();
+      final images = await _quizImageService!.getQuizImages();
       final trueFalseImages =
           images
               .where(
@@ -115,12 +118,11 @@ class _BasicResponsesState extends State<BasicResponses>
               .toList();
 
       setState(() {
-        fruits =
-            trueFalseImages.map((img) => Fruit.fromQuizImage(img)).toList();
+        items = trueFalseImages.map((img) => item.fromQuizImage(img)).toList();
         isLoading = false;
       });
 
-      if (fruits.isNotEmpty) {
+      if (items.isNotEmpty) {
         _generateNewQuestion();
       }
     } catch (e) {
@@ -132,23 +134,22 @@ class _BasicResponsesState extends State<BasicResponses>
   }
 
   void _generateNewQuestion() {
-    if (fruits.isEmpty) return;
+    if (items.isEmpty) return;
 
     setState(() {
-      currentFruit = fruits[Random().nextInt(fruits.length)];
+      currentitem = items[Random().nextInt(items.length)];
       // 50-50 chance to ask about the correct name or a different name
       if (Random().nextBool()) {
-        askedFruitName = currentFruit!.name;
+        askeditemName = currentitem!.name;
       } else {
-        // Get a different random fruit name
-        var otherFruits =
-            fruits.where((f) => f.name != currentFruit!.name).toList();
-        if (otherFruits.isNotEmpty) {
-          askedFruitName =
-              otherFruits[Random().nextInt(otherFruits.length)].name;
+        // Get a different random item name
+        var otheritems =
+            items.where((f) => f.name != currentitem!.name).toList();
+        if (otheritems.isNotEmpty) {
+          askeditemName = otheritems[Random().nextInt(otheritems.length)].name;
         } else {
-          askedFruitName =
-              currentFruit!.name; // Fallback if there's only one fruit
+          askeditemName =
+              currentitem!.name; // Fallback if there's only one item
         }
       }
       showOopsMessage = false;
@@ -159,7 +160,7 @@ class _BasicResponsesState extends State<BasicResponses>
   }
 
   void _handleAnswer(bool userAnswer) async {
-    bool isCorrectName = currentFruit!.name == askedFruitName;
+    bool isCorrectName = currentitem!.name == askeditemName;
     if (userAnswer == isCorrectName) {
       await _speakFeedback(true);
       setState(() {
@@ -192,14 +193,14 @@ class _BasicResponsesState extends State<BasicResponses>
   }
 
   Future<void> _speakQuestion() async {
-    if (currentFruit != null && askedFruitName != null) {
-      await _ttsService.speak('Is this a $askedFruitName?');
+    if (currentitem != null && askeditemName != null) {
+      await _ttsService.speak('Is this a $askeditemName?');
     }
   }
 
   Future<void> _speakFeedback(bool isCorrect) async {
     if (isCorrect) {
-      await _ttsService.speak('Yes! This is ${currentFruit!.name}');
+      await _ttsService.speak('Yes! This is ${currentitem!.name}');
     } else {
       await _ttsService.speak('Wrong! Try again! This is not ');
     }
@@ -229,7 +230,7 @@ class _BasicResponsesState extends State<BasicResponses>
             backgroundColor: widget.backgroundColor,
             elevation: 0,
             actions: [
-              if (currentFruit != null)
+              if (currentitem != null)
                 IconButton(
                   icon: const Icon(Icons.volume_up),
                   onPressed: _speakQuestion,
@@ -242,7 +243,7 @@ class _BasicResponsesState extends State<BasicResponses>
                   ? const Center(child: CircularProgressIndicator())
                   : errorMessage.isNotEmpty
                   ? Center(child: Text(errorMessage))
-                  : fruits.isEmpty
+                  : items.isEmpty
                   ? const Center(child: Text('No quiz images available'))
                   : SafeArea(
                     child: Column(
@@ -255,7 +256,7 @@ class _BasicResponsesState extends State<BasicResponses>
                             bottom: 8.0,
                           ),
                           child: Text(
-                            'Is this a $askedFruitName?',
+                            'Is this a $askeditemName?',
                             style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -264,41 +265,44 @@ class _BasicResponsesState extends State<BasicResponses>
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        // Fruit image with rounded background
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(32),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
+                        // item image with rounded background
+                        Card(
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           margin: const EdgeInsets.symmetric(horizontal: 20),
-                          padding: const EdgeInsets.all(24),
-                          child: SizedBox(
-                            width: 280,
-                            height: 280,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child:
-                                  currentFruit != null
-                                      ? CachedNetworkImage(
-                                        imageUrl: currentFruit!.imageUrl,
-                                        fit: BoxFit.contain,
-                                        placeholder:
-                                            (context, url) => const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            ),
-                                        errorWidget:
-                                            (context, url, error) =>
-                                                const Icon(Icons.error),
-                                      )
-                                      : const SizedBox.shrink(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding: const EdgeInsets.all(
+                              16,
+                            ), // Reduced from 24 to 16
+                            child: SizedBox(
+                              width: 280,
+                              height: 280,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  12,
+                                ), // Reduced from 24 to 12
+                                child:
+                                    currentitem != null
+                                        ? CachedNetworkImage(
+                                          imageUrl: currentitem!.imageUrl,
+                                          fit: BoxFit.contain,
+                                          placeholder:
+                                              (context, url) => const Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              ),
+                                          errorWidget:
+                                              (context, url, error) =>
+                                                  const Icon(Icons.error),
+                                        )
+                                        : const SizedBox.shrink(),
+                              ),
                             ),
                           ),
                         ),
@@ -423,7 +427,7 @@ class _BasicResponsesState extends State<BasicResponses>
                                 horizontal: 12,
                               ),
                               child: Text(
-                                'No, this is ${currentFruit?.name ?? ''}',
+                                'No, this is ${currentitem?.name ?? ''}',
                                 style: const TextStyle(
                                   fontSize: 22,
                                   color: Color(0xFF223A5E),

@@ -14,7 +14,7 @@ class ImageQuizScreen extends StatefulWidget {
 class _ImageQuizScreenState extends State<ImageQuizScreen>
     with TickerProviderStateMixin {
   final TTSService _ttsService = TTSService();
-  final QuizImageService _quizImageService = QuizImageService();
+  QuizImageService? _quizImageService;
   final Random random = Random();
 
   List<QuizImage> displayedImages = [];
@@ -32,6 +32,11 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
+    _initializeService();
+  }
+
+  Future<void> _initializeService() async {
+    _quizImageService = await QuizImageService.instance;
     _initTTS();
   }
 
@@ -41,13 +46,15 @@ class _ImageQuizScreenState extends State<ImageQuizScreen>
   }
 
   Future<void> _setupNewRound() async {
+    if (_quizImageService == null) return;
+
     setState(() {
       isLoading = true;
     });
 
     try {
       // Fetch quiz images from the API
-      final List<QuizImage> images = await _quizImageService.getQuizImages();
+      final List<QuizImage> images = await _quizImageService!.getQuizImages();
       final List<QuizImage> imageQuizImages =
           images.where((image) => image.category == 'image_quiz').toList();
 

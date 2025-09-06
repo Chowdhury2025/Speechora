@@ -113,98 +113,7 @@ class _Presentation3State extends State<Presentation3>
     _askQuestion();
   }
 
-  Widget _buildOptionCard(QuizItem item) {
-    final isSelected = item == _selected;
-    return GestureDetector(
-      onTap: () => _onSelect(item),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFF6D6) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF58CC02) : Colors.transparent,
-            width: 3,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  isSelected
-                      ? const Color(0xFF58CC02).withOpacity(0.3)
-                      : Colors.black12,
-              blurRadius: isSelected ? 15 : 8,
-              spreadRadius: isSelected ? 2 : 0,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Hero(
-              tag: 'image_${item.imageName}',
-              child: Container(
-                width: double.infinity,
-                height: 200, // Increased height for better visibility
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    item.imageUrl,
-                    fit: BoxFit.cover, // Changed to cover for full coverage
-                    width: double.infinity,
-                    height: double.infinity,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value:
-                              loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                        ),
-                      );
-                    },
-                    errorBuilder:
-                        (context, error, stackTrace) => Container(
-                          color: Colors.grey[200],
-                          child: Icon(
-                            Icons.error_outline,
-                            size: 40,
-                            color: Colors.red[300],
-                          ),
-                        ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              item.imageName,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: Colors.teal[800],
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Removed unused _buildOptionCard method
 
   @override
   Widget build(BuildContext context) {
@@ -225,101 +134,201 @@ class _Presentation3State extends State<Presentation3>
     final first = _items[_currentIndex];
     final second = _items[(_currentIndex + 1) % _items.length];
 
+    // Get screen size for responsive sizing
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.height < 700;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(
+        0xFFB8E4DA,
+      ), // Light teal background like in the image
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F1F1F)),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E4147)),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            // Top Question Text with animation and visual feedback
-            ScaleTransition(
-              scale: _questionAnimation,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 24,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top Question Text
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  isSmallScreen ? 20 : 30,
+                  24,
+                  isSmallScreen ? 20 : 40,
                 ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF6D6),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF58CC02).withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                child: ScaleTransition(
+                  scale: _questionAnimation,
+                  child: Text(
+                    "Do you want ${first.imageName} or ${second.imageName}?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize:
+                          isSmallScreen
+                              ? 34
+                              : 42, // Adjust font size for smaller screens
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1E4147), // Dark teal text
+                      height: 1.2,
                     ),
-                  ],
-                ),
-                child: Text(
-                  "Do you want ${first.imageName} or ${second.imageName}?",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F1F1F),
-                    height: 1.3,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 30),
-            // Middle Options (Two Pictures)
-            Expanded(
-              child: SingleChildScrollView(
+
+              // Options as separate cards with images
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildOptionCard(first),
-                    const SizedBox(height: 16),
-                    _buildOptionCard(second),
-                  ],
-                ),
-              ),
-            ),
-            // Bottom Sentence with animation
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              child:
-                  _selected != null
-                      ? Container(
-                        margin: const EdgeInsets.all(24),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                          horizontal: 24,
-                        ),
+                    // First option (Water)
+                    GestureDetector(
+                      onTap: () => _onSelect(first),
+                      child: Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF58CC02),
+                          color: const Color(
+                            0xFFDEF3FA,
+                          ), // Light blue for water
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF58CC02).withOpacity(0.3),
-                              blurRadius: 10,
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        child: Text(
-                          "I want ${_selected!.imageName}",
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          textAlign: TextAlign.center,
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                first.imageUrl,
+                                height: isSmallScreen ? 90 : 120,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Icon(
+                                      Icons.image_not_supported,
+                                      size: isSmallScreen ? 60 : 80,
+                                      color: Colors.grey[400],
+                                    ),
+                              ),
+                            ),
+                            SizedBox(height: isSmallScreen ? 8 : 16),
+                            Text(
+                              first.imageName,
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 24 : 32,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF1E4147),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                      )
-                      : const SizedBox(height: 80),
-            ),
-          ],
+                      ),
+                    ),
+
+                    // Second option (Juice)
+                    GestureDetector(
+                      onTap: () => _onSelect(second),
+                      child: Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFFFFD699,
+                          ), // Light orange for juice
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                second.imageUrl,
+                                height: isSmallScreen ? 90 : 120,
+                                fit: BoxFit.contain,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Icon(
+                                      Icons.image_not_supported,
+                                      size: isSmallScreen ? 60 : 80,
+                                      color: Colors.grey[400],
+                                    ),
+                              ),
+                            ),
+                            SizedBox(height: isSmallScreen ? 8 : 16),
+                            Text(
+                              second.imageName,
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 24 : 32,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF1E4147),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Bottom response text
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                child:
+                    _selected != null
+                        ? Container(
+                          margin: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 20,
+                            horizontal: 24,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFFFF6D6,
+                            ), // Light yellow background
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            "I want ${_selected!.imageName}",
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 24 : 30,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF1E4147),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                        : SizedBox(height: isSmallScreen ? 50 : 70),
+              ),
+            ],
+          ),
         ),
       ),
     );

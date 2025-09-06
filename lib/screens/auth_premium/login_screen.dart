@@ -5,8 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/constants.dart';
 import '../../models/user_model.dart';
-import '../../services/premium_guard.dart';
-import '../../services/subscription_service.dart';
+import '../../services/premium_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,21 +31,18 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      final requestBody = {
+        'email': _emailController.text,
+        'password': _passwordController.text,
+      };
+
       final response = await http.post(
         Uri.parse('${Constants.baseUrl}/user/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _emailController.text,
-          'password': _passwordController.text,
-        }),
+        body: jsonEncode(requestBody),
       );
 
       final responseData = jsonDecode(response.body);
-
-      // DEBUG: Print the response data
-      print('=== DEBUG: Login Response ===');
-      print('Status Code: ${response.statusCode}');
-      print('Response Data: $responseData');
 
       if (response.statusCode == 200) {
         try {
@@ -73,16 +69,8 @@ class _LoginScreenState extends State<LoginScreen> {
             'emergencyContact': responseData['emergencyContact'],
           };
 
-          print('=== DEBUG: Transformed Data ===');
-          print('Transformed Data: $transformedData');
-
           // Create UserModel from transformed data
           UserModel user = UserModel.fromJson(transformedData);
-
-          print('=== DEBUG: UserModel created successfully ===');
-          print('User ID: ${user.id}');
-          print('User Email: ${user.email}');
-          print('User Token: ${user.token ?? "No token"}');
 
           // Store user data
           final prefs = await SharedPreferences.getInstance();
@@ -153,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           // Fetch authoritative subscription status
-          final status = await SubscriptionService.fetchStatus(user.id);
+          final status = await PremiumService.fetchStatus(user.id);
           if (status != null) {
             final state =
                 status['state'] as String?; // trial|premium|expired|free
@@ -199,33 +187,27 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             }
           }
+
+          // Navigate to home screen after successful login
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          }
         } catch (userModelError) {
-          print('=== DEBUG: Error creating UserModel ===');
-          print('Error: $userModelError');
-          print('Response data structure might not match UserModel');
-
-          // If UserModel creation fails, let's see what fields are missing
-          print('=== DEBUG: Available fields in response ===');
-          responseData.forEach((key, value) {
-            print('$key: $value (${value.runtimeType})');
-          });
-
+          // If UserModel creation fails, show error message
           setState(() {
             _errorMessage =
                 'Login successful but data format issue. Please contact support.';
           });
         }
       } else {
+        // Show backend error message directly from API response
         setState(() {
-          _errorMessage =
-              responseData['message'] ?? 'Failed to login. Please try again.';
+          _errorMessage = response.body;
         });
       }
     } catch (e) {
-      print('=== DEBUG: Network or general error ===');
-      print('Error: $e');
       setState(() {
-        _errorMessage = 'Network error. Please check your connection.';
+        _errorMessage = e.toString();
       });
     } finally {
       setState(() {

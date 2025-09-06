@@ -299,7 +299,7 @@ class _MyHomePageState extends State<MyHomePage> {
         );
         break;
       case 'When Questions':
-        screen = const Presentation3List(subject: 'when_questions');
+        screen = const Presentation3List(subject: 'When_Questions');
         break;
       case 'Why Questions':
         screen = PresentationTwo(
@@ -320,7 +320,7 @@ class _MyHomePageState extends State<MyHomePage> {
         screen = const presentation5();
         break;
       case 'Choice Questions':
-        screen = const Presentation3List(subject: 'choice_questions');
+        screen = const Presentation3List(subject: 'Choice_Questions');
         break;
       case 'How Questions':
         screen = VideoCategoriesScreen(backgroundColor: color);

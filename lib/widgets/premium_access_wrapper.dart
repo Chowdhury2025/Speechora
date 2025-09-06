@@ -94,6 +94,37 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper> {
     final prefs = await SharedPreferences.getInstance();
     final isPremium = prefs.getBool('isPremium') ?? false;
     final premiumStatus = prefs.getString('premiumStatus') ?? '';
+    final now = DateTime.now();
+
+    // Check trial expiry
+    if (premiumStatus == 'trial') {
+      final trialExpiryStr = prefs.getString('trialExpiry');
+      if (trialExpiryStr != null) {
+        final trialExpiry = DateTime.tryParse(trialExpiryStr);
+        if (trialExpiry != null && now.isAfter(trialExpiry)) {
+          // Trial expired, update prefs
+          await prefs.setBool('isPremium', false);
+          await prefs.setString('premiumStatus', '');
+          return false;
+        }
+      }
+    }
+
+    // Check premium expiry
+    if (premiumStatus == 'premium') {
+      final premiumExpiryStr = prefs.getString('premiumExpiry');
+      if (premiumExpiryStr == null || premiumExpiryStr.isEmpty) {
+        // Unlimited premium
+        return true;
+      }
+      final premiumExpiry = DateTime.tryParse(premiumExpiryStr);
+      if (premiumExpiry != null && now.isAfter(premiumExpiry)) {
+        // Premium expired, update prefs
+        await prefs.setBool('isPremium', false);
+        await prefs.setString('premiumStatus', '');
+        return false;
+      }
+    }
 
     // Allow access if user is premium or in trial period
     return isPremium || premiumStatus == 'trial';

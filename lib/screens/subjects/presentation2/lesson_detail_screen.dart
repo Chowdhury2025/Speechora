@@ -220,47 +220,54 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
                   Expanded(
                     flex: 3,
                     child: Container(
-                      padding: const EdgeInsets.all(
-                        0,
-                      ), // Remove padding for full coverage
-                      child:
-                          option['type'] == 'image_url'
-                              ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child:
-                                    option['content'] != null
-                                        ? Image.network(
-                                          option['content'],
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          height: double.infinity,
-                                          loadingBuilder: (
-                                            context,
-                                            child,
-                                            loadingProgress,
-                                          ) {
-                                            if (loadingProgress == null)
-                                              return child;
-                                            return Center(
-                                              child: CircularProgressIndicator(
-                                                value:
-                                                    loadingProgress
-                                                                .expectedTotalBytes !=
-                                                            null
-                                                        ? loadingProgress
-                                                                .cumulativeBytesLoaded /
-                                                            loadingProgress
-                                                                .expectedTotalBytes!
-                                                        : null,
-                                              ),
-                                            );
-                                          },
-                                          errorBuilder:
-                                              (
-                                                context,
-                                                error,
-                                                stackTrace,
-                                              ) => Container(
+                      // Apply margin, padding and shadow to the image container
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      // Clip the child so the image respects the borderRadius
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child:
+                            option['type'] == 'image_url'
+                                ? (option['content'] != null
+                                    ? Image.network(
+                                      option['content'],
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      loadingBuilder: (
+                                        context,
+                                        child,
+                                        loadingProgress,
+                                      ) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            value:
+                                                loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                            .cumulativeBytesLoaded /
+                                                        loadingProgress
+                                                            .expectedTotalBytes!
+                                                    : null,
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Container(
                                                 color: Colors.grey[200],
                                                 child: Column(
                                                   mainAxisAlignment:
@@ -284,18 +291,18 @@ class _LessonDetailScreenState extends State<LessonDetailScreen>
                                                   ],
                                                 ),
                                               ),
-                                        )
-                                        : Icon(
-                                          Icons.image_not_supported,
-                                          size: 40,
-                                          color: Colors.grey[400],
-                                        ),
-                              )
-                              : Icon(
-                                Icons.help_outline,
-                                size: 40,
-                                color: Colors.grey[400],
-                              ),
+                                    )
+                                    : Icon(
+                                      Icons.image_not_supported,
+                                      size: 40,
+                                      color: Colors.grey[400],
+                                    ))
+                                : Icon(
+                                  Icons.help_outline,
+                                  size: 40,
+                                  color: Colors.grey[400],
+                                ),
+                      ),
                     ),
                   ),
                   // Label

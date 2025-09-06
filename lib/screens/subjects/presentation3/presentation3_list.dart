@@ -33,22 +33,26 @@ class _Presentation3ListState extends State<Presentation3List> {
 
   Future<void> _loadItems() async {
     try {
+      // The API endpoint is already included in the baseUrl from constants
       final response = await http.get(
         Uri.parse('${Constants.baseUrl}/presentation3'),
       );
       if (response.statusCode == 200) {
+        print('Response body: ${response.body}');
         final List<dynamic> data = json.decode(response.body);
         final allItems = data.map((e) => QuizItem.fromJson(e)).toList();
 
-        // Filter items by subject
+        // Filter items by subject - handle both underscore variations
         final filteredItems =
-            allItems
-                .where(
-                  (item) =>
-                      item.subject.toLowerCase() ==
-                      widget.subject.toLowerCase(),
-                )
-                .toList();
+            allItems.where((item) {
+              final itemSubject = item.subject.toLowerCase();
+              final targetSubject = widget.subject.toLowerCase();
+
+              // Handle both "when_questions" and "When_Questions" variations
+              return itemSubject == targetSubject ||
+                  itemSubject.replaceAll('_', '').replaceAll(' ', '') ==
+                      targetSubject.replaceAll('_', '').replaceAll(' ', '');
+            }).toList();
 
         setState(() {
           _items.addAll(filteredItems);

@@ -16,6 +16,7 @@ class PremiumGuard {
         }
       }
       // Trial expired, update status
+      await prefs.setBool('isPremium', false);
       await prefs.setString('premiumStatus', '');
       return false;
     }
@@ -23,13 +24,16 @@ class PremiumGuard {
     // Check if premium is active and valid
     if (premiumStatus == 'premium') {
       final premiumExpiryStr = prefs.getString('premiumExpiry');
-      if (premiumExpiryStr != null) {
-        final premiumExpiry = DateTime.tryParse(premiumExpiryStr);
-        if (premiumExpiry != null && now.isBefore(premiumExpiry)) {
-          return true;
-        }
+      if (premiumExpiryStr == null || premiumExpiryStr.isEmpty) {
+        // Unlimited premium
+        return true;
+      }
+      final premiumExpiry = DateTime.tryParse(premiumExpiryStr);
+      if (premiumExpiry != null && now.isBefore(premiumExpiry)) {
+        return true;
       }
       // Premium expired, update status
+      await prefs.setBool('isPremium', false);
       await prefs.setString('premiumStatus', '');
       return false;
     }

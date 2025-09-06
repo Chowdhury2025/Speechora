@@ -1,7 +1,5 @@
 import 'package:book8/screens/staticscreens/about_screen.dart';
-import 'package:book8/widgets/premium_payment_dialog.dart';
-import 'package:book8/services/premium_guard.dart';
-import 'package:book8/services/subscription_service.dart';
+import 'package:book8/services/premium_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
@@ -162,7 +160,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
     if (userId == null) return;
-    final status = await SubscriptionService.fetchStatus(userId);
+    final status = await PremiumService.fetchStatus(userId);
     if (status == null) return;
     final state = status['state'] as String?; // trial|premium|expired|free
     final expiry = status['expiry'];
@@ -238,7 +236,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettingsAccess() async {
-    final access = await PremiumGuard.getSettingsAccess();
+    final access = await PremiumService.getSettingsAccess();
     setState(() {
       _settingsAccess = access;
     });

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../../services/tts_service.dart';
@@ -13,8 +14,8 @@ class presentation5 extends StatefulWidget {
 
 class _presentation5State extends State<presentation5>
     with SingleTickerProviderStateMixin {
+  QuizImageService? _quizImageService;
   final TTSService _ttsService = TTSService();
-  final QuizImageService _quizImageService = QuizImageService();
   final Random random = Random();
 
   // Image caching
@@ -39,6 +40,11 @@ class _presentation5State extends State<presentation5>
   void initState() {
     super.initState();
     _celebrationController = AnimationController(vsync: this);
+    _initializeService();
+  }
+
+  Future<void> _initializeService() async {
+    _quizImageService = await QuizImageService.instance;
     _initializeQuiz();
   }
 
@@ -55,7 +61,10 @@ class _presentation5State extends State<presentation5>
       // Step 2: Preload all images into memory cache
       await _preloadAllImages();
 
-      // Step 3: Start the first round
+      // Step 3: Ensure all images are downloaded locally for offline use
+      await _ensureImagesDownloaded();
+
+      // Step 4: Start the first round
       await _setupNewRound();
     } catch (e) {
       if (mounted) {
@@ -71,7 +80,11 @@ class _presentation5State extends State<presentation5>
 
   /// Fetch all available quiz images from the API
   Future<void> _fetchAllImages() async {
-    final images = await _quizImageService.getQuizImages(
+    if (_quizImageService == null) {
+      return;
+    }
+
+    final images = await _quizImageService!.getQuizImages(
       quizType: 'image_quiz',
     );
 
@@ -84,28 +97,38 @@ class _presentation5State extends State<presentation5>
     });
   }
 
-  /// Preload all images into Flutter's image cache
+  /// Ensure all images are downloaded locally for offline use
+  Future<void> _ensureImagesDownloaded() async {
+    if (_quizImageService == null || allQuizImages.isEmpty) return;
+
+    try {
+      await _quizImageService!.ensureImagesDownloaded(allQuizImages);
+    } catch (e) {
+      // Continue even if some images fail to download
+    }
+  }
+
+  /// Preload all images into Flutter's image cache or local storage
   Future<void> _preloadAllImages() async {
     if (allQuizImages.isEmpty) return;
-
-    // Show progress during preloading
-    int loadedCount = 0;
 
     final futures =
         allQuizImages.map((image) async {
           try {
-            await precacheImage(NetworkImage(image.imageUrl), context);
-            loadedCount++;
+            // Check if we have a local path for this image
+            final localPath = _quizImageService!.getLocalImagePath(
+              image.imageUrl,
+            );
 
-            // Update loading progress (optional - you can remove this if not needed)
-            if (mounted) {
-              setState(() {
-                // You can show progress here if desired
-              });
+            if (localPath != null && File(localPath).existsSync()) {
+              // Image is already downloaded locally, precache it
+              await precacheImage(FileImage(File(localPath)), context);
+            } else {
+              // Download and cache the image
+              await precacheImage(NetworkImage(image.imageUrl), context);
             }
           } catch (e) {
             // Continue even if some images fail to preload
-            print('Failed to preload image: ${image.imageUrl}');
           }
         }).toList();
 
@@ -205,76 +228,123 @@ class _presentation5State extends State<presentation5>
 
     return GestureDetector(
       onTap: () => _handleImageTap(image),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE8F5F5),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF9DD5D5), width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Main image content
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    image.imageUrl,
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
-                    // Since images are preloaded, they should load instantly
-                    // But we keep error handling just in case
-                    errorBuilder:
-                        (context, error, stackTrace) => Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.image_not_supported,
-                            size: 40,
-                            color: Colors.grey,
-                          ),
-                        ),
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white, // White background like presentation1
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            children: [
+              // Main image content
+              Padding(
+                padding: const EdgeInsets.all(
+                  8.0,
+                ), // Reduced from 20.0 to 8.0 for larger images
+                child: Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      12,
+                    ), // Slightly smaller to fit within card
+                    child: Builder(
+                      builder: (context) {
+                        // Check if we have a local path for this image
+                        final localPath = _quizImageService!.getLocalImagePath(
+                          image.imageUrl,
+                        );
+
+                        if (localPath != null) {
+                          final fileExists = File(localPath).existsSync();
+
+                          if (fileExists) {
+                            return Image.file(
+                              File(localPath),
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fall back to network if local file fails
+                                return Image.network(
+                                  image.imageUrl,
+                                  fit: BoxFit.contain,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          } else {
+                            // Remove invalid path from service
+                            _quizImageService!.removeInvalidPath(
+                              image.imageUrl,
+                            );
+                          }
+                        }
+
+                        // Fall back to network image
+                        return Image.network(
+                          image.imageUrl,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Feedback overlay
-            if (showFeedback)
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(17),
+              // Feedback overlay
+              if (showFeedback)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child:
+                        isCorrect == true
+                            ? const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 80,
+                            )
+                            : const Icon(
+                              Icons.sentiment_dissatisfied,
+                              color: Colors.orange,
+                              size: 80,
+                            ),
+                  ),
                 ),
-                child: Center(
-                  child:
-                      isCorrect == true
-                          ? const Icon(
-                            Icons.check_circle,
-                            color: Colors.green,
-                            size: 80,
-                          )
-                          : const Icon(
-                            Icons.sentiment_dissatisfied,
-                            color: Colors.orange,
-                            size: 80,
-                          ),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -344,42 +414,40 @@ class _presentation5State extends State<presentation5>
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: const Color(0xFFB8E6E6),
+        backgroundColor: const Color(0xFFB8E6E6), // Light teal background
         body:
             isLoading
                 ? _buildLoadingScreen()
                 : SafeArea(
                   child: Stack(
                     children: [
-                      // Main content - CENTERED
-                      Center(
-                        child: Container(
-                          constraints: const BoxConstraints(
-                            maxWidth:
-                                600, // Optional: limit max width for larger screens
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                              vertical: 24.0,
-                            ),
-                            child: GridView.builder(
-                              shrinkWrap: true, // Allow grid to size itself
-                              physics:
-                                  const NeverScrollableScrollPhysics(), // Disable scrolling since we're centering
+                      // Main content
+                      Padding(
+                        padding: const EdgeInsets.all(
+                          16.0,
+                        ), // Reduced from 20.0 to 16.0
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Grid of image cards
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
                                     childAspectRatio: 1.0,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing:
+                                        12, // Reduced from 20 to 12
+                                    mainAxisSpacing:
+                                        12, // Reduced from 20 to 12
                                   ),
                               itemCount: displayedImages.length,
                               itemBuilder:
                                   (context, index) =>
                                       _buildImageCard(displayedImages[index]),
                             ),
-                          ),
+                          ],
                         ),
                       ),
 
@@ -392,7 +460,7 @@ class _presentation5State extends State<presentation5>
                               children: [
                                 if (showBigCelebration) ...[
                                   Lottie.asset(
-                                    'assets/animations/Animation - 1749309499190.json',
+                                    'assets/Animation - 1749309499190.json',
                                     controller: _celebrationController,
                                     onLoaded: (composition) {
                                       _celebrationController.duration =

@@ -2,7 +2,10 @@ import 'package:book8/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/tts_service.dart';
 import 'image_detail_screen.dart';
 
@@ -28,11 +31,15 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
   List<Map<String, dynamic>> images = [];
   bool isLoading = true;
   String? error;
+  Map<String, String> localImagePaths = {};
 
   @override
   void initState() {
     super.initState();
-    fetchImages();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await fetchImages();
+      await preloadImages();
+    });
     _ttsService.init();
   }
 
@@ -56,18 +63,80 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
             );
             isLoading = false;
           });
+          // Save to cache
+          await _saveImagesToCache(images);
         }
       } else {
         throw Exception('Failed to load images: ${response.statusCode}');
       }
     } catch (e) {
-      if (mounted) {
+      // Try to load from cache
+      final cachedImages = await _loadImagesFromCache();
+      if (cachedImages.isNotEmpty && mounted) {
         setState(() {
-          error = e.toString();
+          images = cachedImages;
           isLoading = false;
         });
+      } else {
+        if (mounted) {
+          setState(() {
+            error = e.toString();
+            isLoading = false;
+          });
+        }
       }
     }
+  }
+
+  Future<void> _saveImagesToCache(List<Map<String, dynamic>> images) async {
+    final prefs = await SharedPreferences.getInstance();
+    final imagesJson = json.encode(images);
+    await prefs.setString('cached_images_${widget.imageCategory}', imagesJson);
+  }
+
+  Future<List<Map<String, dynamic>>> _loadImagesFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final imagesJson = prefs.getString('cached_images_${widget.imageCategory}');
+    if (imagesJson != null) {
+      final List<dynamic> data = json.decode(imagesJson);
+      final cachedImages = List<Map<String, dynamic>>.from(data);
+      // Sort cached images
+      cachedImages.sort(
+        (a, b) => (a['position'] ?? double.infinity).compareTo(
+          b['position'] ?? double.infinity,
+        ),
+      );
+      return cachedImages;
+    }
+    return [];
+  }
+
+  Future<void> preloadImages() async {
+    if (!mounted) return;
+    final directory = await getApplicationDocumentsDirectory();
+    await Future.wait(
+      images.map((image) async {
+        if (image['imageUrl'] != null && image['imageUrl'].isNotEmpty) {
+          final fileName = image['imageUrl'].split('/').last;
+          final file = File('${directory.path}/$fileName');
+          if (await file.exists()) {
+            // File already exists locally
+            localImagePaths[image['imageUrl']] = file.path;
+          } else {
+            // Download the image
+            try {
+              final response = await http.get(Uri.parse(image['imageUrl']));
+              if (response.statusCode == 200) {
+                await file.writeAsBytes(response.bodyBytes);
+                localImagePaths[image['imageUrl']] = file.path;
+              }
+            } catch (e) {
+              print('Error downloading image: $e');
+            }
+          }
+        }
+      }),
+    );
   }
 
   Future<void> speakText(String text, {int? index}) async {
@@ -83,7 +152,11 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
       MaterialPageRoute(
         builder: (context) => ImageDetailScreen(image: image),
         settings: RouteSettings(
-          arguments: {'imagesList': images, 'currentIndex': index},
+          arguments: {
+            'imagesList': images,
+            'currentIndex': index,
+            'localImagePaths': localImagePaths,
+          },
         ),
       ),
     );
@@ -146,7 +219,7 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
             CircularProgressIndicator(color: Colors.white),
             SizedBox(height: 16),
             Text(
-              'Loading images...',
+              'downLoading images firstime...',
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
@@ -239,38 +312,72 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    CachedNetworkImage(
-                      imageUrl: image['imageUrl'],
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) => Container(
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                      errorWidget:
-                          (context, url, error) => Container(
-                            color: Colors.grey.shade300,
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.broken_image,
-                                  size: 32,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Image not available',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
+                    Builder(
+                      builder: (context) {
+                        final localPath = localImagePaths[image['imageUrl']];
+                        if (localPath != null && File(localPath).existsSync()) {
+                          return Image.file(
+                            File(localPath),
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) => Container(
+                                  color: Colors.grey.shade300,
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.broken_image,
+                                        size: 32,
+                                        color: Colors.grey,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Image not available',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                          );
+                        } else {
+                          return CachedNetworkImage(
+                            imageUrl: image['imageUrl'],
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (context, url) => Container(
+                                  color: Colors.grey.shade200,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                ),
+                            errorWidget:
+                                (context, url, error) => Container(
+                                  color: Colors.grey.shade300,
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.broken_image,
+                                        size: 32,
+                                        color: Colors.grey,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Image not available',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                          );
+                        }
+                      },
                     ),
                     Positioned(
                       bottom: 0,
@@ -329,18 +436,6 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.volume_up,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            final textToSpeak =
-                                '${image['title'] ?? 'Image'}. ${image['description'] ?? ''}';
-                            speakText(textToSpeak);
-                          },
                         ),
                       ),
                     ),

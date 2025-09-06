@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PremiumPaymentDialog extends StatefulWidget {
   const PremiumPaymentDialog({Key? key}) : super(key: key);
@@ -10,35 +10,20 @@ class PremiumPaymentDialog extends StatefulWidget {
 
 class _PremiumPaymentDialogState extends State<PremiumPaymentDialog> {
   bool _isProcessing = false;
-  final _formKey = GlobalKey<FormState>();
-  final _cardNumberController = TextEditingController();
 
-  void _simulatePayment() async {
-    if (!_formKey.currentState!.validate()) return;
-
+  Future<void> _launchPurchaseWebsite() async {
     setState(() => _isProcessing = true);
 
-    // Simulate payment processing
-    await Future.delayed(const Duration(seconds: 2));
+    final Uri url = Uri.parse('https://book8.vercel.app/premium-purchase');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open purchase page')),
+        );
+      }
+    }
 
-    // Simulate successful payment
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isPremium', true);
-    await prefs.setString('premiumStatus', 'premium');
-
-    // Set premium expiry to 30 days from now
-    final expiry = DateTime.now().add(const Duration(days: 30));
-    await prefs.setString('premiumExpiry', expiry.toIso8601String());
-    await prefs.setString('premiumStatusMessage', 'Premium Active');
-
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
-  }
-
-  @override
-  void dispose() {
-    _cardNumberController.dispose();
-    super.dispose();
+    setState(() => _isProcessing = false);
   }
 
   @override
@@ -56,37 +41,20 @@ class _PremiumPaymentDialogState extends State<PremiumPaymentDialog> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '₦999/month',
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
+              'Redirecting to secure payment page...',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            Form(
-              key: _formKey,
-              child: TextFormField(
-                controller: _cardNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Card Number',
-                  hintText: 'Enter card number',
-                  prefixIcon: Icon(Icons.credit_card),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter card number';
-                  }
-                  return null;
-                },
-              ),
+            const Text(
+              'You will be redirected to our website to complete your purchase securely.',
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isProcessing ? null : _simulatePayment,
+                onPressed: _isProcessing ? null : _launchPurchaseWebsite,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.green,
@@ -101,7 +69,7 @@ class _PremiumPaymentDialogState extends State<PremiumPaymentDialog> {
                             color: Colors.white,
                           ),
                         )
-                        : const Text('Pay Now', style: TextStyle(fontSize: 16)),
+                        : const Text('Continue to Purchase', style: TextStyle(fontSize: 16)),
               ),
             ),
           ],

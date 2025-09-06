@@ -14,7 +14,7 @@ class DragDropGame extends StatefulWidget {
 class _DragDropGameState extends State<DragDropGame>
     with SingleTickerProviderStateMixin {
   final TTSService _ttsService = TTSService();
-  final QuizImageService _quizImageService = QuizImageService();
+  QuizImageService? _quizImageService;
   final Random random = Random();
 
   bool isWordToPicture = true;
@@ -34,6 +34,11 @@ class _DragDropGameState extends State<DragDropGame>
   void initState() {
     super.initState();
     _celebrationController = AnimationController(vsync: this);
+    _initializeService();
+  }
+
+  Future<void> _initializeService() async {
+    _quizImageService = await QuizImageService.instance;
     _initializeGame();
   }
 
@@ -64,7 +69,9 @@ class _DragDropGameState extends State<DragDropGame>
   }
 
   Future<void> _fetchAllImages() async {
-    final images = await _quizImageService.getQuizImages();
+    if (_quizImageService == null) return;
+
+    final images = await _quizImageService!.getQuizImages();
 
     if (images.isEmpty) {
       throw Exception('No quiz images available');
@@ -493,7 +500,7 @@ class _DragDropGameState extends State<DragDropGame>
         child: Stack(
           children: [
             Lottie.asset(
-              'assets/animations/Animation - 1749309499190.json',
+              'assets/Animation - 1749309499190.json',
               controller: _celebrationController,
               onLoaded: (composition) {
                 _celebrationController.duration = composition.duration;
