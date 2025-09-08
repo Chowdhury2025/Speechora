@@ -49,5 +49,11 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSCameraUsageDescription</key>
+		<string>This app needs camera access to take profile pictures</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>This app needs photo library access to select profile pictures</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>This app needs microphone access for voice features</string>
 	</dict>
 </plist>

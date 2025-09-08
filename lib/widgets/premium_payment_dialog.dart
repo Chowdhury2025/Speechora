@@ -69,7 +69,10 @@ class _PremiumPaymentDialogState extends State<PremiumPaymentDialog> {
                             color: Colors.white,
                           ),
                         )
-                        : const Text('Continue to Purchase', style: TextStyle(fontSize: 16)),
+                        : const Text(
+                          'Continue to Purchase',
+                          style: TextStyle(fontSize: 16),
+                        ),
               ),
             ),
           ],

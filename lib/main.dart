@@ -5,6 +5,7 @@ import 'screens/auth_premium/login_screen.dart';
 import 'screens/staticscreens/profile_screen.dart';
 import 'screens/staticscreens/splash_screen.dart';
 import 'widgets/premium_access_wrapper.dart';
+import 'services/notification_service.dart';
 
 // Duolingo-like colors
 class AppColors {
@@ -15,7 +16,10 @@ class AppColors {
   static const Color error = Color(0xFFFF4B4B); // Red for errors
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize();
+  await AlarmService.initialize();
   runApp(const MyApp());
 }
 
