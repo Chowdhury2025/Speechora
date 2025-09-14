@@ -612,15 +612,15 @@ export const getUserDetailsController = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        videos: true,
-        images: true,
-        tests: true,
-        quizImages: true,
-        presentation3: true,
-        UsedPromoCode: true,
-        Lesson: true,
-      },
+      // include: {
+      //   videos: true,
+      //   images: true,
+      //   tests: true,
+      //   quizImages: true,
+      //   presentation3: true,
+      //   UsedPromoCode: true,
+      //   Lesson: true,
+      // },
     });
 
     if (!user) return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found' });
@@ -645,13 +645,13 @@ export const getUserDetailsController = async (req: Request, res: Response) => {
       premiumDeduction: user.premiumDeduction,
       premiumExpiry: normalizeDate(user.premiumExpiry),
       // relations
-      videos: user.videos || [],
-      images: user.images || [],
-      tests: user.tests || [],
-      quizImages: user.quizImages || [],
-      presentations: user.presentation3 || [],
-      usedPromoCodes: user.UsedPromoCode || [],
-      lessons: user.Lesson || [],
+      // videos: user.videos || [],
+      // images: user.images || [],
+      // tests: user.tests || [],
+      // quizImages: user.quizImages || [],
+      // presentations: user.presentation3 || [],
+      // usedPromoCodes: user.UsedPromoCode || [],
+      // lessons: user.Lesson || [],
     });
   } catch (error: any) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch user details', error: error?.message || error });

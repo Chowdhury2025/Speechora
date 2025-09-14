@@ -31,6 +31,16 @@ const Sidebar = () => {
   const user = useRecoilValue(userStates);
   const role = user?.role?.toUpperCase();
 
+  React.useEffect(() => {
+    // Collapse sidebar by default on mobile widths tami help here
+    try {
+      const isMobile = window?.innerWidth && window.innerWidth < 768;
+      if (isMobile) setIsOpen(false);
+    } catch (e) {
+      // ignore
+    }
+  }, [setIsOpen]);
+
   const allNavItems = [
     // Admin Dashboard
     { path: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPERUSER', 'ADMIN',] },
