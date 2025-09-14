@@ -18,9 +18,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   String userName = '';
   String userEmail = '';
-  bool isPremium = false;
-  String premiumExpiry = '';
-  String premiumStatus = ''; // can be '', 'trial', or 'premium'
+  // Premium/trial logic is now handled only in PremiumAccessWrapper
   bool isDefaultLauncher = false;
 
   final List<String> languages = [
@@ -115,24 +113,6 @@ class SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       userName = prefs.getString('userName') ?? '';
       userEmail = prefs.getString('userEmail') ?? '';
-
-      // Load premium status
-      isPremium = prefs.getBool('isPremium') ?? false;
-      premiumExpiry = prefs.getString('premiumExpiry') ?? '';
-      premiumStatus = prefs.getString('premiumStatus') ?? '';
-
-      // Check if premium subscription is expired
-      if (premiumStatus == 'premium' && premiumExpiry.isNotEmpty) {
-        final expiryDate = DateTime.tryParse(premiumExpiry);
-        if (expiryDate != null && now.isAfter(expiryDate)) {
-          // Premium expired, update prefs
-          prefs.setBool('isPremium', false);
-          prefs.setString('premiumStatus', '');
-          isPremium = false;
-          premiumExpiry = '';
-          premiumStatus = '';
-        }
-      }
     });
   }
 
@@ -141,20 +121,8 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   String _buildAccountStatusDescription() {
-    final now = DateTime.now();
-    if (premiumStatus == 'premium' && premiumExpiry.isNotEmpty) {
-      final expiryDate = DateTime.tryParse(premiumExpiry);
-      if (expiryDate != null) {
-        final diff = expiryDate.difference(now).inDays + 1;
-        final left = diff < 0 ? 0 : diff;
-        final dateStr = expiryDate.toIso8601String().split('T').first;
-        return 'Premium (expires $dateStr, $left day${left == 1 ? '' : 's'} left)';
-      }
-    }
-    if (isPremium && premiumStatus.isEmpty) {
-      return 'Premium (no expiry)';
-    }
-    return 'Free';
+    // Premium/trial status is now handled in PremiumAccessWrapper
+    return 'Account';
   }
 
   Future<void> _initializeTTS() async {
@@ -162,11 +130,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   Color _getAccountStatusColor() {
-    if (premiumStatus == 'premium' || (isPremium && premiumStatus.isEmpty)) {
-      return Colors.green;
-    } else {
-      return Colors.white70;
-    }
+    return Colors.white70;
   }
 
   @override

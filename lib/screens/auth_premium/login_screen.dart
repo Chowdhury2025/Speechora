@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/constants.dart';
 import '../../models/user_model.dart';
-import '../../services/premium_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -140,53 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
             }
           }
 
-          // Fetch authoritative subscription status
-          final status = await PremiumService.fetchStatus(user.id);
-          if (status != null) {
-            final state =
-                status['state'] as String?; // trial|premium|expired|free
-            final expiry = status['expiry'];
-            if (state != null) {
-              final now = DateTime.now();
-              switch (state) {
-                case 'trial':
-                  await prefs.setBool('isPremium', true);
-                  await prefs.setString('premiumStatus', 'trial');
-                  if (expiry != null) {
-                    await prefs.setString('trialExpiry', expiry);
-                  }
-                  await prefs.setBool('hasUsedTrial', false);
-                  break;
-                case 'premium':
-                  await prefs.setBool('isPremium', true);
-                  await prefs.setString('premiumStatus', 'premium');
-                  if (expiry != null) {
-                    await prefs.setString('premiumExpiry', expiry);
-                  } else {
-                    await prefs.setString('premiumExpiry', '');
-                  }
-                  await prefs.setBool('hasUsedTrial', true);
-                  break;
-                case 'expired':
-                  await prefs.setBool('isPremium', false);
-                  await prefs.setString('premiumStatus', '');
-                  await prefs.setBool('hasUsedTrial', true);
-                  break;
-                default:
-                  await prefs.setBool('isPremium', false);
-                  await prefs.setString('premiumStatus', '');
-                  final trialExpStr = prefs.getString('trialExpiry');
-                  if (trialExpStr != null) {
-                    try {
-                      final t = DateTime.parse(trialExpStr);
-                      if (t.isBefore(now)) {
-                        await prefs.setBool('hasUsedTrial', true);
-                      }
-                    } catch (_) {}
-                  }
-              }
-            }
-          }
+          // Premium status is now handled by PremiumAccessWrapper
 
           // Navigate to home screen after successful login
           if (mounted) {

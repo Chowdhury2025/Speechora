@@ -42,16 +42,8 @@ class _SplashScreenState extends State<SplashScreen>
         return;
       }
 
-      final isPremium = prefs.getBool('isPremium') ?? false;
-      final premiumStatus = prefs.getString('premiumStatus') ?? '';
-      final hasAccess = isPremium || premiumStatus == 'trial';
-
-      if (hasAccess) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      } else {
-        // User is logged in but doesn't have premium access
-        Navigator.of(context).pushReplacementNamed('/settings');
-      }
+      // Always navigate to home - PremiumAccessWrapper will handle access control
+      Navigator.of(context).pushReplacementNamed('/home');
     } catch (e) {
       setState(() => _hasError = true);
       if (mounted) {
