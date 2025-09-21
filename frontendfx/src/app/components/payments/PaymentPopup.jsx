@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../../../config'
+import { useRecoilValue } from 'recoil';
+import { userStates } from '../../../atoms';
+import api from '../../../utils/api';
+import { API_URL } from '../../../config';
 
 const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState('mobile');
+  const user = useRecoilValue(userStates);
+  const [paymentMethod, setPaymentMethod] = useState('mobile_money');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   
   // Promo code states
   const [promoCode, setPromoCode] = useState('');
@@ -63,30 +68,24 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
     setPromoError('');
 
     try {
-      const response = await fetch(`${API_URL}/api/promo-codes/validate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code: promoCode.trim() }),
+      const response = await api.post('/api/promo-codes/validate', {
+        code: promoCode.trim()
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.data.valid) {
         setPromoApplied(true);
-        setPromoDiscount(data.discount);
-        const discountAmount = (amount * data.discount) / 100;
+        setPromoDiscount(response.data.discount);
+        const discountAmount = (amount * response.data.discount) / 100;
         setFinalAmount(amount - discountAmount);
         setPromoError('');
       } else {
-        setPromoError(data.error || 'Invalid promo code');
+        setPromoError(response.data.error || 'Invalid promo code');
         setPromoApplied(false);
         setPromoDiscount(0);
         setFinalAmount(amount);
       }
     } catch (error) {
-      setPromoError('Failed to validate promo code');
+      setPromoError(error.response?.data?.error || 'Failed to validate promo code');
       setPromoApplied(false);
       setPromoDiscount(0);
       setFinalAmount(amount);
@@ -104,75 +103,65 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   };
 
   const handlePayment = async () => {
-    // Get user authentication token
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!user.id) {
+    if (!user?.userId) {
       alert('Please log in to make a purchase');
       navigate('/login');
       return;
     }
 
-    let paymentAmount = finalAmount;
-    
-    // If promo code is applied, use the apply endpoint to increment usage
-    if (promoApplied) {
-      try {
-        const response = await fetch(`${API_URL}/api/promocodes/apply`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ code: promoCode.trim() }),
-        });
-
-        const data = await response.json();
-        
-        if (response.ok) {
-          paymentAmount = data.finalPrice;
-        } else {
-          alert(`Promo code error: ${data.error}`);
-          return;
-        }
-      } catch (error) {
-        alert('Failed to apply promo code');
-        return;
-      }
-    }
+    setIsProcessing(true);
 
     try {
-      // Call the backend premium purchase endpoint
-      const response = await fetch(`${API_URL}/api/user/premium/purchase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          months: planName.includes('Child Plan') ? 1 : 12, // Basic plan = 1 month, Premium = 12 months
-          paymentMethod: paymentMethod,
-          amount: paymentAmount,
-          planName: planName
-        }),
+      let paymentAmount = finalAmount;
+      
+      // If promo code is applied, use the apply endpoint to increment usage
+      if (promoApplied) {
+        try {
+          const promoResponse = await api.post('/api/promo-codes/apply', {
+            code: promoCode.trim()
+          });
+
+          if (promoResponse.data.success) {
+            paymentAmount = promoResponse.data.finalPrice;
+          } else {
+            alert(`Promo code error: ${promoResponse.data.error}`);
+            return;
+          }
+        } catch (error) {
+          alert('Failed to apply promo code');
+          return;
+        }
+      }
+
+      // Use the same API endpoint as the add funds functionality
+      const response = await api.post('/api/user/premium/add', {
+        userId: user.userId,
+        amount: paymentAmount,
+        paymentMethod: paymentMethod === 'card' ? 'visa' : 'mobile_money'
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(`Payment successful! Your premium subscription has been activated.`);
+      if (response.data) {
+        alert(`Payment successful! ₦${paymentAmount} has been added to your account.`);
         onClose();
-        // Navigate to login screen after successful purchase
-        navigate('/login');
-      } else {
-        alert(`Payment failed: ${data.message || 'Unknown error'}`);
+        // Optionally refresh the parent component or navigate
+        window.location.reload(); // Simple refresh to update premium status
       }
     } catch (error) {
-      alert('Payment processing failed. Please try again.');
+      let errorMessage = 'Payment processing failed. Please try again.';
+      if (error.response?.data) {
+        errorMessage = error.response.data.message || 
+                      JSON.stringify(error.response.data) || 
+                      errorMessage;
+      }
+      alert(errorMessage);
       console.error('Payment error:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Pay for {planName}</h2>
@@ -185,16 +174,16 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
           <div className="text-lg font-semibold text-center">
             {promoApplied ? (
               <div>
-                <p className="text-sm text-gray-500 line-through">Original: K{amount?.toFixed(2)}</p>
+                <p className="text-sm text-gray-500 line-through">Original: ₦{amount?.toFixed(2)}</p>
                 <p className="text-green-600">
-                  Final Amount: K{finalAmount?.toFixed(2)}
+                  Final Amount: ₦{finalAmount?.toFixed(2)}
                 </p>
                 <p className="text-sm text-green-600">
-                  Saved: K{(amount - finalAmount)?.toFixed(2)} ({promoDiscount}% off)
+                  Saved: ₦{(amount - finalAmount)?.toFixed(2)} ({promoDiscount}% off)
                 </p>
               </div>
             ) : (
-              <p>Amount: K{amount?.toFixed(2)}</p>
+              <p>Amount: ₦{amount?.toFixed(2)}</p>
             )}
           </div>
         </div>
@@ -215,6 +204,7 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
               <button
                 onClick={removePromoCode}
                 className="text-red-500 hover:text-red-700 text-sm"
+                disabled={isProcessing}
               >
                 Remove
               </button>
@@ -226,13 +216,13 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
                 placeholder="Enter promo code"
-                className="flex-1 p-2 border rounded"
-                disabled={promoLoading}
+                className="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={promoLoading || isProcessing}
               />
               <button
                 onClick={validatePromoCode}
-                disabled={promoLoading || !promoCode.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+                disabled={promoLoading || !promoCode.trim() || isProcessing}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 {promoLoading ? 'Checking...' : 'Apply'}
               </button>
@@ -247,20 +237,22 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
         {/* Payment Method Tabs */}
         <div className="flex mb-4 border-b">
           <button
-            className={`py-2 px-4 ${paymentMethod === 'mobile' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
-            onClick={() => setPaymentMethod('mobile')}
+            className={`py-2 px-4 ${paymentMethod === 'mobile_money' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
+            onClick={() => setPaymentMethod('mobile_money')}
+            disabled={isProcessing}
           >
             Mobile Money
           </button>
           <button
-            className={`py-2 px-4 ${paymentMethod === 'card' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
-            onClick={() => setPaymentMethod('card')}
+            className={`py-2 px-4 ${paymentMethod === 'visa' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
+            onClick={() => setPaymentMethod('visa')}
+            disabled={isProcessing}
           >
             Card
           </button>
         </div>
 
-        {paymentMethod === 'mobile' ? (
+        {paymentMethod === 'mobile_money' ? (
           <div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -271,7 +263,8 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                 value={phoneNumber}
                 onChange={handlePhoneNumberChange}
                 placeholder="Enter phone number"
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isProcessing}
               />
             </div>
             {selectedProvider && (
@@ -299,7 +292,8 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                 value={cardNumber}
                 onChange={(e) => setCardNumber(e.target.value)}
                 placeholder="1234 5678 9012 3456"
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isProcessing}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -312,7 +306,8 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
                   placeholder="MM/YY"
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isProcessing}
                 />
               </div>
               <div>
@@ -324,7 +319,8 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                   value={cvv}
                   onChange={(e) => setCvv(e.target.value)}
                   placeholder="123"
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isProcessing}
                 />
               </div>
             </div>
@@ -337,9 +333,17 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
 
         <button
           onClick={handlePayment}
-          className="w-full mt-6 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          disabled={isProcessing}
+          className="w-full mt-6 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
         >
-          Pay K{finalAmount?.toFixed(2)} Now
+          {isProcessing ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Processing...
+            </>
+          ) : (
+            `Pay ₦${finalAmount?.toFixed(2)} Now`
+          )}
         </button>
       </div>
     </div>

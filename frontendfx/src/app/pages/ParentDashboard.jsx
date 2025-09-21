@@ -6,19 +6,21 @@ import {API_URL} from'../../config'
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { 
- 
   Star,
   Receipt,
   CreditCard,
-  Tag
+  Tag,
+  Plus
 } from 'lucide-react';
 import { fetchPremiumPrice } from '../utils/premium';
+import PaymentPopup from '../components/payments/PaymentPopup'; // Import the PaymentPopup component
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
   const user = useRecoilValue(userStates);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);  const [dashboardData, setDashboardData] = useState({
+  const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState({
     recentTests: [],
     completedLessons: 0,
     upcomingTests: [],
@@ -37,11 +39,14 @@ const ParentDashboard = () => {
     deduction: 0,
     expiry: null,
   });
-  const [addAmount, setAddAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('visa'); // 'visa' or 'mobile_money'
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumError, setPremiumError] = useState(null);
   const [premiumPrice, setPremiumPrice] = useState(null);
+
+  // Payment popup state
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentPlan, setPaymentPlan] = useState('');
 
   // Promo code state
   const [promoCode, setPromoCode] = useState('');
@@ -132,7 +137,8 @@ const ParentDashboard = () => {
         recentTests: data.recentTests || [],
         completedLessons: data.completedLessons?.recentLessons?.length || 0,
         totalCompletedLessons: data.stats.totalCompletedLessons || 0,
-        childProgress: data.childProgress || [],        achievements: data.achievements || [],
+        childProgress: data.childProgress || [],
+        achievements: data.achievements || [],
         stats: data.stats || {},
         schoolFees: data.schoolFees || { currentTerm: {}, paymentHistory: [] }
       });
@@ -145,42 +151,7 @@ const ParentDashboard = () => {
   };
 
   // Use user.userId for premium endpoints
-  const userId = user?.userId
-
-  const handleAddFunds = async () => {
-    const amount = parseFloat(addAmount);
-    if (isNaN(amount) || amount <= 0) return;
-    if (!userId) {
-      setPremiumError('User ID is missing or invalid. Please log in again.');
-      return;
-    }
-    setPremiumLoading(true);
-    setPremiumError(null);
-    const payload = {
-      userId, // only send numeric userId
-      amount,
-      paymentMethod
-    };
-    console.log('Add Funds Payload:', payload);
-    try {
-      await api.post('/api/user/premium/add', payload);
-      await fetchPremiumInfo();
-      setAddAmount('');
-    } catch (err) {
-      // Show backend error message if available
-      let errorMsg = 'Failed to add funds.';
-      if (err?.response) {
-        errorMsg =
-          (err.response.data && (err.response.data.message || JSON.stringify(err.response.data))) ||
-          'Failed to add funds.';
-        console.error('API Error Response:', err.response);
-      }
-      setPremiumError(errorMsg);
-      console.error('API Error:', err);
-    } finally {
-      setPremiumLoading(false);
-    }
-  };
+  const userId = user?.userId;
 
   const handleCancelPremium = async () => {
     setPremiumLoading(true);
@@ -192,6 +163,7 @@ const ParentDashboard = () => {
     try {
       await api.post('/api/user/premium/cancel', { userId });
       await fetchPremiumInfo();
+      toast.success('Premium subscription cancelled successfully!');
     } catch (err) {
       setPremiumError('Failed to cancel premium.');
     } finally {
@@ -207,8 +179,9 @@ const ParentDashboard = () => {
       return;
     }
     try {
-      await api.post(`${API_URL}/api/user/premium/upgrade`, { userId, deduction });
+      await api.post(`/api/user/premium/upgrade`, { userId, deduction });
       await fetchPremiumInfo();
+      toast.success('Premium plan upgraded successfully!');
     } catch (err) {
       setPremiumError('Failed to upgrade premium.');
     } finally {
@@ -227,7 +200,7 @@ const ParentDashboard = () => {
     setPromoSuccess(null);
 
     try {
-      const response = await api.post(`${API_URL}/api/promo-codes/validate`, {
+      const response = await api.post('/api/promo-codes/validate', {
         code: promoCode
       });
       
@@ -254,12 +227,12 @@ const ParentDashboard = () => {
     setPromoSuccess(null);
 
     try {
-      const response = await api.post(`${process.env.REACT_APP_API_URL}/api/promo-codes/apply`, {
+      const response = await api.post('/api/promo-codes/apply', {
         code: promoCode
       });
       
       if (response.data.success) {
-        setPromoSuccess(`Promo code applied! ${response.data.discount}% discount (₦${response.data.discountAmount} saved)`);
+        setPromoSuccess(`Promo code applied! ${response.data.discount}% discount (ZMK${response.data.discountAmount} saved)`);
         // Update premium price to reflect the discount
         setPremiumPrice(response.data.finalPrice);
         // Clear the promo code input
@@ -275,6 +248,26 @@ const ParentDashboard = () => {
     } finally {
       setPromoLoading(false);
     }
+  };
+
+  // Handle opening payment popup
+  const handleAddFunds = (amount = null, planName = 'Add Funds') => {
+    if (amount) {
+      setPaymentAmount(amount);
+    } else {
+      setPaymentAmount(premiumPrice || 1000);
+    }
+    setPaymentPlan(planName);
+    setShowPaymentPopup(true);
+  };
+
+  // Handle closing payment popup and refreshing data
+  const handlePaymentPopupClose = () => {
+    setShowPaymentPopup(false);
+    setPaymentAmount(0);
+    setPaymentPlan('');
+    // Refresh premium info after payment
+    fetchPremiumInfo();
   };
 
   const StatCard = ({ icon: Icon, title, value, color }) => (
@@ -327,68 +320,15 @@ const ParentDashboard = () => {
         </p>
       </div>
 
-      {/* Stats Grid */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">        <StatCard
-          icon={BookOpen}
-          title="Completed Lessons"
-          value={dashboardData.totalCompletedLessons}
-          color="bg-[#58cc02]"
-        />
-        <StatCard
-          icon={GraduationCap}
-          title="Test Score Average"
-          value="85%"
-          color="bg-[#1cb0f6]"
-        />
-        <StatCard
-          icon={Trophy}
-          title="Achievements"
-          value={dashboardData.achievements.length}
-          color="bg-[#ffc800]"
-        />
-        <StatCard
-          icon={Clock}
-          title="Learning Hours"
-          value="12.5"
-          color="bg-[#ff4b4b]"
-        />
-      </div> */}
-
-      {/* Recent Activity & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Tests */}
-        {/* <div className="bg-white rounded-2xl p-6 border border-[#e5f5d5]">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-[#3c9202]">Recent Tests</h2>
-            <button 
-              onClick={() => navigate('/app/tests')}
-              className="text-[#58cc02] hover:text-[#47b102] font-bold"
-            >
-              View All
-            </button>
-          </div>
-          <div className="space-y-4">
-            {dashboardData.recentTests.map((test) => (
-              <div key={test.id} className="flex items-center justify-between p-4 bg-[#f7ffec] rounded-xl">
-                <div>
-                  <h3 className="font-bold text-[#3c9202]">{test.title}</h3>
-                  <p className="text-sm text-[#58cc02]">{test.subject}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-[#3c9202]">{test.score}%</p>
-                  <p className="text-sm text-[#58cc02]">{new Date(test.date).toLocaleDateString()}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div> */}
-
-        
+       
       </div>
-      {/* School subscrition section */}
+
+      {/* School subscription section */}
       <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-[#3c9202]">learning Fees</h2>          <button 
+          <h2 className="text-xl font-bold text-[#3c9202]">Learning Fees</h2>
+          <button 
             onClick={() => navigate('/app/premium')}
             className="flex items-center gap-2 bg-[#58cc02] hover:bg-[#47b102] text-white px-4 py-2 rounded-xl
               transition-colors duration-200 border-b-2 border-[#3c9202]"
@@ -397,8 +337,6 @@ const ParentDashboard = () => {
             <span>Make Payment</span>
           </button>
         </div>
-
-        
 
         {/* Payment History */}
         <div>
@@ -421,11 +359,10 @@ const ParentDashboard = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-[#3c9202]">
-                    ₦{payment.amount.toLocaleString()}
+                    ZMK{payment.amount.toLocaleString()}
                   </p>
                   <p className="text-sm text-[#58cc02]">
                     {new Date(payment.datePaid).toLocaleDateString()}
-
                   </p>
                 </div>
               </div>
@@ -437,16 +374,15 @@ const ParentDashboard = () => {
       {/* Achievements Section */}
       <div className="mt-8 bg-white rounded-2xl p-6 border border-[#e5f5d5]">
         <h2 className="text-xl font-bold text-[#3c9202] mb-4">Recent Achievements</h2>
-          {dashboardData.achievements.map((achievement) => (
-            <div key={achievement.id} className="flex items-center p-4 bg-[#f7ffec] rounded-xl">
-              <Star className="w-8 h-8 text-[#ffc800] mr-3" />
-              <div>
-                <h3 className="font-bold text-[#3c9202]">{achievement.title}</h3>
-                <p className="text-sm text-[#58cc02]">{achievement.description}</p>
-              </div>
+        {dashboardData.achievements.map((achievement) => (
+          <div key={achievement.id} className="flex items-center p-4 bg-[#f7ffec] rounded-xl">
+            <Star className="w-8 h-8 text-[#ffc800] mr-3" />
+            <div>
+              <h3 className="font-bold text-[#3c9202]">{achievement.title}</h3>
+              <p className="text-sm text-[#58cc02]">{achievement.description}</p>
             </div>
-          ))}
-        {/* </div> */}
+          </div>
+        ))}
       </div>
 
       {/* Premium Section */}
@@ -467,40 +403,87 @@ const ParentDashboard = () => {
         ) : premiumError ? (
           <div className="text-red-600 mb-2">
             {premiumError}
-            <br />
-            <span className="text-xs break-all">Payload: {JSON.stringify({ userId, amount: parseFloat(addAmount), paymentMethod })}</span>
           </div>
         ) : (
           <>
-            <p>Status: <span className={premium.isActive ? "text-green-600" : "text-red-600"}>{premium.isActive ? "Active" : "Inactive"}</span></p>
-            <p>Balance: <span className="font-bold">₦{premium.balance}</span></p>
-            <p>Monthly Deduction: <span className="font-bold">₦{premiumPrice !== null ? premiumPrice : premium.deduction}</span></p>
-            <p>Expiry Date: <span className="font-bold">{premium.expiry || "N/A"}</span></p>
-            <div className="flex gap-2 mt-4 items-center">
-              <input
-                type="number"
-                placeholder="Add funds"
-                value={addAmount}
-                onChange={e => setAddAmount(e.target.value)}
-                className="border rounded px-2 py-1"
-              />
-              <select
-                value={paymentMethod}
-                onChange={e => setPaymentMethod(e.target.value)}
-                className="border rounded px-2 py-1"
-              >
-                <option value="visa">Visa</option>
-                <option value="mobile_money">Mobile Money</option>
-              </select>
-              <button onClick={handleAddFunds} className="bg-[#58cc02] text-white px-4 py-1 rounded" disabled={premiumLoading}>Add</button>
-              <button onClick={handleCancelPremium} className="bg-red-500 text-white px-4 py-1 rounded" disabled={premiumLoading}>Cancel</button>
-              <button onClick={() => handleUpgradePremium(1000)} className="bg-blue-500 text-white px-4 py-1 rounded" disabled={premiumLoading}>Upgrade plan(₦1000/mo)</button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Status:</span>
+                  <span className={`font-bold ${premium.isActive ? "text-green-600" : "text-red-600"}`}>
+                    {premium.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Balance:</span>
+                  <span className="font-bold text-[#3c9202]">ZMK{premium.balance?.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Monthly Deduction:</span>
+                  <span className="font-bold text-[#3c9202]">
+                    ZMK{(premiumPrice !== null ? premiumPrice : premium.deduction)?.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Expiry Date:</span>
+                  <span className="font-bold text-[#3c9202]">
+                    {premium.expiry ? new Date(premium.expiry).toLocaleDateString() : "N/A"}
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="mt-2 text-sm text-gray-600">Payment Method: <b>{paymentMethod === 'visa' ? 'Visa' : 'Mobile Money'}</b></p>
-            {premium.deduction > 0 && (
-              <p className="mt-2 text-sm text-gray-600">
-                Your balance will last for <b>{Math.floor(premium.balance / premium.deduction)}</b> month(s).
-              </p>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 mb-6">
+              <button 
+                onClick={() => handleAddFunds(premiumPrice || 1000, 'Premium Monthly Plan')}
+                className="flex items-center gap-2 bg-[#58cc02] hover:bg-[#47b102] text-white px-4 py-2 rounded-lg
+                  transition-colors duration-200 border-b-2 border-[#3c9202]"
+                disabled={premiumLoading}
+              >
+                <Plus className="w-4 h-4" />
+                Add Funds
+              </button>
+              
+              <button 
+                onClick={() => handleAddFunds(5000, 'Premium 5-Month Plan')}
+                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg
+                  transition-colors duration-200"
+                disabled={premiumLoading}
+              >
+                <CreditCard className="w-4 h-4" />
+                5-Month Plan (ZMK5,000)
+              </button>
+
+              <button 
+                onClick={() => handleUpgradePremium(1000)} 
+                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors duration-200" 
+                disabled={premiumLoading}
+              >
+                Upgrade Plan (ZMK1000/mo)
+              </button>
+              
+              <button 
+                onClick={handleCancelPremium} 
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200" 
+                disabled={premiumLoading}
+              >
+                Cancel Premium
+              </button>
+            </div>
+
+            {premium.deduction > 0 && premium.balance > 0 && (
+              <div className="bg-[#f7ffec] rounded-lg p-4 mb-4">
+                <p className="text-sm text-[#3c9202]">
+                  <span className="font-semibold">Duration:</span> Your current balance will last for{' '}
+                  <span className="font-bold text-[#58cc02]">
+                    {Math.floor(premium.balance / premium.deduction)}
+                  </span>{' '}
+                  month(s) at the current deduction rate.
+                </p>
+              </div>
             )}
 
             {/* Promo Code Section */}
@@ -551,6 +534,14 @@ const ParentDashboard = () => {
           </>
         )}
       </div>
+
+      {/* Payment Popup */}
+      <PaymentPopup
+        isOpen={showPaymentPopup}
+        onClose={handlePaymentPopupClose}
+        amount={paymentAmount}
+        planName={paymentPlan}
+      />
     </div>
   );
 };
