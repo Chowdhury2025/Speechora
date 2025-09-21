@@ -34,7 +34,7 @@ class BackendUploadService {
 
   async deleteFile(url) {
     try {
-      const response = await axios.delete(`${this.API_URL}/api/upload/delete`, {
+      const response = await axios.delete(`${API_URL}/api/upload/delete`, {
         data: { url }
       });
 
