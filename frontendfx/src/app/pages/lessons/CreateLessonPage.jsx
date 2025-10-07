@@ -24,7 +24,7 @@ export default function CreateLesson() {
   
   const [lessonData, setLessonData] = useState({
     title: '',
-    description: '',
+    description: 'Default lesson description',
     subject: '',
     ageGroup: '',
     contentType: 'text',
@@ -230,9 +230,9 @@ export default function CreateLesson() {
                 <option value="what_questions">What Questions</option>
                 <option value="where_questions">Where Questions</option>
                 <option value="who_questions">Who Questions</option>
-                <option value="when_questions">When Questions</option>
+                {/* <option value="when_questions">When Questions</option> */}
                 <option value="why_questions">Why Questions</option>
-                <option value="Choice_Questions">Choice Questions</option>
+                {/* <option value="Choice_Questions">Choice Questions</option> */}
               </select>
             </div>
 
@@ -254,17 +254,7 @@ export default function CreateLesson() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-bold text-slate-600 mb-1">
-              Description
-            </label>
-            <textarea
-              value={lessonData.description}
-              onChange={handleInputChange('description')}
-              rows={3}
-              className="w-full rounded-xl border-2 border-slate-200 p-3 focus:border-green-500 focus:outline-none"
-            />
-          </div>
+          {/* Description field removed from UI, default value is set in state */}
         </div>
 
         {/* Content Section */}

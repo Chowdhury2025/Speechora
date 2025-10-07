@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export const createPresentation3Item = async (req: Request, res: Response) => {
   try {
-    const { subject, imageUrl, imageName, description, ageGroup, userId } = req.body;
+    const { subject, imageUrl1, imageUrl2, imageName1, imageName2, description, ageGroup, userId } = req.body;
 
     if (!userId) {
       return res.status(400).json({ error: "userId is required" });
@@ -14,8 +14,10 @@ export const createPresentation3Item = async (req: Request, res: Response) => {
     const newItem = await prisma.presentation3.create({
       data: {
         subject,
-        imageUrl,
-        imageName,
+        imageUrl1,
+        imageUrl2,
+        imageName1,
+        imageName2,
         description,
         ageGroup,
         userId,
@@ -46,14 +48,16 @@ export const getAllPresentation3Items = async (_req: Request, res: Response) => 
 export const updatePresentation3Item = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { subject, imageUrl, imageName, description, ageGroup } = req.body;
+    const { subject, imageUrl1, imageUrl2, imageName1, imageName2, description, ageGroup } = req.body;
 
     const updatedItem = await prisma.presentation3.update({
       where: { id: parseInt(id) },
       data: {
         subject,
-        imageUrl,
-        imageName,
+        imageUrl1,
+        imageUrl2,
+        imageName1,
+        imageName2,
         description,
         ageGroup,
       },

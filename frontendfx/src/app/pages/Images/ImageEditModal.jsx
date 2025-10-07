@@ -516,7 +516,7 @@ const ImageEditModal = ({
             {/* Author Name */}
             <div>
               <label className="block text-sm font-bold text-[#3C3C3C] mb-2">
-               Teacher's Name
+               uploaded by
               </label>
               <input
                 type="text"

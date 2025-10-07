@@ -150,8 +150,10 @@ model QuizImage {
 model Presentation3 {
   id          Int       @id @default(autoincrement())
   subject     String
-  imageUrl    String
-  imageName   String
+  imageUrl1   String
+  imageUrl2   String
+  imageName1  String
+  imageName2  String
   description String
   ageGroup    String
   userId      Int

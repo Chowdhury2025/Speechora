@@ -16,29 +16,37 @@ const Presentation3Form = () => {
   const user = useRecoilValue(userStates);
   const [formData, setFormData] = useState({
     subject: '',
-    imageUrl: '',
-    imageName: '',
-    description: '',
+    imageUrl1: '',
+    imageUrl2: '',
+    imageName1: '',
+    imageName2: '',
+    description: 'Default presentation description',
     ageGroup: ''
   });
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile1, setSelectedFile1] = useState(null);
+  const [selectedFile2, setSelectedFile2] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setIsUploading(true);
-      let imageUrl = formData.imageUrl;
-      
-      if (selectedFile) {
-        // Upload file to R2
-        imageUrl = await uploadService.uploadFile(selectedFile, 'presentation3');
+      let imageUrl1 = formData.imageUrl1;
+      let imageUrl2 = formData.imageUrl2;
+
+      if (selectedFile1) {
+        imageUrl1 = await uploadService.uploadFile(selectedFile1, 'presentation3');
+      }
+      if (selectedFile2) {
+        imageUrl2 = await uploadService.uploadFile(selectedFile2, 'presentation3');
       }
 
       const response = await axios.post(`${API_URL}/api/presentation3`, {
         ...formData,
-        imageUrl,
-        imageName: formData.imageName || selectedFile?.name || '',
+        imageUrl1,
+        imageUrl2,
+        imageName1: formData.imageName1 || selectedFile1?.name || '',
+        imageName2: formData.imageName2 || selectedFile2?.name || '',
         userId: user?.userId
       });
 
@@ -90,62 +98,63 @@ const Presentation3Form = () => {
           </div>
 
           <div>
-            <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-              Image
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Image 1
             </label>
             <input
               type="file"
-              id="image"
+              id="image1"
               accept="image/jpeg,image/png,image/gif"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
+              onChange={(e) => setSelectedFile1(e.target.files[0])}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent"
             />
             <p className="mt-1 text-sm text-gray-500">
-              Upload an image (JPEG, PNG, or GIF, max 5MB)
+              Upload first image (JPEG, PNG, or GIF, max 5MB)
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Image 2
+            </label>
+            <input
+              type="file"
+              id="image2"
+              accept="image/jpeg,image/png,image/gif"
+              onChange={(e) => setSelectedFile2(e.target.files[0])}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent"
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Upload second image (JPEG, PNG, or GIF, max 5MB)
             </p>
           </div>
 
-          <div>
-            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
-              Or Image URL (optional)
-            </label>
-            <input
-              type="text"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent"
-              placeholder="Enter image URL if not uploading a file"
-            />
-          </div>
+        
 
           <div>
-            <label htmlFor="imageName" className="block text-sm font-medium text-gray-700 mb-1">
-              Image Name (optional)
+            <label htmlFor="imageName1" className="block text-sm font-medium text-gray-700 mb-1">
+              Image 1 Name (optional)
             </label>
             <input
               type="text"
-              id="imageName"
-              name="imageName"
-              value={formData.imageName}
+              id="imageName1"
+              name="imageName1"
+              value={formData.imageName1}
               onChange={handleChange}
               placeholder="Will use file name if not provided"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent"
             />
           </div>
-
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-              Description
+            <label htmlFor="imageName2" className="block text-sm font-medium text-gray-700 mb-1">
+              Image 2 Name (optional)
             </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
+            <input
+              type="text"
+              id="imageName2"
+              name="imageName2"
+              value={formData.imageName2}
               onChange={handleChange}
-              required
-              rows={4}
+              placeholder="Will use file name if not provided"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent"
             />
           </div>
@@ -174,9 +183,9 @@ const Presentation3Form = () => {
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
-              disabled={isUploading || (!selectedFile && !formData.imageUrl)}
+              disabled={isUploading || (!selectedFile1 && !formData.imageUrl1) || (!selectedFile2 && !formData.imageUrl2)}
               className={`flex-1 ${
-                isUploading || (!selectedFile && !formData.imageUrl)
+                isUploading || (!selectedFile1 && !formData.imageUrl1) || (!selectedFile2 && !formData.imageUrl2)
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-[#58cc02] hover:bg-[#47b102] border-[#3c9202] hover:border-[#2e7502]'
               } text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2`}

@@ -21,7 +21,7 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
     subject: '',
     imageUrl: '',
     imageName: '',
-    description: '',
+    description: 'Default presentation description',
     ageGroup: ''
   });
   const [loading, setLoading] = useState(false);
@@ -30,13 +30,19 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
 
   useEffect(() => {
     if (open && itemData) {
-      setFormData(itemData);
+      setFormData({
+        ...itemData,
+        description: itemData.description || 'Default presentation description',
+      });
       setLoading(false);
     } else if (open && itemId) {
       setLoading(true);
       axios.get(`${API_URL}/api/presentation3/${itemId}`)
         .then(res => {
-          setFormData(res.data);
+          setFormData({
+            ...res.data,
+            description: res.data.description || 'Default presentation description',
+          });
           setLoading(false);
         })
         .catch((error) => {
@@ -104,10 +110,7 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
               ))}
             </select>
           </div>
-          <div>
-            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-            <input type="text" id="imageUrl" name="imageUrl" value={formData.imageUrl} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent" />
-          </div>
+        
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Image Preview</label>
             {formData.imageUrl && (
@@ -120,10 +123,7 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
             <label htmlFor="imageName" className="block text-sm font-medium text-gray-700 mb-1">Image Name</label>
             <input type="text" id="imageName" name="imageName" value={formData.imageName} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent" />
           </div>
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea id="description" name="description" value={formData.description} onChange={handleChange} required rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent" />
-          </div>
+          {/* Description field removed, value is set in formData by default and not shown to user */}
           <div>
             <label htmlFor="ageGroup" className="block text-sm font-medium text-gray-700 mb-1">Age Group</label>
             <select id="ageGroup" name="ageGroup" value={formData.ageGroup} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent">
