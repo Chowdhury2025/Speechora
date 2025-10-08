@@ -19,14 +19,17 @@ const subjectOptions = [
 const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) => {
   const [formData, setFormData] = useState({
     subject: '',
-    imageUrl: '',
-    imageName: '',
+    imageUrl1: '',
+    imageUrl2: '',
+    imageName1: '',
+    imageName2: '',
     description: 'Default presentation description',
     ageGroup: ''
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading1, setUploading1] = useState(false);
+  const [uploading2, setUploading2] = useState(false);
 
   useEffect(() => {
     if (open && itemData) {
@@ -46,31 +49,55 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
           setLoading(false);
         })
         .catch((error) => {
-          alert('Failed to load item');
+          console.error('Failed to load item:', error);
+          alert('Failed to load item: ' + (error.response?.data?.error || error.message));
           setLoading(false);
+          onClose(); // Close modal on error
         });
     }
-  }, [open, itemId, itemData]);
+  }, [open, itemId, itemData, onClose]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, imageNumber) => {
     const file = e.target.files[0];
     if (!file) return;
+    
+    const setUploading = imageNumber === 1 ? setUploading1 : setUploading2;
     setUploading(true);
+    
     try {
       // Validate and upload
       uploadService.validateFile(file);
       const newUrl = await uploadService.uploadFile(file);
+      
       // Delete old image if exists and is from cloud storage
-      if (formData.imageUrl && formData.imageUrl.includes('r2.dev')) {
-        await uploadService.deleteFile(formData.imageUrl);
+      const oldImageUrl = imageNumber === 1 ? formData.imageUrl1 : formData.imageUrl2;
+      if (oldImageUrl && (oldImageUrl.includes('r2.dev') || oldImageUrl.includes('cloudflare'))) {
+        try {
+          await uploadService.deleteFile(oldImageUrl);
+        } catch (deleteErr) {
+          console.warn('Failed to delete old image:', deleteErr);
+          // Don't block the upload process if delete fails
+        }
       }
-      setFormData({ ...formData, imageUrl: newUrl, imageName: file.name });
+      
+      // Update form data based on image number
+      const updateData = {};
+      if (imageNumber === 1) {
+        updateData.imageUrl1 = newUrl;
+        updateData.imageName1 = file.name;
+      } else {
+        updateData.imageUrl2 = newUrl;
+        updateData.imageName2 = file.name;
+      }
+      
+      setFormData({ ...formData, ...updateData });
     } catch (err) {
-      alert('Image upload failed: ' + err.message);
+      console.error('Image upload error:', err);
+      alert('Image upload failed: ' + (err.message || 'Unknown error'));
     } finally {
       setUploading(false);
     }
@@ -84,7 +111,8 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
       if (onSaved) onSaved();
       onClose();
     } catch (err) {
-      alert('Failed to update item');
+      console.error('Failed to update item:', err);
+      alert('Failed to update item: ' + (err.response?.data?.error || err.message));
     } finally {
       setSaving(false);
     }
@@ -112,16 +140,57 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
           </div>
         
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image Preview</label>
-            {formData.imageUrl && (
-              <img src={formData.imageUrl} alt="Current" className="h-24 mb-2 rounded" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">First Image</label>
+            {formData.imageUrl1 && (
+              <img src={formData.imageUrl1} alt="First Image" className="h-24 mb-2 rounded" />
             )}
-            <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="mb-2" />
-            {uploading && <div className="text-xs text-gray-500">Uploading...</div>}
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => handleImageUpload(e, 1)} 
+              disabled={uploading1} 
+              className="mb-2" 
+            />
+            {uploading1 && <div className="text-xs text-gray-500">Uploading first image...</div>}
           </div>
+          
           <div>
-            <label htmlFor="imageName" className="block text-sm font-medium text-gray-700 mb-1">Image Name</label>
-            <input type="text" id="imageName" name="imageName" value={formData.imageName} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent" />
+            <label htmlFor="imageName1" className="block text-sm font-medium text-gray-700 mb-1">First Image Name</label>
+            <input 
+              type="text" 
+              id="imageName1" 
+              name="imageName1" 
+              value={formData.imageName1} 
+              onChange={handleChange} 
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent" 
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Second Image</label>
+            {formData.imageUrl2 && (
+              <img src={formData.imageUrl2} alt="Second Image" className="h-24 mb-2 rounded" />
+            )}
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => handleImageUpload(e, 2)} 
+              disabled={uploading2} 
+              className="mb-2" 
+            />
+            {uploading2 && <div className="text-xs text-gray-500">Uploading second image...</div>}
+          </div>
+          
+          <div>
+            <label htmlFor="imageName2" className="block text-sm font-medium text-gray-700 mb-1">Second Image Name</label>
+            <input 
+              type="text" 
+              id="imageName2" 
+              name="imageName2" 
+              value={formData.imageName2} 
+              onChange={handleChange} 
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#58cc02] focus:border-transparent" 
+            />
           </div>
           {/* Description field removed, value is set in formData by default and not shown to user */}
           <div>
@@ -134,8 +203,8 @@ const Presentation3EditModal = ({ open, onClose, itemId, itemData, onSaved }) =>
             </select>
           </div>
           <div className="flex gap-4 pt-4">
-            <button type="submit" disabled={saving} className={`flex-1 ${saving ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#58cc02] hover:bg-[#47b102] border-[#3c9202] hover:border-[#2e7502]'} text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2`}>
-              {saving ? 'Saving...' : 'Save Changes'}
+            <button type="submit" disabled={saving || uploading1 || uploading2} className={`flex-1 ${saving || uploading1 || uploading2 ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#58cc02] hover:bg-[#47b102] border-[#3c9202] hover:border-[#2e7502]'} text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2`}>
+              {saving ? 'Saving...' : uploading1 || uploading2 ? 'Uploading...' : 'Save Changes'}
             </button>
             <button type="button" onClick={onClose} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-6 rounded-xl transition-colors duration-200 border-b-2 border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
               Cancel

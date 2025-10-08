@@ -45,6 +45,24 @@ export const getAllPresentation3Items = async (_req: Request, res: Response) => 
   }
 };
 
+export const getPresentation3ItemById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const item = await prisma.presentation3.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!item) {
+      return res.status(404).json({ error: "Presentation3 item not found" });
+    }
+
+    res.json(item);
+  } catch (error) {
+    console.error("Error fetching Presentation3 item:", error);
+    res.status(500).json({ error: "Failed to fetch Presentation3 item" });
+  }
+};
+
 export const updatePresentation3Item = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
