@@ -709,80 +709,7 @@ export const deleteUserController = async (req: Request, res: Response) => {
 // --- Premium APIs ---
 
 // Get premium info
-export const getPremiumInfo = async (req: Request, res: Response) => {
-  const userId = Number(req.body.userId || req.query.userId);
-  if (!userId) return res.status(400).json({ message: "Missing userId" });
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return res.status(404).json({ message: "User not found" });
-  res.json({
-    isActive: user.premiumActive,
-    balance: user.premiumBalance,
-    deduction: user.premiumDeduction,
-    expiry: user.premiumExpiry,
-  });
-};
-
-// Add funds to premium balance
-export const addPremiumFunds = async (req: Request, res: Response) => {
-  const userId = Number(req.body.userId);
-  const { amount } = req.body;
-  if (!userId) return res.status(400).json({ message: "Missing userId" });
-  if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
-  const user = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      premiumBalance: { increment: amount },
-      premiumActive: true,
-    },
-  });
-  // Return full premium info for frontend consistency
-  res.json({
-    premiumActive: user.premiumActive,
-    premiumBalance: user.premiumBalance,
-    premiumDeduction: user.premiumDeduction,
-    premiumExpiry: user.premiumExpiry,
-  });
-};
-
-// Cancel premium
-export const cancelPremium = async (req: Request, res: Response) => {
-  const userId = Number(req.body.userId);
-  if (!userId) return res.status(400).json({ message: "Missing userId" });
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      premiumActive: false,
-      premiumBalance: 0,
-      premiumExpiry: null,
-    },
-  });
-  res.json({ message: "Premium cancelled" });
-};
-
-// Upgrade/set deduction
-export const upgradePremium = async (req: Request, res: Response) => {
-  const userId = Number(req.body.userId);
-  const { deduction } = req.body;
-  if (!userId) return res.status(400).json({ message: "Missing userId" });
-  if (!deduction || deduction <= 0) return res.status(400).json({ message: "Invalid deduction" });
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return res.status(404).json({ message: "User not found" });
-  const months = Math.floor(user.premiumBalance / deduction);
-  let expiry = null;
-  if (months > 0) {
-    expiry = new Date();
-    expiry.setMonth(expiry.getMonth() + months);
-  }
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      premiumActive: true,
-      premiumDeduction: deduction,
-      premiumExpiry: expiry,
-    },
-  });
-  res.json({ message: "Premium upgraded", expiry });
-};
+// 
 
 // Send premium-related email
 export const sendPremiumEmail = async (req: Request, res: Response) => {
@@ -928,5 +855,224 @@ export const purchasePremiumController = async (req: Request, res: Response) => 
     res.json({ message: 'Premium activated', expiry: newExpiry });
   } catch (error) {
     res.status(500).json({ message: 'Failed to purchase premium', error: (error as any)?.message || String(error) });
+  }
+};
+
+// Premium management functions
+export const getPremiumInfo = async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: Number(userId) }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get system-wide premium price
+    const systemSettings = await prisma.systemSettings.findFirst();
+    const systemPrice = parseFloat(systemSettings?.premiumPricing || "1000");
+
+    // Get active promo code if any
+    const activePromoCode = await prisma.promoCode.findFirst({
+      where: {
+        usedBy: {
+          some: {
+            userId: user.id
+          }
+        },
+        isActive: true,
+        OR: [
+          { validUntil: null },
+          { validUntil: { gt: new Date() } }
+        ]
+      },
+      orderBy: {
+        discount: 'desc'
+      }
+    });
+
+    // Calculate final price after discount
+    const discount = activePromoCode ? (systemPrice * activePromoCode.discount / 100) : 0;
+    const finalDeduction = systemPrice - discount;
+
+    const premiumInfo = {
+      isActive: user.premiumActive || false,
+      balance: user.premiumBalance || 0,
+      deduction: finalDeduction,
+      systemPrice: systemPrice,
+      appliedDiscount: discount,
+      expiry: user.premiumExpiry || null
+    };
+
+    res.json(premiumInfo);
+  } catch (error) {
+    console.error('Error fetching premium info:', error);
+    res.status(500).json({ message: 'Failed to fetch premium info' });
+  }
+};
+
+export const addPremiumFunds = async (req: Request, res: Response) => {
+  try {
+    const { userId, amount } = req.body;
+    if (!userId || !amount) {
+      return res.status(400).json({ message: 'User ID and amount are required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: Number(userId) }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const currentBalance = user.premiumBalance || 0;
+    const newBalance = currentBalance + Number(amount);
+
+    await prisma.user.update({
+      where: { id: Number(userId) },
+      data: {
+        premiumBalance: newBalance,
+        premiumActive: true,
+        premiumDeduction: user.premiumDeduction || 1000 // Set default if not exists
+      }
+    });
+
+    res.json({ 
+      message: 'Funds added successfully',
+      newBalance: newBalance 
+    });
+  } catch (error) {
+    console.error('Error adding premium funds:', error);
+    res.status(500).json({ message: 'Failed to add funds' });
+  }
+};
+
+export const cancelPremium = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    await prisma.user.update({
+      where: { id: Number(userId) },
+      data: {
+        premiumActive: false,
+        premiumExpiry: null
+      }
+    });
+
+    res.json({ message: 'Premium cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling premium:', error);
+    res.status(500).json({ message: 'Failed to cancel premium' });
+  }
+};
+
+export const upgradePremium = async (req: Request, res: Response) => {
+  try {
+    const { userId, promoCode } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    // Get system price
+    const systemSettings = await prisma.systemSettings.findFirst();
+    if (!systemSettings) {
+      return res.status(500).json({ message: 'System settings not found' });
+    }
+    const systemPrice = parseFloat(systemSettings.premiumPricing);
+
+    let finalPrice = systemPrice;
+    let appliedPromoCode = null;
+
+    // If promo code provided, validate and apply it
+    if (promoCode) {
+      const promoCodeRecord = await prisma.promoCode.findUnique({
+        where: { code: promoCode }
+      });
+
+      if (!promoCodeRecord) {
+        return res.status(400).json({ message: 'Invalid promo code' });
+      }
+
+      if (!promoCodeRecord.isActive) {
+        return res.status(400).json({ message: 'Promo code is inactive' });
+      }
+
+      if (promoCodeRecord.validUntil && promoCodeRecord.validUntil < new Date()) {
+        return res.status(400).json({ message: 'Promo code has expired' });
+      }
+
+      if (promoCodeRecord.usedCount >= promoCodeRecord.maxUses) {
+        return res.status(400).json({ message: 'Promo code has reached maximum uses' });
+      }
+
+      // Check if user has already used this promo code
+      const existingUse = await prisma.usedPromoCode.findUnique({
+        where: {
+          promoCodeId_userId: {
+            promoCodeId: promoCodeRecord.id,
+            userId: Number(userId)
+          }
+        }
+      });
+
+      if (existingUse) {
+        return res.status(400).json({ message: 'You have already used this promo code' });
+      }
+
+      // Calculate discounted price
+      const discount = (systemPrice * promoCodeRecord.discount) / 100;
+      finalPrice = systemPrice - discount;
+
+      // Record promo code usage
+      await prisma.usedPromoCode.create({
+        data: {
+          promoCodeId: promoCodeRecord.id,
+          userId: Number(userId),
+          amountSaved: discount
+        }
+      });
+
+      // Update promo code usage count
+      await prisma.promoCode.update({
+        where: { id: promoCodeRecord.id },
+        data: { usedCount: { increment: 1 } }
+      });
+
+      appliedPromoCode = promoCodeRecord;
+    }
+
+    // Update user's premium status
+    await prisma.user.update({
+      where: { id: Number(userId) },
+      data: {
+        premiumActive: true,
+        // Set expiry to one month from now
+        premiumExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.json({ 
+      message: 'Premium plan upgraded successfully',
+      systemPrice,
+      finalPrice,
+      appliedDiscount: appliedPromoCode ? (systemPrice * appliedPromoCode.discount) / 100 : 0,
+      promoCode: appliedPromoCode ? {
+        code: appliedPromoCode.code,
+        discount: appliedPromoCode.discount
+      } : null
+    });
+  } catch (error) {
+    console.error('Error upgrading premium:', error);
+    res.status(500).json({ message: 'Failed to upgrade premium' });
   }
 };

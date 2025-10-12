@@ -46,3 +46,94 @@ export const setPremiumPricing = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error', error: err });
   }
 };
+
+// GET all system settings
+export const getSystemSettings = async (_req: Request, res: Response) => {
+  try {
+    let settings = await prisma.systemSettings.findFirst();
+    if (!settings) {
+      // Create default settings if none exist
+      settings = await prisma.systemSettings.create({
+        data: {
+          companyName: 'Book8 Learning Platform',
+          adminEmail: 'admin@book8.com',
+          notificationEmail: 'notifications@book8.com',
+          premiumPricing: '1000', // Default monthly premium price
+        },
+      });
+    }
+    
+    // Return settings in the format expected by frontend
+    res.json({
+      businessName: settings.companyName,
+      adminEmail: settings.adminEmail,
+      supportEmail: settings.adminEmail, // Using adminEmail as supportEmail
+      notificationEmail: settings.notificationEmail,
+      premiumPricing: settings.premiumPricing,
+      bossId: null, // This would need to be added to schema if needed
+      contact: '', // This would need to be added to schema if needed
+      tpn: '', // This would need to be added to schema if needed
+      address: '', // This would need to be added to schema if needed
+      Terms_and_conditions: '', // This would need to be added to schema if needed
+      autoLogoutTime: 30, // This would need to be added to schema if needed
+    });
+  } catch (err) {
+    console.error('Error fetching system settings:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+};
+
+// UPDATE system settings
+export const updateSystemSettings = async (req: Request, res: Response) => {
+  try {
+    const {
+      businessName,
+      adminEmail,
+      notificationEmail,
+      premiumPricing,
+    } = req.body;
+
+    let settings = await prisma.systemSettings.findFirst();
+    
+    if (!settings) {
+      // Create new settings if none exist
+      settings = await prisma.systemSettings.create({
+        data: {
+          companyName: businessName || 'Book8 Learning Platform',
+          adminEmail: adminEmail || 'admin@book8.com',
+          notificationEmail: notificationEmail || 'notifications@book8.com',
+          premiumPricing: premiumPricing || '1000',
+        },
+      });
+    } else {
+      // Update existing settings
+      settings = await prisma.systemSettings.update({
+        where: { id: settings.id },
+        data: {
+          companyName: businessName,
+          adminEmail: adminEmail,
+          notificationEmail: notificationEmail,
+          premiumPricing: premiumPricing,
+        },
+      });
+    }
+
+    // Return updated settings in the format expected by frontend
+    res.json({
+      businessName: settings.companyName,
+      adminEmail: settings.adminEmail,
+      supportEmail: settings.adminEmail,
+      notificationEmail: settings.notificationEmail,
+      premiumPricing: settings.premiumPricing,
+      bossId: null,
+      contact: '',
+      tpn: '',
+      address: '',
+      Terms_and_conditions: '',
+      autoLogoutTime: 30,
+    });
+  } catch (err) {
+    console.error('Error updating system settings:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+};

@@ -17,7 +17,8 @@ const SystemSettings = () => {
     contact: "",
     tpn: "",
     address: "",
-    Terms_and_conditions: ""
+    Terms_and_conditions: "",
+    premiumPricing: "50"
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -161,6 +162,25 @@ const SystemSettings = () => {
               onChange={handleChange}
               className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-[#3C3C3C] mb-2">
+              Monthly Premium Price (ZMK)
+            </label>
+            <input
+              type="number"
+              name="premiumPricing"
+              value={settings.premiumPricing || "50"}
+              onChange={handleChange}
+              min="0"
+              step="1"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
+              placeholder="Enter monthly premium price"
+            />
+            <p className="text-sm text-gray-600 mt-1">
+              This is the monthly deduction amount for premium subscriptions
+            </p>
           </div>
 
           <div className="md:col-span-2">

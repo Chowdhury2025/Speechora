@@ -28,6 +28,7 @@ model User {
   dateOfBirth            DateTime?
   gender                 String?
   emergencyContact       String?
+  childProgress          Json?     // JSON field to store child progress data
   videos                 videos[]  @relation("VideoUploader")
   images                 images[]  @relation("ImageUploader")
   tests                  Test[]    @relation("TestCreator")
@@ -44,6 +45,8 @@ model User {
   trialStartDate   DateTime?
   trialExpiry      DateTime?
   isTrialUsed      Boolean  @default(false)
+  activePromoCode  PromoCode?  @relation("ActiveUserPromoCode", fields: [activePromoCodeId], references: [id])
+  activePromoCodeId Int?
 
   UsedPromoCode UsedPromoCode[] @relation("UserUsedPromoCodes")
 
