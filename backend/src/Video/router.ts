@@ -13,6 +13,9 @@ videoRouter.get('/', videoController.getAllVideos);
 // videoRouter.post('/category', videoController.getVideosByCategory);
 videoRouter.post('/category', videoController.getVideosByCategoryController);
 
+// Route to update a video
+videoRouter.put('/:id', videoController.updateVideo);
+
 // Route to delete a video
 videoRouter.delete('/:id', videoController.deleteVideo);
 

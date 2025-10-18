@@ -7,23 +7,29 @@ const prisma = new PrismaClient();
 // Add a new video
 export const addVideo = async (req: Request, res: Response) => {
     try {
-        const { title, linkyoutube_link, video_url, category, description, ageGroup, name } = req.body;
+        const { 
+            title, 
+            video_url, 
+            category, 
+            description, 
+            ageGroup, 
+            name
+        } = req.body;
 
         // Validate required fields
-        if (!title || (!linkyoutube_link && !video_url)) {
-            return res.status(400).json({ message: 'Title and either YouTube link or R2 video URL is required' });
+        if (!title || !video_url) {
+            return res.status(400).json({ message: 'Title and video URL is required' });
         }
 
         // Create new video
         const video = await prisma.videos.create({
             data: {
                 title,
-                linkyoutube_link,
                 video_url,
                 category,
                 description,
                 ageGroup,
-                name,
+                name
             },
         });
 
@@ -91,20 +97,49 @@ export const getVideosByCategoryController = async (req: Request, res: Response)
     }
 };
 
-// Delete video
-export const deleteVideo = async (req: Request, res: Response) => {
+// Update video
+export const updateVideo = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        await prisma.videos.delete({
+        const { 
+            title, 
+            video_url, 
+            category, 
+            description, 
+            ageGroup, 
+            name
+        } = req.body;
+
+        // Validate required fields
+        if (!title) {
+            return res.status(400).json({ message: 'Title is required' });
+        }
+
+        // Prepare update data - only include video_url if it's provided and not empty
+        const updateData: any = {
+            title,
+            category,
+            description,
+            ageGroup,
+            name
+        };
+
+        if (video_url && video_url.trim() !== '') {
+            updateData.video_url = video_url;
+        }
+
+        // Update video
+        const video = await prisma.videos.update({
             where: {
                 id: parseInt(id),
             },
+            data: updateData,
         });
-        // If you want to delete the R2 file from storage, add logic here
-        res.json({ message: 'Video deleted successfully' });
+
+        res.json({ message: 'Video updated successfully', video });
     } catch (error) {
-        console.error('Error deleting video:', error);
-        res.status(500).json({ message: 'Failed to delete video' });
+        console.error('Error updating video:', error);
+        res.status(500).json({ message: 'Failed to update video' });
     }
 };
 
@@ -126,3 +161,20 @@ export const getAllVideoCategories = async (_req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to fetch video categories' });
     }
 };
+// Delete video
+export const deleteVideo = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        await prisma.videos.delete({
+            where: {
+                id: parseInt(id),
+            },
+        });
+        // If you want to delete the R2 file from storage, add logic here
+        res.json({ message: 'Video deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting video:', error);
+        res.status(500).json({ message: 'Failed to delete video' });
+    }
+};
+

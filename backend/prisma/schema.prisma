@@ -64,19 +64,20 @@ model SystemSettings {
 }
 
 model videos {
-  id               Int      @id @default(autoincrement())
-  linkyoutube_link String?
-  video_url        String?  // R2 video URL (optional)
-  title            String
-  category         String?
-  position         Int?
-  description      String?
-  ageGroup         String?
-  name             String?
-  userId           Int?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  userUploader     User?    @relation(fields: [userId], references: [id], name: "VideoUploader")
+  id              Int      @id @default(autoincrement())
+  video_url       String?  // R2 video URL (optional)
+  title           String
+ 
+  position        Int?
+  description     String?
+  ageGroup        String?
+  name            String?
+  
+  category       String?
+  userId          Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userUploader    User?    @relation(fields: [userId], references: [id], name: "VideoUploader")
 }
 
 model images {
@@ -179,6 +180,8 @@ model PromoCode {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   usedBy      UsedPromoCode[]
+
+  User User[] @relation("ActiveUserPromoCode")
 }
 
 model UsedPromoCode {
@@ -224,7 +227,7 @@ model Lesson {
   description String?
   subject     String  //{wants_and_needs_expression ,action_words_and_verbs, what_questions, where_questions, who_questions, when_questions, why_questions}
   ageGroup    String
-  statement   String  // JSON object with structure: { type: "text" | "image_url" | "YOUTUBE-video_url", content: string }
+  statement   String  // JSON object with structure: { type: "text" | "image_url" | "video_url", content: string }
   options     Json    // Array of objects with structure: [{ type: "text" | "image_url" | "video_url", content: string }]
   userId      Int
   

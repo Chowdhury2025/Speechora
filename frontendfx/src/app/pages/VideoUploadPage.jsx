@@ -1,21 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios'; // Import this in your actual project
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../atoms';
 import { API_URL, uploadService } from '../../config';
 import { TabNavigator } from '../components/common/TabNavigator';
-import { getThumbnailUrl } from '../utils/youtube';
 
 
 const VideoUploadPage = () => {
   const userState = useRecoilValue(userStates);
   
-  const [uploadType, setUploadType] = useState('youtube'); // 'youtube' or 'r2'
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingVideoId, setEditingVideoId] = useState(null);
+  
   const [videoData, setVideoData] = useState({
     title: '',
-    linkyoutube_link: '',
     video_url: '',
-    thumbnail: '',
     category: '',
     customCategory: '',
     position: 0,
@@ -30,19 +29,42 @@ const VideoUploadPage = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const validateYoutubeUrl = (url) => {
-    const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})$/;
-    return pattern.test(url);
-  };
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    if (editId) {
+      setIsEditMode(true);
+      setEditingVideoId(editId);
+      loadVideoForEdit(editId);
+    }
+  }, []);
 
-  const handleYoutubeUrlChange = (e) => {
-    const url = e.target.value;
-    setVideoData(prev => ({
-      ...prev,
-      linkyoutube_link: url,
-      thumbnail: getThumbnailUrl(url),
-      video_url: ''
-    }));
+  const loadVideoForEdit = async (id) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/api/videos`);
+      const video = response.data.find(v => v.id == id);
+      if (video) {
+        setVideoData({
+          title: video.title || '',
+          video_url: video.video_url || '',
+          category: video.category || '',
+          customCategory: '',
+          position: video.position || 0,
+          description: video.description || '',
+          ageGroup: video.ageGroup || '',
+          name: video.name || userState.username || ''
+        });
+        setIsCustomCategory(!categoryOptions.some(c => c.slug === video.category));
+        if (!categoryOptions.some(c => c.slug === video.category)) {
+          setVideoData(prev => ({ ...prev, customCategory: video.category }));
+        }
+      }
+    } catch (err) {
+      setError('Failed to load video for editing');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileSelect = (e) => {
@@ -52,7 +74,6 @@ const VideoUploadPage = () => {
         uploadService.validateFile(file);
         setSelectedFile(file);
         setError(null);
-        setVideoData(prev => ({...prev, linkyoutube_link: '', thumbnail: ''}));
       } catch (error) {
         setError(error.message);
         setSelectedFile(null);
@@ -100,23 +121,17 @@ const VideoUploadPage = () => {
     setSuccess(false);
     setLoading(true);
     try {
-      let payload = {
-        ...videoData,
-        linkyoutube_link: '',
-        video_url: '',
-        thumbnail: ''
-      };
-
-      if (uploadType === 'youtube') {
-        if (!validateYoutubeUrl(videoData.linkyoutube_link)) {
-          throw new Error('Please enter a valid YouTube video URL');
-        }
-        payload.linkyoutube_link = videoData.linkyoutube_link;
-        payload.thumbnail = getThumbnailUrl(videoData.linkyoutube_link);
+      let payload;
+      if (isEditMode) {
+        // For edit, no file upload needed
+        payload = {
+          ...videoData
+        };
       } else {
         if (!selectedFile) {
           throw new Error('Please select a video file to upload');
         }
+        
         try {
           const videoUrl = await uploadToR2(selectedFile);
           if (!videoUrl) {
@@ -125,9 +140,8 @@ const VideoUploadPage = () => {
           console.log('Setting video URL in payload:', videoUrl);
           
           payload = {
-            ...payload,
-            video_url: videoUrl,
-            thumbnail: '/placeholder-video-thumbnail.jpg'
+            ...videoData,
+            video_url: videoUrl
           };
           
           console.log('Final payload after setting URL:', payload);
@@ -149,28 +163,32 @@ const VideoUploadPage = () => {
       console.log('Submitting payload:', payload); // Debug log
 
       try {
-        await axios.post(`${API_URL}/api/videos`, payload);
+        if (isEditMode) {
+          await axios.put(`${API_URL}/api/videos/${editingVideoId}`, payload);
+        } else {
+          await axios.post(`${API_URL}/api/videos`, payload);
+        }
         setSuccess(true);
-        setVideoData(prev => ({
-          ...prev, 
-          title: '',
-          linkyoutube_link: '',
-          video_url: '',
-          thumbnail: '',
-          category: '',
-          customCategory: '',
-          position: 0,
-          description: '',
-          ageGroup: ''
-        }));
-        setSelectedFile(null);
-        setUploadProgress(0);
+        if (!isEditMode) {
+          setVideoData(prev => ({
+            ...prev, 
+            title: '',
+            video_url: '',
+            category: '',
+            customCategory: '',
+            position: 0,
+            description: '',
+            ageGroup: ''
+          }));
+          setSelectedFile(null);
+          setUploadProgress(0);
+        }
       } catch (apiError) {
         console.error('API Error Details:', apiError.response?.data || apiError);
-        throw new Error(apiError.response?.data?.message || 'Failed to save video information');
+        throw new Error(apiError.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'save'} video information`);
       }
     } catch (err) {
-      setError(err.message || 'Failed to upload video');
+      setError(err.message || `Failed to ${isEditMode ? 'update' : 'upload'} video`);
     } finally {
       setLoading(false);
     }
@@ -198,44 +216,37 @@ const VideoUploadPage = () => {
   return (
     <div className="container mx-auto p-4">
       <TabNavigator />
-      <h1 className="text-2xl font-bold mb-6 text-[#3c9202]">Upload Educational Video</h1>
+      <h1 className="text-2xl font-bold mb-6 text-[#3c9202]">{isEditMode ? 'Edit Educational Video' : 'Upload Educational Video'}</h1>
 
       <div className="bg-[#e5f5d5] border-l-4 border-[#58cc02] p-4 mb-6 rounded-xl">
-        <h2 className="text-lg font-bold text-[#3c9202] mb-2">How to Upload a Video</h2>
+        <h2 className="text-lg font-bold text-[#3c9202] mb-2">How to {isEditMode ? 'Edit' : 'Upload'} a Video</h2>
         <div className="space-y-4">
           <div>
-            <h3 className="font-semibold text-[#3c9202]">Option 1: YouTube Link</h3>
+            <h3 className="font-semibold text-[#3c9202]">{isEditMode ? 'Edit Video Information' : 'Upload Video File'}</h3>
             <ol className="list-decimal list-inside text-[#2e7502] ml-4">
-              <li>Find an educational video on YouTube</li>
-              <li>Copy the YouTube video URL</li>
-              <li>Paste it in the YouTube Link field</li>
-            </ol>
-          </div>
-          <div>
-            <h3 className="font-semibold text-[#3c9202]">Option 2: Upload Video File</h3>
-            <ol className="list-decimal list-inside text-[#2e7502] ml-4">
-              <li>Select a video file (MP4, MOV, WebM)</li>
-              <li>File size below 100MB</li>
-              <li>Video uploaded to secure cloud storage</li>
+              {isEditMode ? (
+                <>
+                  <li>Modify the video information as needed</li>
+                  <li>Update title, category, age group, description</li>
+                  <li>Changes will be saved to the database</li>
+                </>
+              ) : (
+                <>
+                  <li>Select a video file (MP4, MOV, WebM) - file size below 100MB</li>
+                  <li>Fill in the required fields (title, category, age group)</li>
+                  <li>Video will be uploaded to secure cloud storage</li>
+                </>
+              )}
             </ol>
           </div>
         </div>
-        <p className="mt-3 text-sm text-[#3c9202]">Fill in required fields then click “Upload Video”</p>
+        <p className="mt-3 text-sm text-[#3c9202]">Fill in required fields then click "{isEditMode ? 'Update' : 'Upload'} Video".</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl">{error}</div>}
-          {success && <div className="bg-[#e5f5d5] border-l-4 border-[#58cc02] text-[#3c9202] p-4 rounded-xl">Video successfully uploaded!</div>}
-
-          {/* Upload Type */}
-          <div>
-            <span className="block font-bold mb-2 text-[#3c9202]">Upload Method *</span>
-            <div className="flex space-x-4">
-              <label className="flex items-center"><input type="radio" value="youtube" checked={uploadType==='youtube'} onChange={e=>{setUploadType('youtube');setError(null);}} className="mr-2"/>YouTube</label>
-              <label className="flex items-center"><input type="radio" value="r2" checked={uploadType==='r2'} onChange={e=>{setUploadType('r2');setError(null);}} className="mr-2"/>File Upload</label>
-            </div>
-          </div>
+          {success && <div className="bg-[#e5f5d5] border-l-4 border-[#58cc02] text-[#3c9202] p-4 rounded-xl">Video successfully {isEditMode ? 'updated' : 'uploaded'}!</div>}
 
           {/* Title */}
           <div>
@@ -243,23 +254,15 @@ const VideoUploadPage = () => {
             <input type="text" name="title" value={videoData.title} onChange={handleChange} required className="w-full border px-4 py-2 rounded focus:border-[#58cc02]" placeholder="Video title"/>
           </div>
 
-          {/* YouTube URL */}
-          {uploadType==='youtube' && (
+          {/* File Upload - only show in upload mode */}
+          {!isEditMode && (
             <div>
-              <label className="block font-bold mb-2 text-[#3c9202]">YouTube URL *</label>
-              <input type="url" name="linkyoutube_link" value={videoData.linkyoutube_link} onChange={handleYoutubeUrlChange} required className="w-full border px-4 py-2 rounded focus:border-[#58cc02]" placeholder="https://youtu.be/..."/>
-            </div>
-          )}
-
-          {/* File Upload */}
-          {uploadType==='r2' && (
-            <div>
-              <label className="block font-bold mb-2 text-[#3c9202]">Select File *</label>
+              <label className="block font-bold mb-2 text-[#3c9202]">Select Video File *</label>
               <input 
                 type="file" 
                 accept="video/mp4,video/mpeg,video/quicktime,video/webm" 
                 onChange={handleFileSelect} 
-                required 
+                required={!isEditMode}
                 className="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-[#58cc02] file:text-white hover:file:bg-[#47b102]"
               />
               {selectedFile && (
@@ -307,9 +310,6 @@ const VideoUploadPage = () => {
             <textarea name="description" value={videoData.description} onChange={handleChange} rows={4} className="w-full border px-4 py-2 rounded focus:border-[#58cc02]" placeholder="Optional description" />
           </div>
 
-          {/* Thumbnail Preview */}
-          {videoData.thumbnail && <img src={videoData.thumbnail} alt="Thumbnail" className="w-full max-w-xs rounded mt-2" />}
-
           {/* Teacher Name */}
           <div>
             <label className="block font-bold mb-2 text-[#3c9202]">Teacher</label>
@@ -318,7 +318,7 @@ const VideoUploadPage = () => {
 
           {/* Submit */}
           <button type="submit" disabled={loading} className="w-full bg-[#58cc02] py-2 rounded text-white font-bold hover:bg-[#47b102] disabled:opacity-50">
-            {loading ? 'Uploading...' : 'Upload Video'}
+            {loading ? (isEditMode ? 'Updating...' : 'Uploading...') : (isEditMode ? 'Update Video' : 'Upload Video')}
           </button>
         </form>
       </div>

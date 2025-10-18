@@ -64,6 +64,25 @@ const Sidebar = () => {
   // Filter nav items based on user role
   const navItems = allNavItems.filter(item => item.roles.includes(role));
 
+  // Content management subgroup (collapsible)
+  const contentKeys = ['images', 'Lessonslist', 'presentation3', 'quiz-images', 'videos'];
+  // Show content management links to everyone (not role-filtered) so the folder is visible to all users
+  const contentNavItems = allNavItems.filter(item => contentKeys.includes(item.path));
+  const otherNavItems = navItems.filter(item => !contentKeys.includes(item.path));
+  // default open so users can see the folder; auto-open when on a content route
+  const [contentOpen, setContentOpen] = React.useState(true);
+
+  // Auto-expand content group when the current path matches one of the content routes
+  React.useEffect(() => {
+    try {
+      const current = location.pathname || '';
+      const isContentPath = contentKeys.some(key => current.startsWith(`/app/${key}`));
+      if (isContentPath) setContentOpen(true);
+    } catch (e) {
+      // ignore
+    }
+  }, [location.pathname]);
+
   const handleLogout = () => {
     // Clear localStorage
     localStorage.removeItem("user");
@@ -124,7 +143,7 @@ const Sidebar = () => {
         </div>      {/* Navigation Items */}
         <nav className="flex flex-col h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)] py-4 sm:py-6 px-2 sm:px-3">
           <div className="flex-1 space-y-2 sm:space-y-3 overflow-y-auto custom-scrollbar max-h-[calc(100vh-11rem)] sm:max-h-[calc(100vh-12rem)]">
-            {navItems.map((item) => {
+            {otherNavItems.map((item) => {
               const Icon = item.icon;
               const fullPath = `/app/${item.path}`;
               const isActive = location.pathname === fullPath ||
@@ -170,10 +189,46 @@ const Sidebar = () => {
                 </Link>
               );
             })}
-          </div>
 
-          {/* Logout Button */}
-          <div className="sticky bottom-0 pt-4 mt-auto border-t border-slate-200 bg-white">
+            {/* Content Management collapsible group (always shown) */}
+            <div className={`transition-all duration-200 ${!isOpen ? 'flex justify-center' : ''}`}>
+              <div className={`w-full ${!isOpen ? 'text-center' : ''}`}>
+                <button
+                  onClick={() => setContentOpen(!contentOpen)}
+                  className={`w-full flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200 font-bold text-xs sm:text-sm ${!isOpen ? 'justify-center' : ''}`}
+                >
+                  <div className={`relative group flex items-center ${!isOpen ? 'justify-center' : ''}`}>
+                    <BookOpen size={24} className={`${!isOpen ? 'text-duo-gray-600' : 'text-duo-gray-600'}`} />
+                    <span className={`ml-4 transition-all duration-300 font-semibold ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>Content Management</span>
+                    <span className={`ml-auto mr-2 ${!isOpen ? 'opacity-0' : ''}`}>{contentOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}</span>
+                  </div>
+                </button>
+
+                {/* Collapsible links */}
+                {contentOpen && (
+                  <div className="mt-2 space-y-2 px-1">
+                    {contentNavItems.length > 0 ? (
+                      contentNavItems.map((item) => {
+                        const Icon = item.icon;
+                        const fullPath = `/app/${item.path}`;
+                        const isActive = location.pathname === fullPath || (fullPath !== '/app/dashboard' && location.pathname.startsWith(fullPath));
+                        return (
+                          <Link
+                            key={item.path}
+                            to={fullPath}
+                            className={`flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200 font-bold text-xs sm:text-sm ${isActive ? 'bg-[#e8fff0] text-[#2c7b10]' : 'text-duo-gray-600 hover:bg-[#f0fff4]'} `}
+                          >
+                            <Icon size={18} className={`${isActive ? 'text-[#2c7b10]' : 'text-duo-gray-600'}`} />
+                            <span className="ml-3">{item.label}</span>
+                          </Link> 
+                          
+                        );
+                      })
+                    ) : (
+                      <div className="text-sm text-gray-500 px-3">No content access</div>
+                    )}
+
+                    <div className="sticky bottom-4 pt-3 mb-4 border-t border-slate-200 bg-white">
             <button
               onClick={handleLogout}
               className={`
@@ -184,7 +239,7 @@ const Sidebar = () => {
               ${!isOpen ? 'justify-center h-12' : 'h-10'}
             `}
             >
-              <div className="relative group">
+              <div className="relative group mx-auto flex items-center">
                 <LogOut
                   size={24}
                   className="text-duo-gray-600 group-hover:text-[#ff4b4b] transition-colors duration-200"
@@ -198,13 +253,21 @@ const Sidebar = () => {
                   Logout
                 </span>
                 {!isOpen && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                    Logonbhjut
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 mb-8 ">
+                    Logout
                   </div>
                 )}
               </div>
             </button>
           </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Logout Button */}
+         
         </nav>
       </div>
     </>
