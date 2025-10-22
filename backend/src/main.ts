@@ -18,6 +18,7 @@ import systemSettingsRouter from './SystemSettings/router';
 import promoCodeRouter from './app/PromoCode/router';  // Add promo code router import
 import presentation3Router from './app/Presentation3/router';  // Add presentation3 router import
 import uploadRouter from './Upload/router';  // Add upload router import
+import paymentRouter from './Payment/router';  // Add payment router import
 
 
 const app: Express = express();
@@ -95,6 +96,7 @@ app.use('/api/system', systemSettingsRouter); // Premium Pricing uses POST for u
 app.use('/api/promo-codes', promoCodeRouter); // Add promo code routes
 app.use('/api/presentation3', presentation3Router); // Add presentation3 routes
 app.use('/api/upload', uploadRouter); // Add upload routes
+app.use('/api/payments', paymentRouter); // Add payment routes
 
 // Add email configuration router
 

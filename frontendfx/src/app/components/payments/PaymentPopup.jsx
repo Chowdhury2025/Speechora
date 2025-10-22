@@ -4,6 +4,7 @@ import { useRecoilValue } from 'recoil';
 import { userStates } from '../../../atoms';
 import api from '../../../utils/api';
 import { API_URL } from '../../../config';
+import lencoService from '../../../services/lencoService';
 
 const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const navigate = useNavigate();
@@ -44,18 +45,21 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
     return null;
   }
 
-  const detectProvider = (number) => {
-    const prefix = number.substring(0, 3);
-    if (prefix === '095' || prefix === '095') return 'ZAMTEL';
-    if (prefix === '096' || prefix === '076') return 'MTN';
-    if (prefix === '097' || prefix === '077') return 'AIRTEL';
-    return '';
+  const detectProvider = async (number) => {
+    return await lencoService.detectMobileProvider(number);
   };
 
-  const handlePhoneNumberChange = (e) => {
-    const number = e.target.value;
-    setPhoneNumber(number);
-    setSelectedProvider(detectProvider(number));
+  const handlePhoneNumberChange = async (e) => {
+    // Only allow numbers and format
+    let value = e.target.value.replace(/\D/g, '');
+    
+    // Limit length and format
+    if (value.length <= 10) {
+      setPhoneNumber(value);
+      if (value.length >= 3) {
+        setSelectedProvider(await detectProvider(value));
+      }
+    }
   };
 
   const validatePromoCode = async () => {
@@ -133,28 +137,142 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
         }
       }
 
-      // Use the same API endpoint as the add funds functionality
-      const response = await api.post('/api/user/premium/add', {
-        userId: user.userId,
+      // Generate unique reference for this payment
+      const reference = await lencoService.generateReference('BOOK8_PREMIUM');
+      
+      // Prepare payment data
+      const paymentData = {
         amount: paymentAmount,
-        paymentMethod: paymentMethod === 'card' ? 'visa' : 'mobile_money'
-      });
+        email: user.email,
+        phone: lencoService.formatPhoneNumber(phoneNumber),
+        customerName: `${user.username || ''} ${user.lastName || ''}`.trim() || 'Book8 User',
+        reference: reference,
+        callbackUrl: `${window.location.origin}/payment-callback`,
+        userId: user.userId,
+        planName: planName
+      };
 
-      if (response.data) {
-        alert(`Payment successful! ₦${paymentAmount} has been added to your account.`);
-        onClose();
-        // Optionally refresh the parent component or navigate
-        window.location.reload(); // Simple refresh to update premium status
+      let paymentResponse;
+
+      if (paymentMethod === 'mobile_money') {
+        // Validate phone number
+        if (!phoneNumber.trim()) {
+          alert('Please enter your phone number');
+          return;
+        }
+
+        paymentData.provider = await lencoService.detectMobileProvider(phoneNumber);
+        paymentResponse = await lencoService.initializeMobileMoneyPayment(paymentData);
+      } else {
+        // Validate card details
+        if (!cardNumber.trim() || !expiryDate.trim() || !cvv.trim()) {
+          alert('Please fill in all card details');
+          return;
+        }
+
+        // Parse expiry date
+        const [month, year] = expiryDate.split('/');
+        if (!month || !year || month.length !== 2 || year.length !== 2) {
+          alert('Please enter expiry date in MM/YY format');
+          return;
+        }
+
+        paymentData.cardNumber = cardNumber.replace(/\s/g, '');
+        paymentData.expiryMonth = month;
+        paymentData.expiryYear = `20${year}`;
+        paymentData.cvv = cvv;
+
+        paymentResponse = await lencoService.initializeCardPayment(paymentData);
       }
+
+      if (paymentResponse.success) {
+        // Handle successful payment initialization
+        if (paymentResponse.data?.payment_url) {
+          // Redirect to payment URL for completion
+          window.open(paymentResponse.data.payment_url, '_blank');
+          
+          // Start polling for payment status
+          setTimeout(() => {
+            checkPaymentStatus(reference, paymentAmount);
+          }, 5000);
+        } else if (paymentResponse.data?.status === 'success') {
+          // Payment completed immediately
+          await updateUserPremium(paymentAmount);
+        } else {
+          // Payment pending - start polling
+          checkPaymentStatus(reference, paymentAmount);
+        }
+      } else {
+        throw new Error(paymentResponse.message || 'Payment initialization failed');
+      }
+
     } catch (error) {
       let errorMessage = 'Payment processing failed. Please try again.';
-      if (error.response?.data) {
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data) {
         errorMessage = error.response.data.message || 
                       JSON.stringify(error.response.data) || 
                       errorMessage;
       }
       alert(errorMessage);
       console.error('Payment error:', error);
+      setIsProcessing(false);
+    }
+  };
+
+  // Check payment status periodically
+  const checkPaymentStatus = async (reference, amount, attempts = 0) => {
+    const maxAttempts = 12; // Check for 2 minutes (12 * 10 seconds)
+    
+    try {
+      const statusResponse = await lencoService.verifyPayment(reference);
+      
+      if (statusResponse.data?.status === 'success') {
+        await updateUserPremium(amount);
+      } else if (statusResponse.data?.status === 'failed') {
+        alert('Payment failed. Please try again.');
+        setIsProcessing(false);
+      } else if (attempts < maxAttempts) {
+        // Payment still pending, check again in 10 seconds
+        setTimeout(() => {
+          checkPaymentStatus(reference, amount, attempts + 1);
+        }, 10000);
+      } else {
+        // Max attempts reached
+        alert('Payment verification timeout. Please contact support if money was deducted.');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Payment status check error:', error);
+      if (attempts < maxAttempts) {
+        setTimeout(() => {
+          checkPaymentStatus(reference, amount, attempts + 1);
+        }, 10000);
+      } else {
+        alert('Unable to verify payment status. Please contact support.');
+        setIsProcessing(false);
+      }
+    }
+  };
+
+  // Update user premium after successful payment
+  const updateUserPremium = async (amount) => {
+    try {
+      const response = await api.post('/api/user/premium/add', {
+        userId: user.userId,
+        amount: amount,
+        paymentMethod: paymentMethod === 'card' ? 'visa' : 'mobile_money'
+      });
+
+      if (response.data) {
+        alert(`Payment successful! K${amount} has been added to your account.`);
+        onClose();
+        window.location.reload(); // Refresh to update premium status
+      }
+    } catch (error) {
+      console.error('Premium update error:', error);
+      alert('Payment was successful but failed to update account. Please contact support.');
     } finally {
       setIsProcessing(false);
     }
@@ -174,16 +292,16 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
           <div className="text-lg font-semibold text-center">
             {promoApplied ? (
               <div>
-                <p className="text-sm text-gray-500 line-through">Original: ₦{amount?.toFixed(2)}</p>
+                <p className="text-sm text-gray-500 line-through">Original: K{amount?.toFixed(2)}</p>
                 <p className="text-green-600">
-                  Final Amount: ₦{finalAmount?.toFixed(2)}
+                  Final Amount: K{finalAmount?.toFixed(2)}
                 </p>
                 <p className="text-sm text-green-600">
-                  Saved: ₦{(amount - finalAmount)?.toFixed(2)} ({promoDiscount}% off)
+                  Saved: K{(amount - finalAmount)?.toFixed(2)} ({promoDiscount}% off)
                 </p>
               </div>
             ) : (
-              <p>Amount: ₦{amount?.toFixed(2)}</p>
+              <p>Amount: K{amount?.toFixed(2)}</p>
             )}
           </div>
         </div>
@@ -259,12 +377,13 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                 Phone Number
               </label>
               <input
-                type="text"
+                type="tel"
                 value={phoneNumber}
                 onChange={handlePhoneNumberChange}
-                placeholder="Enter phone number"
+                placeholder="0XX XXX XXXX"
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isProcessing}
+                maxLength="10"
               />
             </div>
             {selectedProvider && (
@@ -290,10 +409,17 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
               <input
                 type="text"
                 value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
+                onChange={(e) => {
+                  // Format card number with spaces
+                  const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+                  if (value.replace(/\s/g, '').length <= 16) {
+                    setCardNumber(value);
+                  }
+                }}
                 placeholder="1234 5678 9012 3456"
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isProcessing}
+                maxLength="19"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -304,10 +430,18 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                 <input
                   type="text"
                   value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
+                  onChange={(e) => {
+                    // Format expiry date as MM/YY
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 2) {
+                      value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                    }
+                    setExpiryDate(value);
+                  }}
                   placeholder="MM/YY"
                   className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={isProcessing}
+                  maxLength="5"
                 />
               </div>
               <div>
@@ -317,10 +451,17 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
                 <input
                   type="text"
                   value={cvv}
-                  onChange={(e) => setCvv(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow numbers and limit to 3-4 digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 4) {
+                      setCvv(value);
+                    }
+                  }}
                   placeholder="123"
                   className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={isProcessing}
+                  maxLength="4"
                 />
               </div>
             </div>
@@ -342,7 +483,7 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
               Processing...
             </>
           ) : (
-            `Pay ₦${finalAmount?.toFixed(2)} Now`
+            `Pay K${finalAmount?.toFixed(2)} Now`
           )}
         </button>
       </div>
