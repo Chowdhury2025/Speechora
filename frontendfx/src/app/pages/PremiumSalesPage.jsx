@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+ import React, { useState } from "react";
 import PaymentPopup from "../components/payments/PaymentPopup";
 
 const PremiumSalesPage = () => {
