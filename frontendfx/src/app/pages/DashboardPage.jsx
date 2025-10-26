@@ -115,38 +115,20 @@ const DashboardPage = () => {
     }
   });
 
-  const [users, setUsers] = useState([
-    {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      isPremium: true,
-      createdAt: "2025-09-15T10:30:00Z"
-    },
-    {
-      name: "Sarah Smith",
-      email: "sarah.smith@example.com",
-      isPremium: true,
-      createdAt: "2025-09-20T14:15:00Z"
-    },
-    {
-      name: "Mike Johnson",
-      email: "mike.j@example.com",
-      isPremium: false,
-      createdAt: "2025-10-01T09:45:00Z"
-    },
-    {
-      name: "Emily Brown",
-      email: "emily.b@example.com",
-      isPremium: true,
-      createdAt: "2025-10-05T16:20:00Z"
-    },
-    {
-      name: "Alex Wilson",
-      email: "alex.w@example.com",
-      isPremium: false,
-      createdAt: "2025-10-10T11:10:00Z"
-    }
-  ]);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState('');
+  const [expenses, setExpenses] = useState([]);
+  const [expensesLoading, setExpensesLoading] = useState(false);
+  const [expensesSummary, setExpensesSummary] = useState([]);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseForm, setExpenseForm] = useState({ name: '', type: '', amount: '', description: '' });
+  const [expenseError, setExpenseError] = useState('');
+  
+  // Premium price and timeRange should be declared before any effects that use them
+  const [premiumPrice, setPremiumPrice] = useState('');
+  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
+  const [timeRange, setTimeRange] = useState('week'); // 'week' | 'month' | 'year'
 
   useEffect(() => {
     const fetchPremiumPrice = async () => {
@@ -162,9 +144,113 @@ const DashboardPage = () => {
     fetchPremiumPrice();
   }, []);
 
-  const [premiumPrice, setPremiumPrice] = useState('');
-  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
-  const [timeRange, setTimeRange] = useState('week'); // 'week' | 'month' | 'year'
+  // Fetch users from backend API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setUsersLoading(true);
+      setUsersError('');
+      try {
+        const res = await axios.get(`${API_URL}/api/user/users`);
+        // backend may return { users: [...] } or the array directly
+        const fetched = res.data?.users ?? res.data ?? [];
+        setUsers(Array.isArray(fetched) ? fetched : []);
+      } catch (err) {
+        console.error('Failed to fetch users for dashboard:', err);
+        setUsersError(err.response?.data?.message || err.message || 'Failed to load users');
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Fetch expenses from backend API
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      setExpensesLoading(true);
+      try {
+        const res = await axios.get(`${API_URL}/api/expenses`);
+        const data = res.data?.expenses ?? [];
+        setExpenses(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Failed to fetch expenses:', err);
+      } finally {
+        setExpensesLoading(false);
+      }
+    };
+
+    fetchExpenses();
+  }, []);
+
+  // Fetch aggregated expenses summary for the pie chart based on timeRange
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/dashboard/expenses-summary`, { params: { range: timeRange } });
+        const data = res.data?.summary ?? [];
+        setExpensesSummary(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.warn('Failed to fetch expenses summary:', err?.message || err);
+        setExpensesSummary([]);
+      }
+    };
+
+    fetchSummary();
+  }, [timeRange]);
+
+  // Compute user growth series from fetched users
+  const computeUserGrowth = (usersArr = [], range = 'week') => {
+    if (!Array.isArray(usersArr)) return [];
+
+    // Helper to format date keys
+    const toKey = (d) => {
+      const dt = new Date(d);
+      if (range === 'year') return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`; // YYYY-MM-DD
+    };
+
+    // Group new user counts per day/month
+    const counts = {};
+    const createdDates = usersArr
+      .map(u => u.createdAt || u.created_at || u.created || null)
+      .filter(Boolean)
+      .map(d => toKey(d));
+
+    createdDates.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
+
+    // Build timeline for requested range
+    const today = new Date();
+    const series = [];
+
+    if (range === 'year') {
+      // last 12 months
+      for (let i = 11; i >= 0; i--) {
+        const dt = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const key = toKey(dt);
+        // Sum counts for that month key
+        const value = counts[key] || 0;
+        const total = series.length ? series[series.length - 1].total + value : value + 0;
+        series.push({ date: key, value, total });
+      }
+    } else {
+      // last N days (week -> 7, month -> 30)
+      const days = range === 'month' ? 30 : 7;
+      let cumulative = 0;
+      for (let i = days - 1; i >= 0; i--) {
+        const dt = new Date();
+        dt.setDate(today.getDate() - i);
+        const key = toKey(dt);
+        const value = counts[key] || 0;
+        cumulative += value;
+        series.push({ date: key, value, total: cumulative });
+      }
+    }
+
+    return series;
+  };
+
+  const userGrowth = computeUserGrowth(users, timeRange);
 
   const handleUpdatePremiumPrice = async () => {
     try {
@@ -257,7 +343,7 @@ const DashboardPage = () => {
               value={stats.totalUsers}
               icon="👥"
               color="bg-[#58cc02]"
-              sparkData={sliceRange(stats.analytics?.userGrowth || [], timeRange).map(p => p.value)}
+              sparkData={sliceRange(userGrowth || [], timeRange).map(p => p.value)}
             />
             <StatCard
               title="Current Total Buys"
@@ -271,7 +357,7 @@ const DashboardPage = () => {
               value={stats.premiumUsers}
               icon="⭐"
               color="bg-[#58cc02]"
-              sparkData={sliceRange((stats.analytics?.userGrowth || []).map((u, i) => ({ ...u, value: Math.max(0, stats.premiumUsers - i * 2) })), timeRange).map(p => p.value)}
+              sparkData={sliceRange((userGrowth || []).map((u, i) => ({ ...u, value: Math.max(0, stats.premiumUsers - i * 2) })), timeRange).map(p => p.value)}
             />
             <StatCard
               title="Total Tests"
@@ -282,7 +368,7 @@ const DashboardPage = () => {
             <StatCard
               title="Active Users Today"
               value={(() => {
-                const ug = sliceRange(stats.analytics?.userGrowth || [], timeRange);
+                const ug = sliceRange(userGrowth || [], timeRange);
                 return (ug.length ? ug[ug.length - 1].value : stats.activeUsers);
               })()}
               icon="📱"
@@ -308,7 +394,7 @@ const DashboardPage = () => {
           <div className="bg-white p-3 rounded-lg shadow-sm border border-[#e5f5d5]">
             {(() => {
               const rev = sliceRange(stats.analytics?.revenueGrowth || [], timeRange).map(r => r.value || 0);
-              const ug = sliceRange(stats.analytics?.userGrowth || [], timeRange).map(r => r.value || 0);
+              const ug = sliceRange(userGrowth || [], timeRange).map(r => r.value || 0);
               return (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -333,8 +419,8 @@ const DashboardPage = () => {
             <h3 className="font-semibold text-[#3c9202]">User Growth (Bar Chart)</h3>
             <div className="h-48 bg-[#f7faf3] rounded-lg p-4">
               <div className="flex h-full items-end space-x-2">
-                {(sliceRange(stats.analytics?.userGrowth || [], timeRange) || []).map((point, index) => {
-                  const arr = sliceRange(stats.analytics?.userGrowth || [], timeRange) || [];
+                {(sliceRange(userGrowth || [], timeRange) || []).map((point, index) => {
+                  const arr = sliceRange(userGrowth || [], timeRange) || [];
                   const maxValue = Math.max(...arr.map(p => p.total), 1);
                   // Use total relative to max to compute bar height
                   const heightPercentage = (point.total / maxValue) * 100;
@@ -395,12 +481,22 @@ const DashboardPage = () => {
         {/* Expenses Pie Chart */}
               <div className="space-y-2">
                 <h3 className="font-semibold text-[#3c9202]">Expenses Distribution (Pie Chart)</h3>
-                <div className="h-48 bg-[#f7faf3] rounded-lg p-4 relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <button
+                        onClick={() => setIsExpenseModalOpen(true)}
+                        className="px-3 py-1 rounded bg-[#58cc02] text-white"
+                      >
+                        Add Expense
+                      </button>
+                    </div>
+                  </div>
+                  <div className="h-48 bg-[#f7faf3] rounded-lg p-4 relative">
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="relative w-32 h-32 rounded-full overflow-hidden bg-white shadow-sm">
                       {(() => {
-                        const expensesArr = stats.analytics?.expenses || [];
-                        const total = expensesArr.reduce((acc, curr) => acc + curr.amount, 0) || 1;
+                        const expensesArr = (expensesSummary && expensesSummary.length) ? expensesSummary : (expenses || stats.analytics?.expenses || []);
+                        const total = expensesArr.reduce((acc, curr) => acc + (curr.total ?? curr.amount ?? 0), 0) || 1;
                         const gradientParts = expensesArr.map((exp, idx) => {
                           const percentage = (exp.amount / total) * 100;
                           const start = expensesArr.slice(0, idx).reduce((acc, c) => acc + (c.amount / total) * 100, 0);
@@ -423,13 +519,13 @@ const DashboardPage = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                  {(stats.analytics?.expenses || []).map((expense, index) => {
+                  {((expensesSummary && expensesSummary.length) ? expensesSummary : (expenses || stats.analytics?.expenses || [])).map((expense, index) => {
                     const lightness = 45 + index * 6;
                     const color = `hsl(96 85% ${lightness}%)`;
                     return (
                       <div key={index} className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-sm" style={{ background: color }} />
-                        <span>{expense.category}</span>
+                        <span>{expense.type || expense.name}</span>
                       </div>
                     );
                   })}
@@ -512,6 +608,98 @@ const DashboardPage = () => {
       </div>
 
       {/* User List Section */}
+      {/* Expense Modal */}
+      {isExpenseModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md m-4 relative">
+            <button
+              onClick={() => setIsExpenseModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-bold text-[#3c9202] mb-4">Record Expense</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Expense Name</label>
+                <input
+                  type="text"
+                  value={expenseForm.name}
+                  onChange={(e) => setExpenseForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <input
+                  type="text"
+                  value={expenseForm.type}
+                  onChange={(e) => setExpenseForm(f => ({ ...f, type: e.target.value }))}
+                  placeholder="e.g. Server Costs, Marketing"
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <input
+                  type="number"
+                  value={expenseForm.amount}
+                  onChange={(e) => setExpenseForm(f => ({ ...f, amount: e.target.value }))}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                <textarea
+                  value={expenseForm.description}
+                  onChange={(e) => setExpenseForm(f => ({ ...f, description: e.target.value }))}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              {expenseError && <div className="text-red-500">{expenseError}</div>}
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => setIsExpenseModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    // submit
+                    setExpenseError('');
+                    const amt = parseFloat(expenseForm.amount);
+                    if (!expenseForm.name.trim() || !expenseForm.type.trim() || Number.isNaN(amt)) {
+                      setExpenseError('Please provide name, type and a numeric amount');
+                      return;
+                    }
+                    try {
+                      const resp = await axios.post(`${API_URL}/api/expenses`, {
+                        name: expenseForm.name.trim(),
+                        type: expenseForm.type.trim(),
+                        amount: amt,
+                        description: expenseForm.description.trim()
+                      });
+                      const newExpense = resp.data?.expense;
+                      if (newExpense) {
+                        setExpenses(e => [newExpense, ...e]);
+                        setIsExpenseModalOpen(false);
+                        setExpenseForm({ name: '', type: '', amount: '', description: '' });
+                      }
+                    } catch (err) {
+                      console.error('Failed to save expense', err);
+                      setExpenseError(err.response?.data?.message || 'Failed to save expense');
+                    }
+                  }}
+                  className="bg-[#58cc02] hover:bg-[#47b102] text-white px-6 py-2 rounded-lg"
+                >
+                  Save Expense
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="bg-white rounded-xl shadow-sm border-2 border-[#e5f5d5] p-6">
         <h2 className="text-xl font-bold text-[#3c9202] mb-4">User List</h2>
         <div className="overflow-x-auto">
@@ -525,20 +713,34 @@ const DashboardPage = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user, index) => (
-                <tr key={index} className="border-b border-[#e5f5d5]">
-                  <td className="py-3">{user.name}</td>
-                  <td className="py-3">{user.email}</td>
-                  <td className="py-3">
-                    <span className={`px-2 py-1 rounded-full text-sm ${
-                      user.isPremium ? 'bg-[#e5f5d5] text-[#3c9202]' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {user.isPremium ? 'Premium' : 'Free'}
-                    </span>
-                  </td>
-                  <td className="py-3">{new Date(user.createdAt).toLocaleDateString()}</td>
+              {usersLoading ? (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-gray-600">Loading users...</td>
                 </tr>
-              ))}
+              ) : usersError ? (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-red-500">{usersError}</td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-gray-600">No users found.</td>
+                </tr>
+              ) : (
+                users.map((user, index) => (
+                  <tr key={user.id ?? index} className="border-b border-[#e5f5d5]">
+                    <td className="py-3">{user.name || user.username || user.fullName || '—'}</td>
+                    <td className="py-3">{user.email || '—'}</td>
+                    <td className="py-3">
+                      <span className={`px-2 py-1 rounded-full text-sm ${
+                        user.isPremium ? 'bg-[#e5f5d5] text-[#3c9202]' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {user.isPremium ? 'Premium' : 'Free'}
+                      </span>
+                    </td>
+                    <td className="py-3">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

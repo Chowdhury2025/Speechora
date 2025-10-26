@@ -19,6 +19,7 @@ import promoCodeRouter from './app/PromoCode/router';  // Add promo code router 
 import presentation3Router from './app/Presentation3/router';  // Add presentation3 router import
 import uploadRouter from './Upload/router';  // Add upload router import
 import paymentRouter from './Payment/router';  // Add payment router import
+import expenseRouter from './Expense/router';
 
 
 const app: Express = express();
@@ -97,6 +98,7 @@ app.use('/api/promo-codes', promoCodeRouter); // Add promo code routes
 app.use('/api/presentation3', presentation3Router); // Add presentation3 routes
 app.use('/api/upload', uploadRouter); // Add upload routes
 app.use('/api/payments', paymentRouter); // Add payment routes
+app.use('/api/expenses', expenseRouter);
 
 // Add email configuration router
 

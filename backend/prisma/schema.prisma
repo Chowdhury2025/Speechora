@@ -51,6 +51,7 @@ model User {
   UsedPromoCode UsedPromoCode[] @relation("UserUsedPromoCodes")
 
   Presentation3 Presentation3[]
+  recordedExpenses Expense[]
 }
 
 model SystemSettings {
@@ -236,4 +237,16 @@ model Lesson {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+}
+
+model Expense {
+  id           Int      @id @default(autoincrement())
+  name         String
+  type         String   // e.g. Server Costs, Marketing, Support, Development, Admin
+  amount       Float
+  description  String?
+  recordedById Int?
+  recordedBy   User?    @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
