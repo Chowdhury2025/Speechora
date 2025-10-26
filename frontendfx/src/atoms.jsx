@@ -50,7 +50,7 @@ export const authState = atom({
 
 export const companyNameState = atom({
   key: 'companyNameState',
-  default: 'book8 ',
+  default: 'Speechora ',
   effects: [localPersistEffect]
 });
 

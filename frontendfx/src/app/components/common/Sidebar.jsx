@@ -130,7 +130,7 @@ const Sidebar = () => {
         </div>
         <div className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 border-b border-slate-200">
           <span className={`font-bold text-duo-gray-700 text-base sm:text-lg transition-all duration-300 ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>
-            Book8 Admin
+            Speechora Admin
           </span>
           <button
             onClick={() => setIsOpen(!isOpen)}

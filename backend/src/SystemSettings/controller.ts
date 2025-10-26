@@ -55,9 +55,9 @@ export const getSystemSettings = async (_req: Request, res: Response) => {
       // Create default settings if none exist
       settings = await prisma.systemSettings.create({
         data: {
-          companyName: 'Book8 Learning Platform',
-          adminEmail: 'admin@book8.com',
-          notificationEmail: 'notifications@book8.com',
+          companyName: 'Speechora Learning Platform',
+          adminEmail: 'admin@Speechora.com',
+          notificationEmail: 'notifications@Speechora.com',
           premiumPricing: '1000', // Default monthly premium price
         },
       });
@@ -99,9 +99,9 @@ export const updateSystemSettings = async (req: Request, res: Response) => {
       // Create new settings if none exist
       settings = await prisma.systemSettings.create({
         data: {
-          companyName: businessName || 'Book8 Learning Platform',
-          adminEmail: adminEmail || 'admin@book8.com',
-          notificationEmail: notificationEmail || 'notifications@book8.com',
+          companyName: businessName || 'Speechora Learning Platform',
+          adminEmail: adminEmail || 'admin@Speechora.com',
+          notificationEmail: notificationEmail || 'notifications@Speechora.com',
           premiumPricing: premiumPricing || '1000',
         },
       });

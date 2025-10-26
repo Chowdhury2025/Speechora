@@ -138,14 +138,14 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
       }
 
       // Generate unique reference for this payment
-      const reference = await lencoService.generateReference('BOOK8_PREMIUM');
+      const reference = await lencoService.generateReference('Speechora_PREMIUM');
       
       // Prepare payment data
       const paymentData = {
         amount: paymentAmount,
         email: user.email,
         phone: lencoService.formatPhoneNumber(phoneNumber),
-        customerName: `${user.username || ''} ${user.lastName || ''}`.trim() || 'Book8 User',
+        customerName: `${user.username || ''} ${user.lastName || ''}`.trim() || 'Speechora User',
         reference: reference,
         callbackUrl: `${window.location.origin}/payment-callback`,
         userId: user.userId,

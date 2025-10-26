@@ -20,14 +20,14 @@ const DownloadButtons = () => {
             Get it on Google Play
           </a>
           <a
-            href="https://raw.githubusercontent.com/Jamadrac/book8app/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk" // Replace with your App Store link
+            href="https://raw.githubusercontent.com/Jamadrac/Speechoraapp/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk" // Replace with your App Store link
             className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gray-800 hover:bg-gray-900 transition-colors duration-200 w-full sm:w-auto"
           >
             <Apple className="mr-3 -ml-1 h-6 w-6" /> {/* Changed from FaApple */}
             Download on the App Store
           </a>
           <a
-            href="https://raw.githubusercontent.com/Jamadrac/book8app/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk" // Replace with your APK download link
+            href="https://raw.githubusercontent.com/Jamadrac/Speechoraapp/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk" // Replace with your APK download link
             className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 w-full sm:w-auto"
           >
             <Download className="mr-3 -ml-1 h-6 w-6" /> {/* Changed from FaDownload */}

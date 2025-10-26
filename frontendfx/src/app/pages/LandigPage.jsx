@@ -78,7 +78,7 @@ const LandingPage = () => {
           <div className="relative mb-8">
             <img 
               src={appIcon}
-              alt="book8 Mascot" 
+              alt="Speechora Mascot" 
               className="w-32 h-auto mx-auto md:w-40 animate-bounce" 
             />
             <div className="absolute -right-4 top-0 bg-secondary text-white px-3 py-1 rounded-full text-sm font-bold transform rotate-12">
@@ -121,7 +121,7 @@ const LandingPage = () => {
         <section className="py-16 md:py-20 bg-white w-full">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-700 text-center mb-12">
-              Why you'll love learning with <span className="text-primary">book8</span>
+              Why you'll love learning with <span className="text-primary">Speechora</span>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <FeatureCard 
@@ -163,12 +163,12 @@ const LandingPage = () => {
                 <DownloadButton
                   icon={Apple}
                   text="Download on App Store"
-                  href="https://raw.githubusercontent.com/Jamadrac/book8app/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk"
+                  href="https://raw.githubusercontent.com/Jamadrac/Speechoraapp/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk"
                 />
                 <DownloadButton
                   icon={Download}
                   text="Download APK"
-                  href="https://raw.githubusercontent.com/Jamadrac/book8app/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk"
+                  href="https://raw.githubusercontent.com/Jamadrac/Speechoraapp/refs/heads/main/build/app/outputs/flutter-apk/app-release.apk"
                 />
               </div>
             </div>
@@ -181,7 +181,7 @@ const LandingPage = () => {
             <div className="relative">
               <img 
                 src={appIcon}
-                alt="book8 Mascot" 
+                alt="Speechora Mascot" 
                 className="w-24 h-auto mx-auto mb-6 md:absolute md:-top-20 md:right-0 md:w-32"
               />
             </div>
@@ -259,11 +259,11 @@ const LandingPage = () => {
             {/* Logo and Copyright */}
             <div className="col-span-2 lg:col-span-1 flex flex-col items-start justify-between">
               <div className="flex items-center space-x-2 mb-4">
-                <img src={appIcon} alt="book8 Logo" className="h-8 w-8" />
-                <span className="text-xl font-bold text-primary">book8</span>
+                <img src={appIcon} alt="Speechora Logo" className="h-8 w-8" />
+                <span className="text-xl font-bold text-primary">Speechora</span>
               </div>
               <div className="text-slate-600 text-sm">
-                © {new Date().getFullYear()} book8. All rights reserved.
+                © {new Date().getFullYear()} Speechora. All rights reserved.
               </div>
             </div>
           </div>
@@ -279,7 +279,7 @@ const LandingPage = () => {
               <FooterLink href="/help">Help Center</FooterLink>
             </div>
             <div className="mt-8 text-center text-slate-600 text-sm">
-              © {new Date().getFullYear()} book8. All rights reserved.
+              © {new Date().getFullYear()} Speechora. All rights reserved.
             </div>
           </div>
         </div>

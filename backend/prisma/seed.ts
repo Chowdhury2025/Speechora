@@ -6,10 +6,10 @@ async function main() {
   // Create default system settings
   await prisma.systemSettings.create({
     data: {
-      companyName: "Book8 Learning Platform",
-      adminEmail: "admin@book8.com",
+      companyName: "Speechora Learning Platform",
+      adminEmail: "admin@Speechora.com",
       premiumPricing: "50",
-      notificationEmail: "notifications@book8.com",
+      notificationEmail: "notifications@Speechora.com",
     },
   });
 
@@ -58,7 +58,7 @@ async function main() {
   // Create some test users
   await prisma.user.create({
     data: {
-      email: "teacher@book8.com",
+      email: "teacher@Speechora.com",
       password: "$2a$10$dqWjF8mJwFZj0dyWzjQH8eRgHM2qMDj8KX8LKJ", // hash of "password123"
       username: "Teacher Demo",
       role: "TEACHER",

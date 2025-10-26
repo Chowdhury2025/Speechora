@@ -45,7 +45,7 @@ function getLocalIpAddresses(): string[] {
 // Allowlist static origins and a local-network pattern for convenience when
 // developing from other devices on the LAN (e.g. 192.168.x.x:8800).
 const allowedOrigins = [
-  "https://book8.vercel.app",
+  "https://speechora.com",
   "http://localhost:5173",
   "http://192.168.43.204:8000",
   "http://localhost:8800",
@@ -109,7 +109,7 @@ app.get('/api/version', (_req: Request, res: Response) => {
 
 app.get("/", (req: Request, res: Response) => {
   console.log(req.body);
-  res.json("book8 latest");
+  res.json("Speechora latest");
 }); 
 
 app.listen(8000, '0.0.0.0', () => {

@@ -1,5 +1,5 @@
 // API URLs
-export const API_URL = import.meta.env.VITE_API_URL || 'https://book8-backend.vercel.app';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://Speechora-backend.vercel.app';
 // export const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8800';
 
 // Cloudflare R2 Configuration

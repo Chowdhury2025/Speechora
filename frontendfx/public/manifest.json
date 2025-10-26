@@ -1,6 +1,6 @@
 {
-  "name": "Book8 Learning Platform",
-  "short_name": "Book8",
+  "name": "Speechora Learning Platform",
+  "short_name": "Speechora",
   "description": "Educational platform for interactive learning",
   "start_url": "/",
   "display": "standalone",

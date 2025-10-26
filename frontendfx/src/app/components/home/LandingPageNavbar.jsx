@@ -30,9 +30,9 @@ const LandingPageNavbar = () => {
           {/* Logo / App Name */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
-              <img src={appIcon} alt="book8 Logo" className="h-10 w-10" /> {/* Using appIcon.png */}
+              <img src={appIcon} alt="Speechora Logo" className="h-10 w-10" /> {/* Using appIcon.png */}
               <span className="text-2xl font-bold text-kelly-500 hover:text-kelly-600 transition-colors">
-                book8
+                Speechora
               </span>
             </Link>
           </div>

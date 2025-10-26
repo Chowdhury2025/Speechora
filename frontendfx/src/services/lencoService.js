@@ -131,7 +131,7 @@ class LencoService {
   }
 
   // Generate unique reference
-  async generateReference(prefix = 'BOOK8') {
+  async generateReference(prefix = 'Speechora') {
     try {
       const response = await this.apiClient.post('/generate-reference', { prefix });
       return response.data.reference;

@@ -49,7 +49,7 @@ const SystemSettings = () => {
       const data = await response.json();
       setSettings(data);
       // Update company name in Recoil state
-      setCompanyName(data.businessName || "book8 ");
+      setCompanyName(data.businessName || "Speechora ");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -75,7 +75,7 @@ const SystemSettings = () => {
       console.log('Updated settings:', data);
       setSettings(data);
       // Update company name in Recoil state after successful update
-      setCompanyName(data.businessName || "book8 ");
+      setCompanyName(data.businessName || "Speechora ");
     } catch (err) {
       setError(err.message);
     } finally {

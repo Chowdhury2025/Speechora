@@ -33,7 +33,7 @@ const SidebarModal = ({ isOpen, onClose, user, navItems, handleLogout }) => {
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-200">
-            <h2 className="text-xl font-bold text-slate-800">Book8 Menu</h2>
+            <h2 className="text-xl font-bold text-slate-800">Speechora Menu</h2>
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-slate-500 hover:bg-slate-100"
