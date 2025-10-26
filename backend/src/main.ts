@@ -45,7 +45,7 @@ function getLocalIpAddresses(): string[] {
 // Allowlist static origins and a local-network pattern for convenience when
 // developing from other devices on the LAN (e.g. 192.168.x.x:8800).
 const allowedOrigins = [
-  "https://speechora.com",
+  "https://www.speechora.com",
   "http://localhost:5173",
   "http://192.168.43.204:8000",
   "http://localhost:8800",
