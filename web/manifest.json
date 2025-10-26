@@ -1,6 +1,6 @@
 {
-    "name": "speachora",
-    "short_name": "speachora",
+    "name": "speechora",
+    "short_name": "speechora",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#58CC02",

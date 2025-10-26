@@ -79,6 +79,16 @@ dependencies:
   
   # Text to speech
   flutter_tts:
+  
+  # State management for localization
+  provider:
+  
+  # Localization support
+  flutter_localizations:
+    sdk: flutter
+  
+  # Internationalization
+  intl:
 
 dev_dependencies:
   flutter_test:

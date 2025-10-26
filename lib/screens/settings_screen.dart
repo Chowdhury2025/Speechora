@@ -4,6 +4,9 @@ import 'package:speachora/widgets/alarm_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:speachora/l10n/app_localizations.dart';
+import 'package:speachora/providers/locale_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,6 +19,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   static String selectedLanguage = 'English';
   static String selectedVoiceAccent = 'American';
   static double speechRate = 0.5;
+  bool translateBeforeSpeaking = true;
 
   String userName = '';
   String userEmail = '';
@@ -75,6 +79,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     final rate = prefs.getDouble('speechRate');
     final defaultLauncher = prefs.getBool('isDefaultLauncher');
     final defaultLauncherFlutter = prefs.getBool('flutter.isDefaultLauncher');
+    final translatePref = prefs.getBool('translateBeforeSpeak');
 
     if (lang != null) {
       setState(() {
@@ -94,6 +99,11 @@ class SettingsScreenState extends State<SettingsScreen> {
         SettingsScreenState.speechRate = rate;
       });
     }
+    if (translatePref != null) {
+      setState(() {
+        translateBeforeSpeaking = translatePref;
+      });
+    }
     if (defaultLauncherFlutter != null) {
       setState(() {
         isDefaultLauncher = defaultLauncherFlutter;
@@ -111,14 +121,13 @@ class SettingsScreenState extends State<SettingsScreen> {
     await prefs.setString('selectedVoiceAccent', selectedVoiceAccent);
     await prefs.setDouble('speechRate', speechRate);
     await prefs.setBool('isDefaultLauncher', isDefaultLauncher);
+    await prefs.setBool('translateBeforeSpeak', translateBeforeSpeaking);
     // Also write the flutter-prefixed key so the native Android code can read it directly
     await prefs.setBool('flutter.isDefaultLauncher', isDefaultLauncher);
   }
 
   Future<void> _loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-
     setState(() {
       userName = prefs.getString('userName') ?? '';
       userEmail = prefs.getString('userEmail') ?? '';
@@ -148,12 +157,49 @@ class SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  Future<void> _fixTTS() async {
+    try {
+      final avail = await _ttsService.getAvailableLanguages();
+      final locale = _ttsService.getLocaleForLanguage(selectedLanguage);
+      final langCode = locale.split('-').first.toLowerCase();
+      final found = avail.any((l) => l.toLowerCase().contains(langCode));
+
+      if (found) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('TTS voice for $selectedLanguage appears installed.')),
+          );
+        }
+        return;
+      }
+
+      // Open native installer for TTS data on Android
+      const channel = MethodChannel('com.book8/tts');
+      try {
+        await channel.invokeMethod('installTtsData');
+      } on PlatformException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not open TTS installer: ${e.message}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error checking TTS languages: $e')),
+        );
+      }
+    }
+  }
+
   void _showLanguageDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Select Language'),
+            title: Text(l10n.selectLanguage),
             content: SizedBox(
               width: double.maxFinite,
               child: ListView(
@@ -170,6 +216,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                                 SettingsScreenState.selectedLanguage = lang;
                               });
                               _savePreferences();
+                              // Trigger locale change through provider
+                              context.read<LocaleProvider>().setLocale(lang);
                               Navigator.pop(context);
                             },
                           ),
@@ -182,11 +230,12 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showAccentDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Select Voice Accent'),
+            title: Text(l10n.selectVoiceAccent),
             content: SizedBox(
               width: double.maxFinite,
               child: ListView(
@@ -217,13 +266,36 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _testTTS() async {
     await _ttsService.init();
+    // Apply selected accent and language then speak a short test phrase.
     await _ttsService.setAccent(selectedVoiceAccent);
-    await _ttsService.speak(
-      'Hello! This is a test of the $selectedVoiceAccent voice accent.',
-    );
+    await _ttsService.setLanguageByName(selectedLanguage);
+
+    final testText = selectedLanguage == 'English'
+        ? 'Hello! This is a test of the $selectedVoiceAccent voice accent.'
+        : 'Hello! This text will be translated and spoken in $selectedLanguage.';
+
+    await _ttsService.speak(testText);
+    // Check whether device reports the selected locale and notify user if missing
+    try {
+      final locale = _ttsService.getLocaleForLanguage(selectedLanguage);
+      final avail = await _ttsService.getAvailableLanguages();
+      final langCode = locale.split('-').first.toLowerCase();
+      final found = avail.any((l) => l.toLowerCase().contains(langCode));
+      if (!found && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Device may not have a "$selectedLanguage" voice installed; speech may fallback.\nYou can install language packs in system TTS settings or use cloud TTS for better quality.',
+            ),
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
+    } catch (_) {}
   }
 
   void _showAlarmSettings() {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -245,9 +317,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Alarm & Usage Settings',
-                            style: TextStyle(
+                          Text(
+                            l10n.alarmSettings,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -276,12 +348,13 @@ class SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final backgroundColor = Theme.of(context).primaryColor;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Settings',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.settings,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: backgroundColor,
         elevation: 0,
@@ -328,31 +401,82 @@ class SettingsScreenState extends State<SettingsScreen> {
               children: [
                 _settingsCard(
                   Icons.language,
-                  'Language',
+                  l10n.language,
                   trailing: selectedLanguage,
                   onTap: _showLanguageDialog,
                 ),
                 _settingsCard(
                   Icons.record_voice_over,
-                  'Voice Accent',
+                  l10n.voiceAccent,
                   trailing: selectedVoiceAccent,
                   onTap: _showAccentDialog,
                 ),
-                _settingsCard(Icons.volume_up, 'Test TTS', onTap: _testTTS),
+                _settingsCard(Icons.volume_up, l10n.testTTS, onTap: _testTTS),
+
+                // Translate before speaking toggle
+                Card(
+                  color: Theme.of(context).primaryColor.withOpacity(0.7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 7),
+                  child: SwitchListTile(
+                    title: Text(
+                      l10n.translateBeforeSpeaking,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      l10n.translateBeforeSpeakingDesc,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    value: translateBeforeSpeaking,
+                    activeColor: Colors.green,
+                    onChanged: (value) async {
+                      setState(() => translateBeforeSpeaking = value);
+                      await _savePreferences();
+                    },
+                    secondary: const Icon(Icons.translate, color: Colors.white),
+                  ),
+                ),
+                // Fix TTS button - checks available languages and opens installer if missing
+                Card(
+                  color: Theme.of(context).primaryColor.withOpacity(0.7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 7),
+                  child: ListTile(
+                    leading: const Icon(Icons.build, color: Colors.white),
+                    title: Text(
+                      l10n.fixTTS,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      l10n.fixTTSDesc,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    onTap: _fixTTS,
+                  ),
+                ),
                 _settingsCard(
                   Icons.alarm,
-                  'Alarm & Usage Settings',
+                  l10n.alarmSettings,
                   onTap: _showAlarmSettings,
                 ),
-                _settingsCard(Icons.category, 'Categories'),
-                _settingsCard(Icons.favorite, 'Favorites'),
-                _settingsCard(Icons.folder, 'File Locations'),
+                _settingsCard(Icons.category, l10n.categories),
+                _settingsCard(Icons.favorite, l10n.favorites),
+                _settingsCard(Icons.folder, l10n.fileLocations),
                 _settingsCard(
                   Icons.view_column,
-                  'Display',
+                  l10n.display,
                   trailing: 'two columns',
                 ),
-                _settingsCard(Icons.notifications, 'Notifications'),
+                _settingsCard(Icons.notifications, l10n.notifications),
 
                 const Divider(color: Colors.white24, height: 32),
                 // Default launcher toggle
@@ -364,16 +488,16 @@ class SettingsScreenState extends State<SettingsScreen> {
                   elevation: 4,
                   margin: const EdgeInsets.symmetric(vertical: 7),
                   child: SwitchListTile(
-                    title: const Text(
-                      'Set as Default Launcher',
-                      style: TextStyle(
+                    title: Text(
+                      l10n.setAsDefaultLauncher,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    subtitle: const Text(
-                      'Make Book8 your default home screen app',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    subtitle: Text(
+                      l10n.setAsDefaultLauncherDesc,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     value: isDefaultLauncher,
                     activeColor: Colors.green,
@@ -386,17 +510,17 @@ class SettingsScreenState extends State<SettingsScreen> {
                     secondary: const Icon(Icons.home, color: Colors.white),
                   ),
                 ),
-                _settingsCard(Icons.copyright, 'Copyright'),
-                _settingsCard(Icons.privacy_tip, 'Privacy'),
-                _settingsCard(Icons.star_rate, 'Rate Us'),
-                _settingsCard(Icons.apps, 'More Apps'),
-                _settingsCard(Icons.info, 'About'),
+                _settingsCard(Icons.copyright, l10n.copyright),
+                _settingsCard(Icons.privacy_tip, l10n.privacy),
+                _settingsCard(Icons.star_rate, l10n.rateUs),
+                _settingsCard(Icons.apps, l10n.moreApps),
+                _settingsCard(Icons.info, l10n.about),
                 const SizedBox(height: 30),
                 // Logout button
                 ElevatedButton.icon(
                   onPressed: _logout,
                   icon: const Icon(Icons.logout),
-                  label: const Text('Logout'),
+                  label: Text(l10n.logout),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
                     foregroundColor: Colors.white,

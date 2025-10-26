@@ -21,13 +21,6 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(seconds: 3),
     );
-
-    // Check login and premium status after animation
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && !_hasError) {
-        _checkAccessAndNavigate();
-      }
-    });
   }
 
   Future<void> _checkAccessAndNavigate() async {
@@ -67,18 +60,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Fallback content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('assets/appIcon.png', width: 120, height: 120),
-                const SizedBox(height: 24),
-                Text('Book8', style: Theme.of(context).textTheme.displayLarge),
-              ],
-            ),
-          ),
-          // Lottie animation layer
+          // Lottie animation only (no static app icon/text)
           Center(
             child: Lottie.asset(
               'assets/splash_screen_lotties.json',
@@ -86,16 +68,21 @@ class _SplashScreenState extends State<SplashScreen>
               onLoaded: (composition) {
                 // Update the controller duration to match the animation
                 _controller.duration = composition.duration;
-                // Start the animation
+                // Start the animation and navigate after it completes
                 _controller.forward().then((_) {
-                  if (mounted) {
+                  if (mounted && !_hasError) {
                     _checkAccessAndNavigate();
                   }
                 });
               },
               errorBuilder: (context, error, stackTrace) {
+                // If Lottie fails, mark error and navigate after short delay
                 _hasError = true;
-                return const SizedBox.shrink(); // Hide the Lottie widget on error
+                Future.delayed(const Duration(seconds: 1), () {
+                  if (mounted) _checkAccessAndNavigate();
+                });
+                // Show an empty container (keep splash minimal)
+                return const SizedBox.shrink();
               },
             ),
           ),

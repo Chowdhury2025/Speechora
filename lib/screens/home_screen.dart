@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:speachora/l10n/app_localizations.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/PresentationTwo.dart';
 
@@ -38,129 +39,139 @@ class _MyHomePageState extends State<MyHomePage> {
   DateTime? _lastSettingsTapTime;
   static const Duration _tapTimeout = Duration(seconds: 2);
 
-  final List<SubjectCard> subjects = [
-    SubjectCard(
-      title: 'Daily Routine', // 1
-      icon: Icons.home_outlined,
-      color: Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'Home', // 2
-      icon: Icons.house,
-      color: Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'School', // 3
-      icon: Icons.school,
-      color: Color(0xFFFFC800),
-    ),
-    SubjectCard(
-      title: 'Therapy', // 4
-      icon: Icons.healing,
-      color: Color(0xFF58CC02),
-    ),
-    SubjectCard(
-      title: 'Activities', // 5
-      icon: Icons.sports_basketball,
-      color: Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'Family & Friends', // 6
-      icon: Icons.people,
-      color: Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'Toys & Games', // 7
-      icon: Icons.toys,
-      color: Color(0xFFFFC800),
-    ),
-    SubjectCard(
-      title: 'Food & Drink', // 8
-      icon: Icons.restaurant,
-      color: Color(0xFF58CC02),
-    ),
-    SubjectCard(
-      title: 'Places', // 9
-      icon: Icons.place,
-      color: Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'Action Verbs', // 10
-      icon: Icons.directions_run,
-      color: Color(0xFFFFC800),
-    ),
-    SubjectCard(
-      title: 'I Want / Needs', // 11
-      icon: Icons.favorite,
-      color: Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'What Questions', // 12
-      icon: Icons.help_outline,
-      color: Color(0xFF58CC02),
-    ),
-    SubjectCard(
-      title: 'Where Questions', // 13
-      icon: Icons.map,
-      color: Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'Who Questions', // 14
-      icon: Icons.person_search,
-      color: Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'Why Questions', // 15
-      icon: Icons.psychology,
-      color: Color(0xFF58CC02),
-    ),
-    SubjectCard(
-      title: 'How Questions', // 16
-      icon: Icons.lightbulb_outline,
-      color: Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'Question Starters', // 17
-      icon: Icons.question_answer,
-      color: Color(0xFFFFC800),
-    ),
-    SubjectCard(
-      title: 'When Questions', // 18
-      icon: Icons.access_time,
-      color: Color(0xFFFFC800),
-    ),
-    SubjectCard(
-      title: 'Choice Questions', // 19
-      icon: Icons.rule,
-      color: Color(0xFFFF4B4B),
-    ),
-    SubjectCard(
-      title: 'Basic Responses', // 20
-      icon: Icons.more_horiz,
-      color: Color(0xFF1CB0F6),
-    ),
-
-    SubjectCard(
-      title: 'Find the Item', // 21
-      icon: Icons.check_circle_outline,
-      color: Color(0xFF58CC02),
-    ),
-    SubjectCard(
-      title: 'Video Learning', // 22
-      icon: Icons.video_library,
-      color: Color(0xFF1CB0F6),
-    ),
-    SubjectCard(
-      title: 'Games', // 23
-      icon: Icons.games,
-      color: Color(0xFF58CC02),
-    ),
-  ];
+  late List<SubjectCard> subjects;
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _buildSubjects();
+  }
+
+  void _buildSubjects() {
+    final l = AppLocalizations.of(context);
+    subjects = [
+      SubjectCard(
+        title: l.dailyRoutine,
+        icon: Icons.home_outlined,
+        color: Color(0xFF1CB0F6),
+      ),
+      SubjectCard(
+        title: l.home,
+        icon: Icons.house,
+        color: Color(0xFFFF4B4B),
+      ),
+      SubjectCard(
+        title: l.school,
+        icon: Icons.school,
+        color: Color(0xFFFFC800),
+      ),
+      SubjectCard(
+        title: l.therapy,
+        icon: Icons.healing,
+        color: Color(0xFF58CC02),
+      ),
+      SubjectCard(
+        title: l.activities,
+        icon: Icons.sports_basketball,
+        color: Color(0xFF1CB0F6),
+      ),
+      SubjectCard(
+        title: l.familyFriends,
+        icon: Icons.people,
+        color: Color(0xFFFF4B4B),
+      ),
+      SubjectCard(
+        title: l.toysGames,
+        icon: Icons.toys,
+        color: Color(0xFFFFC800),
+      ),
+      SubjectCard(
+        title: l.foodDrink,
+        icon: Icons.restaurant,
+        color: Color(0xFF58CC02),
+      ),
+      SubjectCard(
+        title: l.places,
+        icon: Icons.place,
+        color: Color(0xFF1CB0F6),
+      ),
+      SubjectCard(
+        title: l.actionVerbs,
+        icon: Icons.directions_run,
+        color: Color(0xFFFFC800),
+      ),
+      SubjectCard(
+        title: l.iWantNeeds,
+        icon: Icons.favorite,
+        color: Color(0xFFFF4B4B),
+      ),
+      SubjectCard(
+        title: l.whatQuestions,
+        icon: Icons.help_outline,
+        color: Color(0xFF58CC02),
+      ),
+      SubjectCard(
+        title: l.whereQuestions,
+        icon: Icons.map,
+        color: Color(0xFF1CB0F6),
+      ),
+      SubjectCard(
+        title: l.whoQuestions,
+        icon: Icons.person_search,
+        color: Color(0xFFFF4B4B),
+      ),
+      SubjectCard(
+        title: l.whyQuestions,
+        icon: Icons.psychology,
+        color: Color(0xFF58CC02),
+      ),
+      SubjectCard(
+        title: l.howQuestions,
+        icon: Icons.lightbulb_outline,
+        color: Color(0xFF1CB0F6),
+      ),
+      SubjectCard(
+        title: l.questionStarters,
+        icon: Icons.question_answer,
+        color: Color(0xFFFFC800),
+      ),
+      SubjectCard(
+        title: l.whenQuestions,
+        icon: Icons.access_time,
+        color: Color(0xFFFFC800),
+      ),
+      SubjectCard(
+        title: l.choiceQuestions,
+        icon: Icons.rule,
+        color: Color(0xFFFF4B4B),
+      ),
+      SubjectCard(
+        title: l.basicResponses,
+        icon: Icons.more_horiz,
+        color: Color(0xFF1CB0F6),
+      ),
+      SubjectCard(
+        title: l.findTheItem,
+        icon: Icons.check_circle_outline,
+        color: Color(0xFF58CC02),
+      ),
+      SubjectCard(
+        title: l.videoLearning,
+        icon: Icons.video_library,
+        color: Color(0xFF1CB0F6),
+      ),
+      SubjectCard(
+        title: 'Games',
+        icon: Icons.games,
+        color: Color(0xFF58CC02),
+      ),
+    ];
   }
 
   Future<void> _loadUserName() async {

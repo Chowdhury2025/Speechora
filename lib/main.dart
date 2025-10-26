@@ -1,10 +1,14 @@
 import 'package:speachora/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/auth_premium/login_screen.dart';
 import 'screens/staticscreens/profile_screen.dart';
 import 'screens/staticscreens/splash_screen.dart';
 import 'widgets/premium_access_wrapper.dart';
+import 'l10n/app_localizations.dart';
+import 'providers/locale_provider.dart';
 // import 'services/notification_service.dart'; // REMOVED - notification service disabled
 
 // Duolingo-like colors
@@ -20,7 +24,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // await NotificationService.initialize(); // REMOVED - notification service disabled
   // await AlarmService.initialize(); // REMOVED - notification service disabled
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => LocaleProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -28,83 +37,106 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Kids Learning App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          background: AppColors.background,
-          error: AppColors.error,
-          onBackground: AppColors.text,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Nunito',
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w900,
-            color: AppColors.text,
-          ),
-          displayMedium: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: AppColors.text,
-          ),
-          displaySmall: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppColors.text,
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppColors.text,
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.text,
-          ),
-          bodyMedium: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.text,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            textStyle: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+    return Consumer<LocaleProvider>(
+      builder: (context, localeProvider, _) {
+        return MaterialApp(
+          title: 'speechora',
+          locale: localeProvider.locale,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en'),
+            Locale('es'),
+            Locale('fr'),
+            Locale('de'),
+            Locale('hi'),
+            Locale('zh'),
+            Locale('ar'),
+            Locale('bn'),
+            Locale('pt'),
+            Locale('ru'),
+          ],
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              background: AppColors.background,
+              error: AppColors.error,
+              onBackground: AppColors.text,
+              brightness: Brightness.light,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            useMaterial3: true,
+            fontFamily: 'Nunito',
+            textTheme: const TextTheme(
+              displayLarge: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                color: AppColors.text,
+              ),
+              displayMedium: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: AppColors.text,
+              ),
+              displaySmall: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.text,
+              ),
+              headlineMedium: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.text,
+              ),
+              bodyLarge: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+              bodyMedium: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      home: const SplashScreen(),
-      routes: {
-        // Unprotected routes (always accessible)
-        '/login': (context) => const LoginScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/profile': (context) => ProfileScreen(),
+          home: const SplashScreen(),
+          routes: {
+            // Unprotected routes (always accessible)
+            '/login': (context) => const LoginScreen(),
+            '/settings': (context) => const SettingsScreen(),
+            '/profile': (context) => ProfileScreen(),
 
-        // Protected routes (require premium or trial access)
-        '/home':
-            (context) => PremiumAccessWrapper(
-              child: MyHomePage(title: getUserDisplayName()),
-              onAccessDeniedRoute: '/settings',
-            ),
+            // Protected routes (require premium or trial access)
+            '/home':
+                (context) => PremiumAccessWrapper(
+                  child: MyHomePage(title: getUserDisplayName()),
+                  onAccessDeniedRoute: '/settings',
+                ),
+          },
+          debugShowCheckedModeBanner: false,
+        );
       },
-      debugShowCheckedModeBanner: false,
     );
   }
 }
