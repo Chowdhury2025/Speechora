@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:book8/services/quiz_image_service.dart';
-import 'package:book8/services/tts_service.dart';
+import 'package:speachora/services/quiz_image_service.dart';
+import 'package:speachora/services/tts_service.dart';
 import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lottie/lottie.dart';

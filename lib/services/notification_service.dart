@@ -1,3 +1,8 @@
+// NOTIFICATION SERVICE DISABLED
+// This file has been commented out because flutter_local_notifications dependency was removed
+// to fix Android build issues with core library desugaring requirements.
+
+/*
 import 'dart:convert';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -130,6 +135,7 @@ class AlarmService {
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -196,3 +202,4 @@ class AlarmService {
     await loadAndScheduleAlarms();
   }
 }
+*/

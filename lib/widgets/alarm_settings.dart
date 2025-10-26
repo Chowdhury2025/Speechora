@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:book8/services/notification_service.dart';
+// import 'package:speachora/services/notification_service.dart'; // REMOVED - notification service disabled
 
 class AlarmSettings extends StatefulWidget {
   const AlarmSettings({super.key});
@@ -23,7 +23,8 @@ class _AlarmSettingsState extends State<AlarmSettings> {
   }
 
   Future<void> _loadAndScheduleAlarms() async {
-    await AlarmService.loadAndScheduleAlarms();
+    // await AlarmService.loadAndScheduleAlarms(); // DISABLED - notification service removed
+    print('Alarm scheduling disabled - notification service removed');
   }
 
   Future<void> _loadSettings() async {
@@ -43,7 +44,8 @@ class _AlarmSettingsState extends State<AlarmSettings> {
     await prefs.setInt('dailyUsageLimit', dailyUsageLimit);
     final alarmsJson = alarms.map((alarm) => jsonEncode(alarm)).toList();
     await prefs.setStringList('alarms', alarmsJson);
-    await AlarmService.rescheduleAllAlarms();
+    // await AlarmService.rescheduleAllAlarms(); // DISABLED - notification service removed
+    print('Alarm rescheduling disabled - notification service removed');
   }
 
   void _showUsageLimitDialog() {
@@ -180,7 +182,8 @@ class _AlarmSettingsState extends State<AlarmSettings> {
                   Navigator.pop(context);
 
                   // Cancel the scheduled alarm
-                  AlarmService.cancelAlarm(index);
+                  // AlarmService.cancelAlarm(index); // DISABLED - notification service removed
+                  print('Alarm cancellation disabled - notification service removed');
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Alarm "$alarmName" deleted')),
@@ -274,11 +277,12 @@ class _AlarmSettingsState extends State<AlarmSettings> {
                     _saveSettings();
                     Navigator.pop(context);
 
-                    AlarmService.scheduleAlarm(
-                      alarmName,
-                      selectedTime,
-                      alarms.length - 1,
-                    );
+                    // AlarmService.scheduleAlarm( // DISABLED - notification service removed
+                    //   alarmName,
+                    //   selectedTime,
+                    //   alarms.length - 1,
+                    // );
+                    print('Alarm scheduling disabled - notification service removed');
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Alarm "$alarmName" created')),
@@ -333,9 +337,10 @@ class _AlarmSettingsState extends State<AlarmSettings> {
             style: TextStyle(color: Colors.white70),
           ),
           onTap: () async {
-            await NotificationService.showTestNotification();
+            // await NotificationService.showTestNotification(); // DISABLED - notification service removed
+            print('Test notification disabled - notification service removed');
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Test notification sent!')),
+              const SnackBar(content: Text('Test notification disabled - service removed')),
             );
           },
         ),
@@ -351,9 +356,10 @@ class _AlarmSettingsState extends State<AlarmSettings> {
             style: TextStyle(color: Colors.white70),
           ),
           onTap: () async {
-            await AlarmService.rescheduleAllAlarms();
+            // await AlarmService.rescheduleAllAlarms(); // DISABLED - notification service removed
+            print('Alarm rescheduling disabled - notification service removed');
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Alarms rescheduled!')),
+              const SnackBar(content: Text('Alarm rescheduling disabled - service removed')),
             );
           },
         ),

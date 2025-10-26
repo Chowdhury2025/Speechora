@@ -1,11 +1,11 @@
-import 'package:book8/screens/settings_screen.dart';
+import 'package:speachora/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/auth_premium/login_screen.dart';
 import 'screens/staticscreens/profile_screen.dart';
 import 'screens/staticscreens/splash_screen.dart';
 import 'widgets/premium_access_wrapper.dart';
-import 'services/notification_service.dart';
+// import 'services/notification_service.dart'; // REMOVED - notification service disabled
 
 // Duolingo-like colors
 class AppColors {
@@ -18,8 +18,8 @@ class AppColors {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService.initialize();
-  await AlarmService.initialize();
+  // await NotificationService.initialize(); // REMOVED - notification service disabled
+  // await AlarmService.initialize(); // REMOVED - notification service disabled
   runApp(const MyApp());
 }
 

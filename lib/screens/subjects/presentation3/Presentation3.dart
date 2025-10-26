@@ -1,25 +1,33 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import '../../../services/tts_service.dart';
+import '../../../services/presentation3_service.dart';
 
 class QuizItem {
   final String subject;
-  final String imageUrl;
-  final String imageName;
+  final String imageUrl1;
+  final String imageUrl2;
+  final String imageName1;
+  final String imageName2;
   final String description;
   final String ageGroup;
 
   QuizItem({
     required this.subject,
-    required this.imageUrl,
-    required this.imageName,
+    required this.imageUrl1,
+    required this.imageUrl2,
+    required this.imageName1,
+    required this.imageName2,
     required this.description,
     required this.ageGroup,
   });
 
   factory QuizItem.fromJson(Map<String, dynamic> json) => QuizItem(
     subject: json['subject'],
-    imageUrl: json['imageUrl'],
-    imageName: json['imageName'],
+    imageUrl1: json['imageUrl1'],
+    imageUrl2: json['imageUrl2'],
+    imageName1: json['imageName1'],
+    imageName2: json['imageName2'],
     description: json['description'],
     ageGroup: json['ageGroup'],
   );
@@ -47,10 +55,14 @@ class _Presentation3State extends State<Presentation3>
   final List<QuizItem> _items = [];
   int _currentIndex = 0;
   QuizItem? _selected;
+  String? _selectedName;
   bool _hasError = false;
   String? _errorMessage;
   late AnimationController _questionAnimationController;
   late Animation<double> _questionAnimation;
+  bool _showFirstImageOnTop = true;
+  bool _isLoading = false;
+  Presentation3Service? _presentation3Service;
 
   @override
   void initState() {
@@ -69,7 +81,64 @@ class _Presentation3State extends State<Presentation3>
         _questionAnimationController.reverse();
       }
     });
-    _initializeItems();
+    _initializePresentation();
+  }
+
+  void _initializePresentation() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      _presentation3Service = await Presentation3Service.instance;
+
+      setState(() {
+        _items.addAll(widget.items);
+        _currentIndex = widget.initialIndex;
+        if (_items.length < 2) {
+          _hasError = true;
+          _errorMessage = 'Not enough items to display. Please add more.';
+          _isLoading = false;
+          return;
+        }
+      });
+
+      await _downloadAndCacheImages();
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) => _askQuestion());
+    } catch (e) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = 'Failed to initialize: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _downloadAndCacheImages() async {
+    if (_presentation3Service == null || _items.isEmpty) return;
+
+    try {
+      final presentation3Items = _items.map((item) => Presentation3Item(
+        id: 0,
+        subject: item.subject,
+        imageUrl1: item.imageUrl1,
+        imageUrl2: item.imageUrl2,
+        imageName1: item.imageName1,
+        imageName2: item.imageName2,
+        description: item.description,
+        ageGroup: item.ageGroup,
+      )).toList();
+
+      await _presentation3Service!.ensureImagesDownloaded(presentation3Items);
+      print('All images downloaded and cached successfully');
+    } catch (e) {
+      print('Error downloading images: $e');
+    }
   }
 
   @override
@@ -78,42 +147,101 @@ class _Presentation3State extends State<Presentation3>
     super.dispose();
   }
 
-  void _initializeItems() {
-    setState(() {
-      _items.addAll(widget.items);
-      _currentIndex = widget.initialIndex;
-      if (_items.length < 2) {
-        _hasError = true;
-        _errorMessage = 'Not enough items to display. Please add more.';
-        return;
-      }
-    });
-
-    // Ask the first question once the UI is built
-    WidgetsBinding.instance.addPostFrameCallback((_) => _askQuestion());
-  }
-
   Future<void> _askQuestion() async {
-    final a = _items[_currentIndex];
-    final b = _items[(_currentIndex + 1) % _items.length];
+    final item = _items[_currentIndex];
+    _showFirstImageOnTop = (DateTime.now().millisecondsSinceEpoch % 2 == 0);
     _questionAnimationController.forward();
-    await _tts.speak("Do you want ${a.imageName} or ${b.imageName}?");
+    final topName = _showFirstImageOnTop ? item.imageName1 : item.imageName2;
+    final bottomName = _showFirstImageOnTop ? item.imageName2 : item.imageName1;
+    await _tts.speak("Do you want $topName or $bottomName?");
   }
 
-  Future<void> _onSelect(QuizItem choice) async {
+  Future<void> _onSelect(bool topSelected) async {
     if (_selected != null) return;
-    setState(() => _selected = choice);
-    await _tts.speak("I want ${choice.imageName}");
-    // after a short delay, advance
+    final item = _items[_currentIndex];
+    final selectedName = topSelected
+        ? (_showFirstImageOnTop ? item.imageName1 : item.imageName2)
+        : (_showFirstImageOnTop ? item.imageName2 : item.imageName1);
+    setState(() {
+      _selected = item;
+      _selectedName = selectedName;
+    });
+    await _tts.speak("I want $selectedName");
     await Future.delayed(const Duration(seconds: 2));
     setState(() {
-      _currentIndex = (_currentIndex + 2) % _items.length;
+      _currentIndex = (_currentIndex + 1) % _items.length;
       _selected = null;
+      _selectedName = null;
     });
     _askQuestion();
   }
 
-  // Removed unused _buildOptionCard method
+  Future<void> _refreshData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (_presentation3Service != null) {
+        await _presentation3Service!.clearAllData();
+        _presentation3Service = await Presentation3Service.instance;
+        await _downloadAndCacheImages();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data refreshed and images redownloaded successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to refresh data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Widget _buildImageWidget(String imageUrl) {
+    if (_presentation3Service != null) {
+      final localPath = _presentation3Service!.getLocalImagePath(imageUrl);
+      if (localPath != null && File(localPath).existsSync()) {
+        return Image.file(
+          File(localPath),
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: Colors.grey[300],
+            child: Icon(
+              Icons.image_not_supported,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+          ),
+        );
+      }
+    }
+    
+    return Image.network(
+      imageUrl,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: Colors.grey[300],
+        child: Icon(
+          Icons.image_not_supported,
+          size: 80,
+          color: Colors.grey[400],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,21 +255,42 @@ class _Presentation3State extends State<Presentation3>
         ),
       );
     }
-    if (_items.length < 2) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    
+    if (_isLoading || _items.length < 2) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFB8E4DA),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E4147)),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Loading and caching images...',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF1E4147),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
-    final first = _items[_currentIndex];
-    final second = _items[(_currentIndex + 1) % _items.length];
+    final item = _items[_currentIndex];
+    final topImageUrl = _showFirstImageOnTop ? item.imageUrl1 : item.imageUrl2;
+    final bottomImageUrl = _showFirstImageOnTop ? item.imageUrl2 : item.imageUrl1;
+    final topImageName = _showFirstImageOnTop ? item.imageName1 : item.imageName2;
+    final bottomImageName = _showFirstImageOnTop ? item.imageName2 : item.imageName1;
 
-    // Get screen size for responsive sizing
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.height < 700;
 
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFB8E4DA,
-      ), // Light teal background like in the image
+      backgroundColor: const Color(0xFFB8E4DA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -149,186 +298,136 @@ class _Presentation3State extends State<Presentation3>
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E4147)),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFF1E4147)),
+            onPressed: _refreshData,
+            tooltip: 'Refresh and redownload images',
+          ),
+        ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Top Question Text
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  isSmallScreen ? 20 : 30,
-                  24,
-                  isSmallScreen ? 20 : 40,
-                ),
-                child: ScaleTransition(
-                  scale: _questionAnimation,
-                  child: Text(
-                    "Do you want ${first.imageName} or ${second.imageName}?",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize:
-                          isSmallScreen
-                              ? 34
-                              : 42, // Adjust font size for smaller screens
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1E4147), // Dark teal text
-                      height: 1.2,
-                    ),
+        child: Column(
+          children: [
+            // Top Question Text
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: isSmallScreen ? 12 : 16,
+              ),
+              child: ScaleTransition(
+                scale: _questionAnimation,
+                child: Text(
+                  "Do you want $topImageName or $bottomImageName?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 28 : 36,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E4147),
+                    height: 1.2,
                   ),
                 ),
               ),
+            ),
 
-              // Options as separate cards with images
-              Padding(
+            // Options as large image cards
+            Expanded(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   children: [
-                    // First option (Water)
-                    GestureDetector(
-                      onTap: () => _onSelect(first),
-                      child: Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFFDEF3FA,
-                          ), // Light blue for water
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                first.imageUrl,
-                                height: isSmallScreen ? 90 : 120,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Icon(
-                                      Icons.image_not_supported,
-                                      size: isSmallScreen ? 60 : 80,
-                                      color: Colors.grey[400],
-                                    ),
+                    // Top image option
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _onSelect(true),
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
-                            SizedBox(height: isSmallScreen ? 8 : 16),
-                            Text(
-                              first.imageName,
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 24 : 32,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1E4147),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: _buildImageWidget(topImageUrl),
+                          ),
                         ),
                       ),
                     ),
 
-                    // Second option (Juice)
-                    GestureDetector(
-                      onTap: () => _onSelect(second),
-                      child: Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFFFFD699,
-                          ), // Light orange for juice
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                second.imageUrl,
-                                height: isSmallScreen ? 90 : 120,
-                                fit: BoxFit.contain,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Icon(
-                                      Icons.image_not_supported,
-                                      size: isSmallScreen ? 60 : 80,
-                                      color: Colors.grey[400],
-                                    ),
+                    // Bottom image option
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _onSelect(false),
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
-                            SizedBox(height: isSmallScreen ? 8 : 16),
-                            Text(
-                              second.imageName,
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 24 : 32,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1E4147),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: _buildImageWidget(bottomImageUrl),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
+            ),
 
-              // Bottom response text
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                child:
-                    _selected != null
-                        ? Container(
-                          margin: const EdgeInsets.all(16),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 24,
+            // Bottom response text
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: _selected != null
+                  ? Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: EdgeInsets.symmetric(
+                        vertical: isSmallScreen ? 16 : 20,
+                        horizontal: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF6D6),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFFFFF6D6,
-                            ), // Light yellow background
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            "I want ${_selected!.imageName}",
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 24 : 30,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1E4147),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                        : SizedBox(height: isSmallScreen ? 50 : 70),
-              ),
-            ],
-          ),
+                        ],
+                      ),
+                      child: Text(
+                        _selectedName != null ? 'I want $_selectedName' : '',
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 24 : 30,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1E4147),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : SizedBox(height: isSmallScreen ? 60 : 80),
+            ),
+          ],
         ),
       ),
     );

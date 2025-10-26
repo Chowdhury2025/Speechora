@@ -1,4 +1,4 @@
-import 'package:book8/services/tts_service.dart';
+import 'package:speachora/services/tts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:io';
@@ -166,6 +166,36 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1E4147)),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          // Navigation arrows moved to the top right of the screen
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tooltip(
+                message: 'Previous',
+                child: IconButton(
+                  onPressed: _navigateToPrevious,
+                  icon: const Icon(
+                    Icons.chevron_left,
+                    color: Color(0xFF1E4147),
+                    size: 32,
+                  ),
+                ),
+              ),
+              Tooltip(
+                message: 'Next',
+                child: IconButton(
+                  onPressed: _navigateToNext,
+                  icon: const Icon(
+                    Icons.chevron_right,
+                    color: Color(0xFF1E4147),
+                    size: 32,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: GestureDetector(
         onHorizontalDragEnd: _onHorizontalDrag,
@@ -227,48 +257,81 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                                               .isNotEmpty)
                                       ? Builder(
                                         builder: (context) {
-                                          final localPath = localImagePaths?[widget.image['imageUrl']];
-                                          if (localPath != null && File(localPath).existsSync()) {
+                                          final localPath =
+                                              localImagePaths?[widget
+                                                  .image['imageUrl']];
+                                          if (localPath != null &&
+                                              File(localPath).existsSync()) {
                                             return Image.file(
                                               File(localPath),
                                               fit: BoxFit.cover,
-                                              width: MediaQuery.of(context).size.width * 0.9,
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.9,
                                               height: 280,
-                                              errorBuilder: (context, error, stackTrace) => Container(
-                                                width: MediaQuery.of(context).size.width * 0.9,
-                                                height: 280,
-                                                color: Colors.grey[300],
-                                                child: const Icon(
-                                                  Icons.broken_image,
-                                                  size: 100,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => Container(
+                                                    width:
+                                                        MediaQuery.of(
+                                                          context,
+                                                        ).size.width *
+                                                        0.9,
+                                                    height: 280,
+                                                    color: Colors.grey[300],
+                                                    child: const Icon(
+                                                      Icons.broken_image,
+                                                      size: 100,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
                                             );
                                           } else {
                                             return CachedNetworkImage(
-                                              imageUrl: widget.image['imageUrl'],
+                                              imageUrl:
+                                                  widget.image['imageUrl'],
                                               fit: BoxFit.cover,
-                                              width: MediaQuery.of(context).size.width * 0.9,
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.9,
                                               height: 280,
-                                              placeholder: (context, url) => Container(
-                                                width: MediaQuery.of(context).size.width * 0.9,
-                                                height: 280,
-                                                color: Colors.grey[300],
-                                                child: const Center(
-                                                  child: CircularProgressIndicator(),
-                                                ),
-                                              ),
-                                              errorWidget: (context, url, error) => Container(
-                                                width: MediaQuery.of(context).size.width * 0.9,
-                                                height: 280,
-                                                color: Colors.grey[300],
-                                                child: const Icon(
-                                                  Icons.broken_image,
-                                                  size: 100,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
+                                              placeholder:
+                                                  (context, url) => Container(
+                                                    width:
+                                                        MediaQuery.of(
+                                                          context,
+                                                        ).size.width *
+                                                        0.9,
+                                                    height: 280,
+                                                    color: Colors.grey[300],
+                                                    child: const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                                  ),
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      Container(
+                                                        width:
+                                                            MediaQuery.of(
+                                                              context,
+                                                            ).size.width *
+                                                            0.9,
+                                                        height: 280,
+                                                        color: Colors.grey[300],
+                                                        child: const Icon(
+                                                          Icons.broken_image,
+                                                          size: 100,
+                                                          color: Colors.grey,
+                                                        ),
+                                                      ),
                                             );
                                           }
                                         },
@@ -302,42 +365,6 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Tooltip(
-                            message: 'Previous',
-                            child: ElevatedButton(
-                              onPressed: _navigateToPrevious,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                elevation: 0,
-                              ),
-                              child: const Icon(
-                                Icons.chevron_left,
-                                color: Color(0xFF1E4147),
-                                size: 32,
-                              ),
-                            ),
-                          ),
-                          Tooltip(
-                            message: 'Next',
-                            child: ElevatedButton(
-                              onPressed: _navigateToNext,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                elevation: 0,
-                              ),
-                              child: const Icon(
-                                Icons.chevron_right,
-                                color: Color(0xFF1E4147),
-                                size: 32,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                       const SizedBox(height: 32),
                       Padding(

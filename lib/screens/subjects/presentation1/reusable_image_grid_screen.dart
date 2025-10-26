@@ -1,4 +1,4 @@
-import 'package:book8/constants/constants.dart';
+import 'package:speachora/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -63,7 +63,6 @@ class _ReusableImageGridScreenState extends State<ReusableImageGridScreen> {
             );
             isLoading = false;
           });
-          // Save to cache
           await _saveImagesToCache(images);
         }
       } else {

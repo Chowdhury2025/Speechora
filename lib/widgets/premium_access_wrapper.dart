@@ -1,4 +1,4 @@
-import 'package:book8/constants/constants.dart';
+import 'package:speachora/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -291,9 +291,11 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
   }
 
   void _handleException(Object e, StackTrace stackTrace) {
-    setState(() {
-      _errorMessage = 'Failed to check premium status';
-    });
+    if (mounted) {
+      setState(() {
+        _errorMessage = 'Failed to check premium status';
+      });
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -354,42 +356,55 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.lock_outline, size: 64, color: Colors.amber),
-                const SizedBox(height: 24),
-                const Text(
-                  'Premium Access Required',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _errorMessage.isNotEmpty
-                      ? _errorMessage
-                      : 'Your premium access has expired or is not active.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Purchase premium access to continue using all features.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 32),
-                if (_isLoading || _isRefreshing)
-                  const Column(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.vertical,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Main visual/title/description block are spaced evenly
+                  const Icon(Icons.lock_outline, size: 64, color: Colors.amber),
+
+                  const Text(
+                    'Premium Access Required',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  Column(
                     children: [
-                      CircularProgressIndicator(color: Colors.amber),
-                      SizedBox(height: 16),
-                      Text('Checking status...'),
+                      Text(
+                        _errorMessage.isNotEmpty
+                            ? _errorMessage
+                            : 'Your premium access has expired or is not active.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Purchase premium access to continue using all features.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
                     ],
-                  )
-                else
-                  _buildActionButtons(),
-              ],
+                  ),
+
+                  // Actions area
+                  if (_isLoading || _isRefreshing)
+                    const Column(
+                      children: [
+                        CircularProgressIndicator(color: Colors.amber),
+                        SizedBox(height: 16),
+                        Text('Checking status...'),
+                      ],
+                    )
+                  else
+                    _buildActionButtons(),
+                ],
+              ),
             ),
           ),
         ),

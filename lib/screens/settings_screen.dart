@@ -1,6 +1,6 @@
-import 'package:book8/screens/staticscreens/about_screen.dart';
-import 'package:book8/services/tts_service.dart';
-import 'package:book8/widgets/alarm_settings.dart';
+import 'package:speachora/screens/staticscreens/about_screen.dart';
+import 'package:speachora/services/tts_service.dart';
+import 'package:speachora/widgets/alarm_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +15,7 @@ class SettingsScreen extends StatefulWidget {
 class SettingsScreenState extends State<SettingsScreen> {
   static String selectedLanguage = 'English';
   static String selectedVoiceAccent = 'American';
+  static double speechRate = 0.5;
 
   String userName = '';
   String userEmail = '';
@@ -71,6 +72,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final lang = prefs.getString('selectedLanguage');
     final accent = prefs.getString('selectedVoiceAccent');
+    final rate = prefs.getDouble('speechRate');
     final defaultLauncher = prefs.getBool('isDefaultLauncher');
     final defaultLauncherFlutter = prefs.getBool('flutter.isDefaultLauncher');
 
@@ -84,6 +86,12 @@ class SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         selectedVoiceAccent = accent;
         SettingsScreenState.selectedVoiceAccent = accent;
+      });
+    }
+    if (rate != null) {
+      setState(() {
+        speechRate = rate;
+        SettingsScreenState.speechRate = rate;
       });
     }
     if (defaultLauncherFlutter != null) {
@@ -101,6 +109,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedLanguage', selectedLanguage);
     await prefs.setString('selectedVoiceAccent', selectedVoiceAccent);
+    await prefs.setDouble('speechRate', speechRate);
     await prefs.setBool('isDefaultLauncher', isDefaultLauncher);
     // Also write the flutter-prefixed key so the native Android code can read it directly
     await prefs.setBool('flutter.isDefaultLauncher', isDefaultLauncher);
@@ -460,9 +469,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
-    // Optionally clear other user data:
-    // await prefs.remove('userName');
-    // await prefs.remove('isPremium');
+ 
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/login');
     }

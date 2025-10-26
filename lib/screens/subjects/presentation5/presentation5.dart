@@ -460,7 +460,7 @@ class _presentation5State extends State<presentation5>
                               children: [
                                 if (showBigCelebration) ...[
                                   Lottie.asset(
-                                    'assets/Animation - 1749309499190.json',
+                                    'assets/animations/completed_a_task.json',
                                     controller: _celebrationController,
                                     onLoaded: (composition) {
                                       _celebrationController.duration =

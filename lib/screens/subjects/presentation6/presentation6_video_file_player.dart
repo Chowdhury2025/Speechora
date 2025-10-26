@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:speachora/services/tts_service.dart';
+import 'package:flutter/services.dart';
 
 class Presentation6VideoFilePlayer extends StatefulWidget {
   final String videoFilePath;
@@ -11,6 +14,11 @@ class Presentation6VideoFilePlayer extends StatefulWidget {
   final String description;
   final String teacherName;
   final String? videoUrl; // Add this to pass the original download URL
+  
+  // TTS fields
+  final String language;
+  final String voiceType;
+  final double speechRate;
 
   const Presentation6VideoFilePlayer({
     Key? key,
@@ -19,6 +27,9 @@ class Presentation6VideoFilePlayer extends StatefulWidget {
     required this.description,
     required this.teacherName,
     this.videoUrl, // Optional parameter for download URL
+    this.language = 'en',
+    this.voiceType = 'default',
+    this.speechRate = 1.0,
   }) : super(key: key);
 
   @override
@@ -34,11 +45,35 @@ class _Presentation6VideoFilePlayerState
   String? _errorMessage;
   double _downloadProgress = 0.0;
   bool _isDownloading = false;
+  
+  // TTS variables
+  final TTSService _ttsService = TTSService();
+  bool _isSpeaking = false;
 
   @override
   void initState() {
     super.initState();
+    // Use edge-to-edge system UI so status/navigation bars remain visible
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _initializeTts();
     _prepareAndPlay();
+  }
+
+  Future<void> _initializeTts() async {
+    await _ttsService.init();
+    
+    // Set up TTS callbacks
+    _ttsService.setStartHandler(() {
+      setState(() {
+        _isSpeaking = true;
+      });
+    });
+    
+    _ttsService.setCompletionHandler(() {
+      setState(() {
+        _isSpeaking = false;
+      });
+    });
   }
 
   Future<void> _prepareAndPlay() async {
@@ -75,12 +110,15 @@ class _Presentation6VideoFilePlayerState
       _videoPlayerController = VideoPlayerController.file(file);
       await _videoPlayerController.initialize();
 
+      // Mute the video audio
+      _videoPlayerController.setVolume(0.0);
+
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController,
-        autoPlay: true,
+        autoPlay: false, // Do not auto play
         looping: false,
         aspectRatio: _videoPlayerController.value.aspectRatio,
-        showControls: true,
+        showControls: false, // Hide controls for kids
         materialProgressColors: ChewieProgressColors(
           playedColor: Theme.of(context).primaryColor,
           handleColor: Theme.of(context).primaryColor,
@@ -97,6 +135,9 @@ class _Presentation6VideoFilePlayerState
       setState(() {
         _isLoading = false;
       });
+
+      // Play the video (muted)
+      _videoPlayerController.play();
     } catch (e) {
       setState(() {
         _errorMessage = 'Failed to load video: $e';
@@ -154,149 +195,283 @@ class _Presentation6VideoFilePlayerState
     }
   }
 
-  Future<void> _retryDownload() async {
-    if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty) {
-      await _prepareAndPlay();
-    }
-  }
+  
 
   @override
   void dispose() {
     _videoPlayerController.dispose();
     _chewieController?.dispose();
+    _ttsService.stop();
+    // Reset system UI mode
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Detailed (non-fullscreen) video presentation layout
+    final bgColor = const Color(0xFFD9F0EB); // soft mint background
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
-        actions: [
-          if (_chewieController != null)
-            IconButton(
-              icon: const Icon(Icons.fullscreen),
-              onPressed: () {
-                _chewieController!.enterFullScreen();
-              },
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Container(color: Colors.black, child: _buildVideoPlayer()),
-          ),
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+      backgroundColor: bgColor,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Main content
+            Column(
+              children: [
+                // Top navigation row with back and next/prev arrows
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        icon: const Icon(Icons.arrow_back, size: 28, color: Color(0xFF0F3B3A)),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.chevron_left, size: 28, color: Color(0xFF0F3B3A)),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.chevron_right, size: 28, color: Color(0xFF0F3B3A)),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Teacher: ${widget.teacherName}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blue[600],
-                      fontSize: 16,
-                    ),
+                ),
+
+                // Title shown in a rounded pill to match the description style
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF6D6), // same pale yellow as description
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Text(
-                        widget.description,
-                        style: const TextStyle(fontSize: 14),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      widget.title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F3B3A),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                ),
 
-  Widget _buildVideoPlayer() {
-    if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _retryDownload,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+                const SizedBox(height: 8),
 
-    if (_isLoading || _isDownloading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(color: Colors.white),
-            const SizedBox(height: 16),
-            Text(
-              _isDownloading ? 'Downloading video...' : 'Loading video...',
-              style: const TextStyle(color: Colors.white),
-            ),
-            if (_isDownloading) ...[
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: LinearProgressIndicator(
-                  value: _downloadProgress,
-                  backgroundColor: Colors.grey[600],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).primaryColor,
+                // Video / Image card placed directly below the title.
+                // Use Flexible + SingleChildScrollView so the video and
+                // description stay close to the title but remain scrollable
+                // on smaller screens.
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: Colors.white, width: 6),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.12),
+                                blurRadius: 12,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: SizedBox(
+                              height: 260,
+                              width: MediaQuery.of(context).size.width - 96,
+                              child: Stack(
+                                children: [
+                                  // Video player or placeholder image (tap to toggle, no icon)
+                                  Positioned.fill(
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: _onCardTap,
+                                      child: _chewieController != null
+                                          ? AspectRatio(
+                                              aspectRatio: _videoPlayerController.value.aspectRatio > 0
+                                                  ? _videoPlayerController.value.aspectRatio
+                                                  : 16 / 9,
+                                              child: Chewie(controller: _chewieController!),
+                                            )
+                                          : widget.videoUrl != null && widget.videoUrl!.isNotEmpty
+                                              ? Image.network(
+                                                  widget.videoUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) => Container(color: Colors.grey[200]),
+                                                )
+                                              : Container(color: Colors.grey[200]),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Description rounded pill (closer to the video)
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 28),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF6D6), // pale yellow
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 8,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              widget.description,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F3B3A),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${(_downloadProgress * 100).toInt()}%',
-                style: const TextStyle(color: Colors.white),
+              ],
+            ),
+
+            // Status overlay: shows only when loading, downloading or error
+            if (_isLoading || _isDownloading || _errorMessage != null) ...[
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.35),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isLoading) const CircularProgressIndicator(color: Colors.white),
+                        if (_isDownloading) ...[
+                          const CircularProgressIndicator(color: Colors.white),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                            child: LinearProgressIndicator(value: _downloadProgress, color: Colors.white),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('${(_downloadProgress * 100).toInt()}%', style: const TextStyle(color: Colors.white)),
+                        ],
+                        if (_errorMessage != null) ...[
+                          const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            child: Text(
+                              _errorMessage ?? '',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ],
         ),
-      );
-    }
-
-    if (_chewieController != null) {
-      return Chewie(controller: _chewieController!);
-    }
-
-    return const Center(child: CircularProgressIndicator(color: Colors.white));
+      ),
+    );
   }
+
+  void _togglePlayPause() {
+    if (!mounted) return;
+    if (_chewieController == null) return;
+    if (_videoPlayerController.value.isPlaying) {
+      _videoPlayerController.pause();
+    } else {
+      _videoPlayerController.play();
+    }
+    setState(() {});
+  }
+
+  Future<void> _speakAndWait(String text) async {
+    if (text.isEmpty) return;
+    final completer = Completer<void>();
+
+    void onComplete() {
+      if (!completer.isCompleted) completer.complete();
+    }
+
+    // Temporarily attach a completion handler
+    _ttsService.setCompletionHandler(() {
+      onComplete();
+      // restore state
+      setState(() {
+        _isSpeaking = false;
+      });
+    });
+
+    setState(() {
+      _isSpeaking = true;
+    });
+
+    await _ttsService.speak(text);
+
+    // Wait for completion (guard timeout)
+    await Future.any([
+      completer.future,
+      Future.delayed(const Duration(seconds: 10)),
+    ]);
+  }
+
+  Future<void> _onCardTap() async {
+    // Read title first, then description, then play the video
+    try {
+      await _speakAndWait(widget.title);
+      await _speakAndWait(widget.description);
+
+      // After TTS, start playback if not playing
+      if (!_videoPlayerController.value.isPlaying) {
+        _videoPlayerController.play();
+        setState(() {});
+      }
+    } catch (_) {
+      // fallback: toggle play/pause
+      _togglePlayPause();
+    }
+  }
+
+  
+
+  
 }

@@ -1,4 +1,4 @@
-import 'package:book8/constants/constants.dart';
+import 'package:speachora/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:crypto/crypto.dart';
 import 'package:video_player/video_player.dart';
-import 'presentation6_youtube_player.dart';
 import 'presentation6_video_file_player.dart';
 
 class VideoCategoriesScreen extends StatefulWidget {
@@ -39,20 +38,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
         errorMessage = null;
       });
 
-      // First, fetch categories
-      final categoriesResponse = await http.get(
-        Uri.parse('$apiUrl/videos/categories'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (categoriesResponse.statusCode != 200) {
-        throw Exception('Failed to load categories');
-      }
-
-      final List<dynamic> categoryData = json.decode(categoriesResponse.body);
-      categories = categoryData.map((c) => c.toString()).toList();
-
-      // Then fetch videos
+      // Fetch all videos (same as frontend)
       final response = await http.get(
         Uri.parse('$apiUrl/videos'),
         headers: {'Content-Type': 'application/json'},
@@ -71,6 +57,17 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
           videos = processedVideos;
           isLoading = false;
         });
+
+        // Extract unique categories from video data (same as frontend)
+        final uniqueCategories = processedVideos
+            .map((video) => video.category)
+            .where((category) => category.isNotEmpty)
+            .toSet()
+            .toList();
+        
+        setState(() {
+          categories = uniqueCategories;
+        });
       } else {
         throw Exception('Failed to load videos');
       }
@@ -83,48 +80,15 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
   }
 
   Future<void> fetchVideosByCategory(String category) async {
-    try {
-      setState(() {
-        isLoading = true;
-        errorMessage = null;
-      });
-
-      if (category.isEmpty) {
-        await fetchVideos();
-        return;
-      }
-
-      final response = await http.post(
-        Uri.parse('$apiUrl/videos/category'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'category': category}),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> videoData = json.decode(response.body);
-        List<VideoModel> processedVideos = [];
-
-        for (var videoJson in videoData) {
-          var video = VideoModel.fromJson(videoJson);
-          processedVideos.add(video);
-        }
-
-        setState(() {
-          videos = processedVideos;
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load videos for category');
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Failed to fetch videos: $e';
-        isLoading = false;
-      });
-    }
+    // No API call needed - filtering is done client-side via filteredVideos getter
+    setState(() {
+      selectedCategory = category;
+    });
   }
 
-  List<VideoModel> get filteredVideos => videos;
+  List<VideoModel> get filteredVideos => selectedCategory.isEmpty
+      ? videos
+      : videos.where((video) => video.category == selectedCategory).toList();
 
   Future<void> deleteVideo(String videoId) async {
     final confirmed = await showDialog<bool>(
@@ -150,7 +114,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
     if (confirmed == true) {
       try {
         final response = await http.delete(
-          Uri.parse('$apiUrl/api/videos/$videoId'),
+          Uri.parse('$apiUrl/videos/$videoId'),
           headers: {'Content-Type': 'application/json'},
         );
 
@@ -176,21 +140,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
 
   Future<void> playVideo(VideoModel video) async {
     try {
-      if (video.youtubeLink.isNotEmpty) {
-        // Play YouTube video in-app
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => Presentation6YouTubePlayer(
-                  youtubeUrl: video.youtubeLink,
-                  title: video.title,
-                  description: video.description,
-                  teacherName: video.name,
-                ),
-          ),
-        );
-      } else if (video.videoUrl.isNotEmpty) {
+      if (video.videoUrl.isNotEmpty) {
         // Prepare local video path
         final directory = await getApplicationDocumentsDirectory();
         final videoHash =
@@ -208,8 +158,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
                     title: video.title,
                     description: video.description,
                     teacherName: video.name,
-                    videoUrl:
-                        video.videoUrl, // Pass the original URL for downloading
+                    videoUrl: video.videoUrl, // Pass the original URL for downloading
                   ),
             ),
           );
@@ -229,21 +178,13 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
     }
   }
 
-  String getYoutubeThumbnail(String youtubeUrl) {
-    if (youtubeUrl.isEmpty) {
+  String getVideoThumbnail(String videoUrl) {
+    if (videoUrl.isEmpty) {
       return 'https://via.placeholder.com/150?text=No+Thumbnail';
     }
-
-    final regExp = RegExp(
-      r'(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)',
-    );
-    final match = regExp.firstMatch(youtubeUrl);
-    if (match != null) {
-      final videoId = match.group(1);
-      // Try maxresdefault first, hqdefault will be used as fallback in CachedNetworkImage
-      return 'https://img.youtube.com/vi/$videoId/maxresdefault.jpg';
-    }
-    return 'https://via.placeholder.com/150?text=No+Thumbnail';
+    // For now, return a default thumbnail for video files
+    // In the future, you could implement actual video thumbnail extraction
+    return 'https://via.placeholder.com/150?text=Video';
   }
 
   @override
@@ -389,182 +330,157 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF58CC02),
+      backgroundColor: const Color(0xFF14B7F7), // bright header blue like screenshot
       body: SafeArea(
         child: Column(
           children: [
-            // Custom Header
-            Container(
-              padding: const EdgeInsets.all(20),
+            // Top row: back, title, refresh
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 18.0),
               child: Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                    onPressed: () => Navigator.of(context).maybePop(),
                   ),
                   const Expanded(
                     child: Text(
-                      'Educational Videos',
+                      'Daily Routine',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
                         color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/videos-upload');
-                      },
-                      icon: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white, size: 26),
+                    onPressed: fetchVideos,
                   ),
                 ],
               ),
             ),
 
-            // Category Filter with Duolingo style
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: DropdownButtonFormField<String>(
-                value: selectedCategory.isEmpty ? null : selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Choose Category',
-                  labelStyle: TextStyle(
-                    color: Color(0xFF777777),
-                    fontWeight: FontWeight.w600,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                ),
-                style: const TextStyle(
-                  color: Color(0xFF333333),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: '',
-                    child: Text('🎯 All Categories'),
-                  ),
-                  ...categories.map(
-                    (category) => DropdownMenuItem<String>(
-                      value: category,
-                      child: Text('📚 $category'),
-                    ),
-                  ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedCategory = value ?? '';
-                  });
-                  fetchVideosByCategory(selectedCategory);
-                },
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Video List/Grid
+            // Grid of cards
             Expanded(
               child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF7F7F7),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(30),
-                  ),
+                  color: Color(0xFF14B7F7),
                 ),
                 child: filteredVideos.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE5E5E5),
-                                borderRadius: BorderRadius.circular(60),
-                              ),
-                              child: const Icon(
-                                Icons.video_library_outlined,
-                                size: 60,
-                                color: Color(0xFF777777),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              selectedCategory.isEmpty
-                                  ? '🎬 No videos available yet!'
-                                  : '📂 No videos in this category',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF777777),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Check back later for new content',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF999999),
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          'No videos',
+                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 18),
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(20),
+                    : GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 18,
+                          crossAxisSpacing: 18,
+                          childAspectRatio: 0.92,
+                        ),
+                        padding: const EdgeInsets.only(bottom: 20, top: 6),
                         itemCount: filteredVideos.length,
                         itemBuilder: (context, index) {
                           final video = filteredVideos[index];
-                          return VideoCard(
-                            video: video,
-                            onPlay: () => playVideo(video),
-                            onDelete: () => deleteVideo(video.id),
-                            getThumbnail: getYoutubeThumbnail,
+                          return GestureDetector(
+                            onTap: () => playVideo(video),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(22),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.28),
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                                image: DecorationImage(
+                                  image: NetworkImage(getVideoThumbnail(video.videoUrl)),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(22),
+                                child: Stack(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Container(
+                                        height: 110,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [Colors.transparent, Colors.black.withOpacity(0.72)],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // small circular thumbnail at top-left
+                                    if (video.thumbnail.isNotEmpty)
+                                      Positioned(
+                                        left: 12,
+                                        top: 12,
+                                        child: Container(
+                                          width: 44,
+                                          height: 44,
+                                          padding: const EdgeInsets.all(3),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: ClipOval(
+                                            child: CachedNetworkImage(
+                                              imageUrl: video.thumbnail,
+                                              fit: BoxFit.cover,
+                                              width: 38,
+                                              height: 38,
+                                              placeholder: (context, url) => Container(color: Colors.grey[200]),
+                                              errorWidget: (context, url, error) => Container(color: Colors.grey[200]),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    Positioned(
+                                      left: 14,
+                                      bottom: 18,
+                                      right: 14,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            video.title,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            video.description.isNotEmpty ? video.description : video.name,
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.95),
+                                              fontSize: 13,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -630,7 +546,7 @@ class VideoCard extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
-                        imageUrl: getThumbnail(video.youtubeLink),
+                        imageUrl: getThumbnail(video.videoUrl),
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
@@ -646,70 +562,26 @@ class VideoCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        errorWidget: (context, url, error) {
-                          // If maxresdefault fails, try hqdefault
-                          if (url.contains('maxresdefault')) {
-                            final regExp = RegExp(
-                              r'(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)',
-                            );
-                            final match = regExp.firstMatch(video.youtubeLink);
-                            if (match != null) {
-                              final videoId = match.group(1);
-                              return CachedNetworkImage(
-                                imageUrl:
-                                    'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF58CC02),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Center(
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF58CC02),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.play_circle_filled,
-                                      size: 32,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF58CC02),
-                              borderRadius: BorderRadius.circular(12),
+                        errorWidget: (context, url, error) => Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF58CC02),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.play_circle_filled,
+                              size: 32,
+                              color: Colors.white,
                             ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.play_circle_filled,
-                                size: 32,
-                                color: Colors.white,
-                              ),
-                            ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ),
-                    // Play button overlay
+                    // Play button overlay (no dimming)
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Center(
@@ -727,67 +599,86 @@ class VideoCard extends StatelessWidget {
               
               const SizedBox(width: 16),
               
-              // Content
+              // Content - make the content column the same height as the
+              // thumbnail and distribute title, name and category/description
+              // evenly so spacing looks balanced for kids.
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      video.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
+                child: SizedBox(
+                  height: 80,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        video.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF333333),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    if (video.name.isNotEmpty) ...[
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.person_outline,
-                            size: 14,
+
+                      // Teacher name (single-line)
+                      if (video.name.isNotEmpty)
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.person_outline,
+                              size: 14,
+                              color: Color(0xFF777777),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                video.name,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF777777),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                      // Category or short description chip (single-line)
+                      if (video.category.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF58CC02).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            video.category,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Color(0xFF58CC02),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      else if (video.description.isNotEmpty)
+                        Text(
+                          video.description,
+                          style: const TextStyle(
+                            fontSize: 12,
                             color: Color(0xFF777777),
                           ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              video.name,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF777777),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                     ],
-                    if (video.category.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF58CC02).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          video.category,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF58CC02),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
               ),
               
@@ -858,7 +749,7 @@ class VideoModel {
   final String ageGroup;
   final String description;
   final String videoUrl;
-  final String youtubeLink;
+  final String thumbnail;
 
   VideoModel({
     required this.id,
@@ -868,7 +759,7 @@ class VideoModel {
     required this.ageGroup,
     required this.description,
     required this.videoUrl,
-    required this.youtubeLink,
+    this.thumbnail = '',
   });
 
   factory VideoModel.fromJson(Map<String, dynamic> json) {
@@ -880,7 +771,7 @@ class VideoModel {
       ageGroup: json['ageGroup'] ?? '',
       description: json['description'] ?? '',
       videoUrl: json['video_url'] ?? '',
-      youtubeLink: json['linkyoutube_link'] ?? '',
+      thumbnail: json['thumbnail'] ?? json['thumbnail_url'] ?? json['thumbnailUrl'] ?? json['image'] ?? '',
     );
   }
 }

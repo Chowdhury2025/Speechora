@@ -1,8 +1,9 @@
-import 'package:book8/screens/settings_screen.dart';
-import 'package:book8/screens/subjects/presentation5/presentation5.dart';
+import 'package:speachora/screens/settings_screen.dart';
+import 'package:speachora/screens/subjects/presentation5/presentation5.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'subjects/presentation1/reusable_image_grid_screen.dart';
 import 'subjects/presentation2/PresentationTwo.dart';
 
@@ -31,6 +32,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String userName = '';
   String userEmail = '';
+
+  // Triple tap functionality for settings
+  int _settingsTapCount = 0;
+  DateTime? _lastSettingsTapTime;
+  static const Duration _tapTimeout = Duration(seconds: 2);
+
   final List<SubjectCard> subjects = [
     SubjectCard(
       title: 'Daily Routine', // 1
@@ -132,11 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
       icon: Icons.more_horiz,
       color: Color(0xFF1CB0F6),
     ),
-    // SubjectCard(
-    //   title: 'yes or no ', // 21
-    //   icon: Icons.check_circle_outline,
-    //   color: Color(0xFF58CC02),
-    // ),
+
     SubjectCard(
       title: 'Find the Item', // 21
       icon: Icons.check_circle_outline,
@@ -166,6 +169,58 @@ class _MyHomePageState extends State<MyHomePage> {
       userName = prefs.getString('userName') ?? '';
       userEmail = prefs.getString('userEmail') ?? '';
     });
+  }
+
+  // Triple tap settings handler
+  void _onSettingsTap() {
+    final now = DateTime.now();
+
+    // Reset counter if too much time has passed since last tap
+    if (_lastSettingsTapTime == null ||
+        now.difference(_lastSettingsTapTime!) > _tapTimeout) {
+      _settingsTapCount = 1;
+    } else {
+      _settingsTapCount++;
+    }
+
+    _lastSettingsTapTime = now;
+
+    if (_settingsTapCount == 1) {
+      // First tap - show instruction
+      _showToast("Tap three times to open settings");
+    } else if (_settingsTapCount == 2) {
+      // Second tap - show progress
+      _showToast("Tap one more time");
+    } else if (_settingsTapCount >= 3) {
+      // Third tap - open settings and reset
+      _settingsTapCount = 0;
+      _lastSettingsTapTime = null;
+      _showToast("Opening settings...");
+
+      // Small delay before opening settings for better UX
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _openSettings();
+      });
+    }
+  }
+
+  void _showToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.black87,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  }
+
+  void _openSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
   }
 
   void _navigateToScreen(BuildContext context, String title, Color color) {
@@ -417,20 +472,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       ],
                     ),
                   ),
+                  // Triple tap settings button
                   IconButton(
                     icon: const Icon(
                       Icons.settings,
                       color: Colors.white,
                       size: 28,
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: _onSettingsTap,
                   ),
                 ],
               ),

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:book8/constants/constants.dart';
+import 'package:speachora/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'Presentation3.dart';
@@ -142,7 +142,7 @@ class _Presentation3ListState extends State<Presentation3List> {
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(16),
                       ),
-                      child: Image.network(item.imageUrl, fit: BoxFit.cover),
+                      child: Image.network(item.imageUrl1, fit: BoxFit.cover),
                     ),
                   ),
                   Expanded(
@@ -155,7 +155,7 @@ class _Presentation3ListState extends State<Presentation3List> {
                         ),
                       ),
                       child: Text(
-                        item.imageName,
+                        item.imageName1,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,

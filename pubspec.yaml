@@ -1,22 +1,8 @@
-name: book8
+name: speachora
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/appIcon.png"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/appIcon.png"
-  web:
-    generate: true
-  windows:
-    generate: true
-    icon_size: 48
-  macos:
-    generate: true
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -33,7 +19,7 @@ flutter_icons:
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.2
+  sdk: ^3.9.2
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -44,56 +30,69 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  url_launcher: ^6.2.5
-  shared_preferences: ^2.2.2  
-  http: ^1.1.0
-  flutter_tts: ^3.8.5
-  image_picker: ^1.0.4
-  permission_handler: ^11.3.0
- 
-  
-  
-  path_provider: ^2.1.1
-  crypto: ^3.0.3
-  video_player: ^2.10.0
-  chewie: ^1.12.1
-  flutter_cache_manager: ^3.3.1
-  youtube_player_iframe: ^5.2.1
-  lottie: ^3.0.0
-  cached_network_image: ^3.3.1  # The following adds the Cupertino Icons font to your application.
-  photo_view: ^0.15.0
-  provider: ^6.1.5
-  google_fonts: ^6.2.1
-  youtube_explode_dart: ^2.5.2
-  android_intent_plus: ^5.3.1
-  flutter_local_notifications: ^19.4.1
-  timezone: ^0.10.1
-  fluttertoast: ^9.0.0
+
+  # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons:
   
+  # HTTP requests
+  http:
+  
+  # Local storage
+  shared_preferences:
+  
+  # URL launcher
+  url_launcher:
+  
+  # Toast messages
+  fluttertoast:
+  
+  # Cache management
+  flutter_cache_manager:
+  
+  # Path provider
+  path_provider:
+  
+  # Video player
+  video_player:
+  
+  # Cryptography
+  crypto:
+  
+  # Lottie animations
+  lottie:
+  
+  # Google Fonts
+  google_fonts:
+  
+  # Cached network images
+  cached_network_image:
+  
+  # Image picker
+  image_picker:
+  
+  # Permission handler
+  permission_handler:
+  
+  # Video player wrapper
+  chewie:
+  
+  # Text to speech
+  flutter_tts:
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
-  flutter_native_splash: ^2.4.0
-
-flutter_native_splash:
-  color: "#FFFFFF"
-  image: assets/appIcon.png
-  android: true
-  ios: true
-  web: true
-  android_gravity: center
-  ios_content_mode: center
-  fullscreen: true
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  # flutter_lints: ^5.0.0
+  flutter_lints:
+  
+  # Flutter launcher icons for generating app icons
+  flutter_launcher_icons:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -105,15 +104,19 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-  
+
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/splash_screen_lotties.json
-    - assets/appbg.png
-    - assets/appIcon.png
-    - assets/items/
+    - assets/
     - assets/animations/
-    - assets/animations/completed_a_task.json
+    - assets/items/
+    - assets/fonts/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
@@ -130,9 +133,22 @@ flutter:
           weight: 800
         - asset: assets/fonts/Nunito-Black.ttf
           weight: 900
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
+  #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Flutter Launcher Icons configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/appIcon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/appIcon.png"
+    background_color: "#58CC02"
+    theme_color: "#58CC02"
+  windows:
+    generate: true
+    image_path: "assets/appIcon.png"
+    icon_size: 48 # min:48, max:256, default: 48

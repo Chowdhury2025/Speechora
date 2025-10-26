@@ -1,9 +1,8 @@
-import 'package:book8/constants/constants.dart';
+import 'package:speachora/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:crypto/crypto.dart';
@@ -12,7 +11,6 @@ import 'dart:convert';
 class Video {
   final int id;
   final String title;
-  final String? linkyoutube_link;
   final String? video_url;
   final String? description;
   final String? name;
@@ -21,22 +19,16 @@ class Video {
   Video({
     required this.id,
     required this.title,
-    this.linkyoutube_link,
     this.video_url,
     this.description,
     this.name,
     String? thumbnailUrl,
-  }) : thumbnailUrl =
-           thumbnailUrl ??
-           (linkyoutube_link != null
-               ? 'https://img.youtube.com/vi/${Uri.parse(linkyoutube_link).queryParameters['v'] ?? ''}/0.jpg'
-               : '');
+  }) : thumbnailUrl = thumbnailUrl ?? '';
 
   factory Video.fromJson(Map<String, dynamic> json) {
     return Video(
       id: json['id'],
       title: json['title'],
-      linkyoutube_link: json['linkyoutube_link'],
       video_url: json['video_url'],
       description: json['description'],
       name: json['name'],
@@ -142,57 +134,7 @@ class _Presentation6ScreenState extends State<Presentation6Screen> {
   }
 
   void _playVideo(Video video) async {
-    if (video.linkyoutube_link?.isNotEmpty ?? false) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            final controller = YoutubePlayerController(
-              params: const YoutubePlayerParams(
-                mute: false,
-                showControls: true,
-                showFullscreenButton: true,
-              ),
-            );
-
-            controller.loadVideo(video.linkyoutube_link!);
-
-            return Scaffold(
-              appBar: AppBar(title: Text(video.title)),
-              body: Column(
-                children: [
-                  YoutubePlayer(controller: controller),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (video.description?.isNotEmpty ?? false) ...[
-                            const Text(
-                              'Description:',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(video.description!, softWrap: true),
-                            const SizedBox(height: 16),
-                          ],
-                          Text(
-                            'Teacher: ${video.name ?? "Unknown Teacher"}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            softWrap: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      );
-    } else if (video.video_url?.isNotEmpty ?? false) {
+    if (video.video_url?.isNotEmpty ?? false) {
       try {
         ScaffoldMessenger.of(
           context,
@@ -232,6 +174,10 @@ class _Presentation6ScreenState extends State<Presentation6Screen> {
           ).showSnackBar(SnackBar(content: Text('Error: $e')));
         }
       }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No video URL available')));
     }
   }
 
