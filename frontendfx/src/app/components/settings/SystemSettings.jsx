@@ -20,6 +20,14 @@ const SystemSettings = () => {
     Terms_and_conditions: "",
     premiumPricing: "50"
   });
+  const [mobileDefaults, setMobileDefaults] = useState({
+    languageOverride: 'en',
+    homeButtons: '', // comma separated labels for simple storage
+    appIconUrl: '',
+    splashIconUrl: '',
+    orientation: 'portrait',
+    downloadOnInitialLogin: false
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [users, setUsers] = useState([]);
@@ -47,7 +55,16 @@ const SystemSettings = () => {
       const response = await fetch(`${API_URL}/api/system/settings`);
       if (!response.ok) throw new Error("Failed to fetch settings");
       const data = await response.json();
+      // Map backend response to local settings state
       setSettings(data);
+      setMobileDefaults(data.mobileDefaults || {
+        languageOverride: 'en',
+        homeButtons: '',
+        appIconUrl: '',
+        splashIconUrl: '',
+        orientation: 'portrait',
+        downloadOnInitialLogin: false
+      });
       // Update company name in Recoil state
       setCompanyName(data.businessName || "Speechora ");
     } catch (err) {
@@ -62,10 +79,12 @@ const SystemSettings = () => {
     try {
       setLoading(true);
       console.log('Submitting settings:', settings);
+      // include mobile defaults in payload
+      const payload = { ...settings, mobileDefaults };
       const response = await fetch(`${API_URL}/api/system/settings`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(payload)
       });
       console.log('Response status:', response.status);
       
@@ -74,6 +93,7 @@ const SystemSettings = () => {
       const data = await response.json();
       console.log('Updated settings:', data);
       setSettings(data);
+      setMobileDefaults(data.mobileDefaults || mobileDefaults);
       // Update company name in Recoil state after successful update
       setCompanyName(data.businessName || "Speechora ");
     } catch (err) {
@@ -88,6 +108,14 @@ const SystemSettings = () => {
     setSettings(prev => ({
       ...prev,
       [name]: name === "bossId" ? (value ? parseInt(value, 10) : null) : value
+    }));
+  };
+
+  const handleMobileDefaultChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setMobileDefaults(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -194,6 +222,46 @@ const SystemSettings = () => {
               rows="4"
               className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-[#58cc02] focus:ring-1 focus:ring-[#58cc02] font-medium"
             />
+          </div>
+
+          {/* Mobile defaults section */}
+          <div className="md:col-span-2">
+            <h3 className="text-lg font-semibold text-[#3c9202] mb-3">Mobile App Defaults</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Language Override</label>
+                <select name="languageOverride" value={mobileDefaults.languageOverride} onChange={handleMobileDefaultChange} className="w-full px-4 py-3 border-2 rounded-xl">
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="pt">Portuguese</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Home Buttons (comma-separated)</label>
+                <input type="text" name="homeButtons" value={mobileDefaults.homeButtons} onChange={handleMobileDefaultChange} className="w-full px-4 py-3 border-2 rounded-xl" placeholder="e.g. Home,Profile,Settings" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">App Icon URL</label>
+                <input type="text" name="appIconUrl" value={mobileDefaults.appIconUrl} onChange={handleMobileDefaultChange} className="w-full px-4 py-3 border-2 rounded-xl" placeholder="https://..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Splash Icon URL</label>
+                <input type="text" name="splashIconUrl" value={mobileDefaults.splashIconUrl} onChange={handleMobileDefaultChange} className="w-full px-4 py-3 border-2 rounded-xl" placeholder="https://..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Orientation</label>
+                <select name="orientation" value={mobileDefaults.orientation} onChange={handleMobileDefaultChange} className="w-full px-4 py-3 border-2 rounded-xl">
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                  <option value="any">Any</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="downloadOnInitialLogin" name="downloadOnInitialLogin" checked={mobileDefaults.downloadOnInitialLogin} onChange={handleMobileDefaultChange} />
+                <label htmlFor="downloadOnInitialLogin" className="text-sm">Download app assets on initial login</label>
+              </div>
+            </div>
           </div>
         </div>
 

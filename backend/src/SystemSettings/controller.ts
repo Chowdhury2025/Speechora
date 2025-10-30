@@ -59,6 +59,14 @@ export const getSystemSettings = async (_req: Request, res: Response) => {
           adminEmail: 'admin@Speechora.com',
           notificationEmail: 'notifications@Speechora.com',
           premiumPricing: '1000', // Default monthly premium price
+          mobileDefaults: {
+            languageOverride: 'en',
+            homeButtons: [],
+            appIconUrl: '',
+            splashIconUrl: '',
+            orientation: 'portrait',
+            downloadOnInitialLogin: false
+          }
         },
       });
     }
@@ -70,6 +78,7 @@ export const getSystemSettings = async (_req: Request, res: Response) => {
       supportEmail: settings.adminEmail, // Using adminEmail as supportEmail
       notificationEmail: settings.notificationEmail,
       premiumPricing: settings.premiumPricing,
+      mobileDefaults: settings.mobileDefaults || {},
       bossId: null, // This would need to be added to schema if needed
       contact: '', // This would need to be added to schema if needed
       tpn: '', // This would need to be added to schema if needed
@@ -91,31 +100,39 @@ export const updateSystemSettings = async (req: Request, res: Response) => {
       adminEmail,
       notificationEmail,
       premiumPricing,
+      mobileDefaults
     } = req.body;
 
     let settings = await prisma.systemSettings.findFirst();
     
     if (!settings) {
       // Create new settings if none exist
-      settings = await prisma.systemSettings.create({
+      settings = await (prisma as any).systemSettings.create({
         data: {
           companyName: businessName || 'Speechora Learning Platform',
           adminEmail: adminEmail || 'admin@Speechora.com',
           notificationEmail: notificationEmail || 'notifications@Speechora.com',
           premiumPricing: premiumPricing || '1000',
+          mobileDefaults: mobileDefaults || {}
         },
       });
     } else {
       // Update existing settings
-      settings = await prisma.systemSettings.update({
+      settings = await (prisma as any).systemSettings.update({
         where: { id: settings.id },
         data: {
           companyName: businessName,
           adminEmail: adminEmail,
           notificationEmail: notificationEmail,
           premiumPricing: premiumPricing,
+          mobileDefaults: mobileDefaults || settings.mobileDefaults || {}
         },
       });
+    }
+
+    // At this point, settings should definitely exist
+    if (!settings) {
+      return res.status(500).json({ message: 'Failed to create or update settings' });
     }
 
     // Return updated settings in the format expected by frontend
@@ -125,6 +142,7 @@ export const updateSystemSettings = async (req: Request, res: Response) => {
       supportEmail: settings.adminEmail,
       notificationEmail: settings.notificationEmail,
       premiumPricing: settings.premiumPricing,
+      mobileDefaults: settings.mobileDefaults || {},
       bossId: null,
       contact: '',
       tpn: '',

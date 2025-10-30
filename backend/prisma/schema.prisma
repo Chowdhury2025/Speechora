@@ -60,6 +60,7 @@ model SystemSettings {
   adminEmail        String   @default("admin@book8.com")
   premiumPricing    String   @default("50") // Default premium pricing
   notificationEmail String   @default("notifications@book8.com")
+  mobileDefaults    Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -84,13 +85,15 @@ model videos {
 model images {
   id           Int      @id @default(autoincrement())
   imageUrl     String   // URL where the image is stored
-  title        String
+  title        String   // Original title (usually English)
   thumbnail    String?  // Optional thumbnail for preview
   category     String?
   position     Int?     // For ordering images in a sequence
-  description  String?
+  description  String?  // Original description (usually English)
   ageGroup     String?  // To match the content with age groups
-  name         String?
+  name         String?  // Original name (usually English)
+  language     String   @default("en") // Primary language
+  translations Json?    // JSON object containing all translations
   userId       Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -102,6 +105,8 @@ model Test {
   title       String
   description String?
   subject     String
+  language  String?
+
   ageGroup    String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -118,7 +123,8 @@ model Question {
   explanation     String?
   difficulty      String?      @default("easy")
   test           Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
-  testId         Int
+  language  String?
+  testId         Int 
   choices        Choice[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -146,6 +152,8 @@ model QuizImage {
   quizTypes   String[]  // Array of quiz types: ['true_false', 'image_quiz']
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  language  String?
+
     userId      Int?
   uploader    User?    @relation("QuizImageUploader", fields: [userId], references: [id])
   @@index([category])
@@ -160,6 +168,8 @@ model Presentation3 {
   imageName1  String
   imageName2  String
   description String
+  language  String?
+
   ageGroup    String
   userId      Int
   createdBy   User      @relation("Presentation3Creator", fields: [userId], references: [id], onDelete: Cascade)
@@ -226,6 +236,8 @@ model Lesson {
   id          Int    @id @default(autoincrement())
   title       String
   description String?
+  language  String?
+
   subject     String  //{wants_and_needs_expression ,action_words_and_verbs, what_questions, where_questions, who_questions, when_questions, why_questions}
   ageGroup    String
   statement   String  // JSON object with structure: { type: "text" | "image_url" | "video_url", content: string }
