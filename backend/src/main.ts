@@ -47,6 +47,7 @@ function getLocalIpAddresses(): string[] {
 // developing from other devices on the LAN (e.g. 192.168.x.x:8800).
 const allowedOrigins = [
   "https://www.speechora.com",
+  "https://book8.vercel.app",
   "http://localhost:5173",
   "http://192.168.43.204:8000",
   "http://localhost:8800",
