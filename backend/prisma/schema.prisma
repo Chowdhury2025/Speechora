@@ -56,10 +56,10 @@ model User {
 
 model SystemSettings {
   id                Int      @id @default(autoincrement())
-  companyName       String   @default("Book8 Learning Platform")
-  adminEmail        String   @default("admin@book8.com")
+  companyName       String   @default("Speechora Learning Platform")
+  adminEmail        String   @default("admin@speechora.com")
   premiumPricing    String   @default("50") // Default premium pricing
-  notificationEmail String   @default("notifications@book8.com")
+  notificationEmail String   @default("notifications@speechora.com")
   mobileDefaults    Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -74,7 +74,8 @@ model videos {
   description     String?
   ageGroup        String?
   name            String?
-  
+  language        String   @default("en")
+  translations    Json?
   category       String?
   userId          Int?
   createdAt       DateTime @default(now())

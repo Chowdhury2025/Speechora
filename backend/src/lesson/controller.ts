@@ -1,97 +1,431 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { TranslationService } from '../services/translationService';
 
 const prisma = new PrismaClient();
+const translationService = TranslationService.getInstance();
 
+interface LessonContent {
+  type: string;
+  content: string;
+  description?: string;
+}
 
+interface LessonTranslationEntry {
+  title?: string;
+  description?: string | null;
+  statement?: LessonContent | null;
+  options?: LessonContent[];
+}
+
+type LessonTranslations = Record<string, LessonTranslationEntry>;
+
+const cloneContent = (content: LessonContent | null | undefined): LessonContent | null => {
+  if (!content) {
+    return null;
+  }
+  const { type, content: value, description } = content;
+  return {
+    type,
+    content: value,
+    ...(description !== undefined ? { description } : {}),
+  };
+};
+
+const cloneOptions = (options: LessonContent[]): LessonContent[] =>
+  options.map(option => ({ ...option }));
+
+const normalizeLanguageParam = (value: unknown, fallback = 'en'): string => {
+  if (!value) {
+    return fallback;
+  }
+  if (Array.isArray(value)) {
+    const first = value[0];
+    return typeof first === 'string' && first ? first : fallback;
+  }
+  if (typeof value === 'string') {
+    return value || fallback;
+  }
+  return fallback;
+};
+
+const parseLessonContent = (raw: unknown): LessonContent | null => {
+  if (raw == null) {
+    return null;
+  }
+
+  const hydrate = (value: any): LessonContent | null => {
+    if (!value || typeof value !== 'object') {
+      return null;
+    }
+
+    const { type, content, description } = value as Record<string, unknown>;
+    if (!type || content === undefined || content === null) {
+      return null;
+    }
+
+    return {
+      type: String(type),
+      content: typeof content === 'string' ? content : String(content),
+      ...(description !== undefined && description !== null
+        ? { description: String(description) }
+        : {}),
+    };
+  };
+
+  if (typeof raw === 'string') {
+    try {
+      return hydrate(JSON.parse(raw));
+    } catch {
+      return {
+        type: 'text',
+        content: raw,
+      };
+    }
+  }
+
+  return hydrate(raw);
+};
+
+const parseLessonOptions = (raw: unknown): LessonContent[] => {
+  if (raw == null) {
+    return [];
+  }
+
+  let data = raw;
+  if (typeof raw === 'string') {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return (data as unknown[])
+    .map(option => parseLessonContent(option))
+    .filter((option): option is LessonContent => option !== null);
+};
+
+const parseTranslations = (raw: unknown): LessonTranslations => {
+  if (!raw) {
+    return {};
+  }
+
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as LessonTranslations;
+    } catch {
+      return {};
+    }
+  }
+
+  return raw as LessonTranslations;
+};
+
+const shouldTranslate = (content: LessonContent | null): boolean => {
+  if (!content) {
+    return false;
+  }
+
+  return content.type === 'text' && typeof content.content === 'string' && content.content.trim().length > 0;
+};
+
+const shouldTranslateText = (text?: string | null): text is string => !!text && text.trim().length > 0;
+
+const createBaseTranslationEntry = (
+  title: string,
+  description: string | undefined,
+  statement: LessonContent | null,
+  options: LessonContent[],
+): LessonTranslationEntry => ({
+  title,
+  description: description ?? null,
+  statement: statement ? { ...statement } : null,
+  options: cloneOptions(options),
+});
+
+const generateLessonTranslations = async (
+  title: string,
+  description: string | undefined,
+  statement: LessonContent | null,
+  options: LessonContent[],
+  sourceLanguage: string,
+): Promise<LessonTranslations> => {
+  const baseEntry = createBaseTranslationEntry(title, description, statement, options);
+
+  if (!translationService.isConfigured()) {
+    return { [sourceLanguage]: baseEntry };
+  }
+
+  const languages = new Set<string>([sourceLanguage]);
+
+  const titlePromise = shouldTranslateText(title)
+    ? translationService.translateToMultipleLanguages(title, sourceLanguage)
+    : Promise.resolve<Record<string, string>>({ [sourceLanguage]: title });
+
+  const descriptionPromise = shouldTranslateText(description)
+    ? translationService.translateToMultipleLanguages(description!, sourceLanguage)
+    : Promise.resolve<Record<string, string>>({});
+
+  const statementContentPromise = shouldTranslate(statement)
+    ? translationService.translateToMultipleLanguages(statement!.content, sourceLanguage)
+    : Promise.resolve<Record<string, string>>({});
+
+  const statementDescriptionPromise = shouldTranslateText(statement?.description)
+    ? translationService.translateToMultipleLanguages(statement!.description!, sourceLanguage)
+    : Promise.resolve<Record<string, string>>({});
+
+  const optionPromises = options.map(async option => {
+    const contentTranslations = shouldTranslate(option)
+      ? await translationService.translateToMultipleLanguages(option.content, sourceLanguage)
+      : {};
+
+    const descriptionTranslations = shouldTranslateText(option.description)
+      ? await translationService.translateToMultipleLanguages(option.description!, sourceLanguage)
+      : {};
+
+    return {
+      contentTranslations,
+      descriptionTranslations,
+    };
+  });
+
+  const [
+    titleTranslations,
+    descriptionTranslations,
+    statementContentTranslations,
+    statementDescriptionTranslations,
+    optionTranslations,
+  ] = await Promise.all([
+    titlePromise,
+    descriptionPromise,
+    statementContentPromise,
+    statementDescriptionPromise,
+    Promise.all(optionPromises),
+  ]);
+
+  const registerLanguages = (translations: Record<string, string>) => {
+    Object.keys(translations).forEach(language => {
+      if (language) {
+        languages.add(language);
+      }
+    });
+  };
+
+  registerLanguages(titleTranslations);
+  registerLanguages(descriptionTranslations);
+  registerLanguages(statementContentTranslations);
+  registerLanguages(statementDescriptionTranslations);
+  optionTranslations.forEach(result => {
+    registerLanguages(result.contentTranslations);
+    registerLanguages(result.descriptionTranslations);
+  });
+
+  const translations: LessonTranslations = {};
+
+  languages.forEach(language => {
+    const entry: LessonTranslationEntry = {
+      title: titleTranslations[language] ?? title,
+      description:
+        descriptionTranslations[language] ??
+        (language === sourceLanguage ? description ?? null : description ?? null),
+      statement: statement
+        ? {
+            ...statement,
+            content: shouldTranslate(statement)
+              ? statementContentTranslations[language] ?? statement.content
+              : statement.content,
+            ...(statement.description !== undefined
+              ? {
+                  description: shouldTranslateText(statement.description)
+                    ? statementDescriptionTranslations[language] ?? statement.description
+                    : statement.description,
+                }
+              : {}),
+          }
+        : null,
+      options: options.map((option, index) => {
+        const { contentTranslations, descriptionTranslations } = optionTranslations[index];
+        return {
+          ...option,
+          content: shouldTranslate(option)
+            ? contentTranslations[language] ?? option.content
+            : option.content,
+          ...(option.description !== undefined
+            ? {
+                description: shouldTranslateText(option.description)
+                  ? descriptionTranslations[language] ?? option.description
+                  : option.description,
+              }
+            : {}),
+        };
+      }),
+    };
+
+    translations[language] = entry;
+  });
+
+  return translations;
+};
+
+const localizeLessonRecord = (lesson: any, requestedLanguage: string) => {
+  const statement = parseLessonContent(lesson.statement) ?? null;
+  const options = parseLessonOptions(lesson.options);
+  const translations = parseTranslations(lesson.translations);
+  const fallbackLanguage = lesson.language || 'en';
+  const translationEntry =
+    translations[requestedLanguage] || translations[fallbackLanguage] || translations['en'];
+
+  const availableLanguages = Array.from(
+    new Set([
+      ...Object.keys(translations),
+      fallbackLanguage,
+    ]),
+  ).filter(language => language);
+
+  const { translations: _ignoredTranslations, ...rest } = lesson;
+
+  return {
+    ...rest,
+    title: translationEntry?.title ?? lesson.title,
+    description:
+      translationEntry?.description ?? lesson.description ?? null,
+    statement: translationEntry?.statement ? cloneContent(translationEntry.statement) : statement,
+    options: translationEntry?.options ? cloneOptions(translationEntry.options) : options,
+    availableLanguages: availableLanguages.length > 0 ? availableLanguages : [fallbackLanguage],
+    currentLanguage: requestedLanguage,
+  };
+};
 
 export const createLesson = async (req: Request, res: Response) => {
   try {
-    const { title, description, subject, ageGroup, userId, statement, options, state } = req.body;
+    const {
+      title,
+      description,
+      subject,
+      ageGroup,
+      userId,
+      statement,
+      options,
+      language: languageOverride,
+      autoTranslate,
+      state,
+    } = req.body;
 
-    // Validate required fields
     if (!title || !subject || !ageGroup) {
       return res.status(400).json({
         error: 'Missing required fields',
         details: 'title, subject, and ageGroup are required fields',
-        state: state || { currentScreen: 'basic-info' }
+        state: state || { currentScreen: 'basic-info' },
       });
     }
 
     if (!userId) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'userId is required',
         details: 'A valid userId must be provided to create a lesson. Please ensure you are logged in and your session is valid.',
-        state: state || { currentScreen: 'basic-info' }
+        state: state || { currentScreen: 'basic-info' },
       });
     }
 
-    if (!statement) {
-      return res.status(400).json({ 
-        error: 'statement is required',
-        details: 'A statement is required for the lesson content',
-        state: { ...state, currentScreen: 'content' }
-      });
-    }
-
-    if (!options || !Array.isArray(options) || options.length < 2) {
-      return res.status(400).json({ 
-        error: 'At least two options are required',
-        details: 'Lesson must have at least two options for students to explore',
-        state: { ...state, currentScreen: 'options' }
-      });
-    }
-
-    // Convert userId to number and validate
     const userIdNum = Number(userId);
-    if (isNaN(userIdNum)) {
+    if (Number.isNaN(userIdNum)) {
       return res.status(400).json({
         error: 'Invalid userId format',
         details: 'userId must be a valid number',
-        state: state || { currentScreen: 'basic-info' }
+        state: state || { currentScreen: 'basic-info' },
       });
     }
 
-    // Find the user first to ensure they exist
     const user = await prisma.user.findUnique({
       where: { id: userIdNum },
     });
 
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'User not found',
         details: `No user found with ID: ${userId}. Please ensure you are using a valid user ID.`,
-        state: state || { currentScreen: 'basic-info' }
+        state: state || { currentScreen: 'basic-info' },
       });
-    }    // Validate statement structure
+    }
+
+    if (!statement) {
+      return res.status(400).json({
+        error: 'statement is required',
+        details: 'A statement is required for the lesson content',
+        state: { ...state, currentScreen: 'content' },
+      });
+    }
+
+    if (!options || !Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({
+        error: 'At least two options are required',
+        details: 'Lesson must have at least two options for students to explore',
+        state: { ...state, currentScreen: 'options' },
+      });
+    }
+
     if (typeof statement !== 'object' || !statement.type || !statement.content) {
       return res.status(400).json({
         error: 'Invalid statement format',
         details: 'Statement must be an object with type and content properties',
-        state: { ...state, currentScreen: 'content' }
+        state: { ...state, currentScreen: 'content' },
       });
     }
 
-    // Validate options structure
-    if (!Array.isArray(options) || !options.every(opt => 
-      typeof opt === 'object' && opt.type && 'content' in opt)) {
+    if (!options.every(opt => typeof opt === 'object' && opt.type && 'content' in opt)) {
       return res.status(400).json({
         error: 'Invalid options format',
         details: 'Each option must be an object with type and content properties',
-        state: { ...state, currentScreen: 'options' }
+        state: { ...state, currentScreen: 'options' },
       });
     }
 
-    // Create the lesson
-    const lesson = await prisma.lesson.create({
+    const baseLanguage = normalizeLanguageParam(languageOverride, 'en');
+
+    const parsedStatement = parseLessonContent(statement);
+    if (!parsedStatement) {
+      return res.status(400).json({
+        error: 'Invalid statement content',
+        details: 'Unable to process the provided statement object',
+        state: { ...state, currentScreen: 'content' },
+      });
+    }
+
+    const parsedOptions = parseLessonOptions(options);
+    if (parsedOptions.length < 2) {
+      return res.status(400).json({
+        error: 'Invalid options content',
+        details: 'Unable to process lesson options',
+        state: { ...state, currentScreen: 'options' },
+      });
+    }
+
+    const translations = autoTranslate === false
+      ? { [baseLanguage]: createBaseTranslationEntry(String(title), description ? String(description) : undefined, parsedStatement, parsedOptions) }
+      : await generateLessonTranslations(
+          String(title),
+          description ? String(description) : undefined,
+          parsedStatement,
+          parsedOptions,
+          baseLanguage,
+        );
+
+    const createdLesson = await prisma.lesson.create({
       data: {
         title: String(title),
         description: description ? String(description) : '',
         subject: String(subject),
         ageGroup: String(ageGroup),
-        statement: JSON.stringify(statement), // Convert statement object to JSON string
-        options: JSON.stringify(options),     // Convert options array to JSON string
+        statement: JSON.stringify(parsedStatement),
+        options: JSON.stringify(parsedOptions),
         userId: userIdNum,
+        language: baseLanguage,
+        translations: translations as any,
       },
       include: {
         createdBy: {
@@ -104,25 +438,28 @@ export const createLesson = async (req: Request, res: Response) => {
       },
     });
 
+    const localizedLesson = localizeLessonRecord(createdLesson, baseLanguage);
+
     res.json({
-      ...lesson,
-      state: { currentScreen: 'success' }
+      ...localizedLesson,
+      state: { currentScreen: 'success' },
     });
   } catch (error) {
     console.error('Error creating lesson:', error);
     res.status(500).json({
       error: 'Failed to create lesson',
       details: error instanceof Error ? error.message : String(error),
-      state: req.body.state || { currentScreen: 'basic-info' }
+      state: req.body.state || { currentScreen: 'basic-info' },
     });
   }
 };
 
 export const getLessons = async (req: Request, res: Response) => {
   try {
-    const { subject, ageGroup } = req.query;
-    
-    let where = {};
+    const { subject, ageGroup, language } = req.query;
+    const requestedLanguage = normalizeLanguageParam(language, 'en');
+
+    let where: Record<string, unknown> = {};
     if (subject) {
       where = { ...where, subject: String(subject) };
     }
@@ -132,9 +469,7 @@ export const getLessons = async (req: Request, res: Response) => {
 
     const lessons = await prisma.lesson.findMany({
       where,
-      orderBy: {
-        createdAt: 'desc'
-      },
+      orderBy: { createdAt: 'desc' },
       include: {
         createdBy: {
           select: {
@@ -144,63 +479,19 @@ export const getLessons = async (req: Request, res: Response) => {
           },
         },
       },
-    });    // Parse JSON strings back into objects for each lesson
-    const parsedLessons = lessons.map(lesson => {
-      try {
-        let parsedStatement = null;
-        let parsedOptions = [];
-
-        // Safely parse statement
-        if (lesson.statement) {
-          try {
-            parsedStatement = JSON.parse(lesson.statement as string);
-          } catch (e) {
-            console.warn(`Failed to parse statement for lesson ${lesson.id}:`, e);
-            // If parsing fails, treat it as a plain text statement
-            parsedStatement = {
-              type: 'text',
-              content: lesson.statement,
-              description: ''
-            };
-          }
-        }
-
-        // Safely parse options
-        if (lesson.options) {
-          try {
-            parsedOptions = JSON.parse(lesson.options as string);
-          } catch (e) {
-            console.warn(`Failed to parse options for lesson ${lesson.id}:`, e);
-            // If parsing fails, treat it as a single text option
-            parsedOptions = [{
-              type: 'text',
-              content: lesson.options,
-              description: ''
-            }];
-          }
-        }
-
-        return {
-          ...lesson,
-          statement: parsedStatement,
-          options: parsedOptions
-        };
-      } catch (e) {
-        console.error(`Error processing lesson ${lesson.id}:`, e);
-        // Return the lesson with unparsed data as fallback
-        return lesson;
-      }
     });
 
+    const localizedLessons = lessons.map(lesson => localizeLessonRecord(lesson, requestedLanguage));
+
     res.json({
-      lessons: parsedLessons,
-      state: { currentScreen: 'list' }
+      lessons: localizedLessons,
+      state: { currentScreen: 'list' },
     });
   } catch (error) {
     console.error('Error fetching lessons:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch lessons',
-      state: { currentScreen: 'list' }
+      state: { currentScreen: 'list' },
     });
   }
 };
@@ -208,8 +499,10 @@ export const getLessons = async (req: Request, res: Response) => {
 export const getLessonById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const requestedLanguage = normalizeLanguageParam(req.query.language, 'en');
+
     const lesson = await prisma.lesson.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: Number(id) },
       include: {
         createdBy: {
           select: {
@@ -222,59 +515,23 @@ export const getLessonById = async (req: Request, res: Response) => {
     });
 
     if (!lesson) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Lesson not found',
-        state: { currentScreen: 'not-found' }
+        state: { currentScreen: 'not-found' },
       });
-    }    // Parse JSON strings back into objects
-    let parsedStatement = null;
-    let parsedOptions = [];
-
-    // Safely parse statement
-    if (lesson.statement) {
-      try {
-        parsedStatement = JSON.parse(lesson.statement as string);
-      } catch (e) {
-        console.warn(`Failed to parse statement for lesson ${lesson.id}:`, e);
-        // If parsing fails, treat it as a plain text statement
-        parsedStatement = {
-          type: 'text',
-          content: lesson.statement,
-          description: ''
-        };
-      }
     }
 
-    // Safely parse options
-    if (lesson.options) {
-      try {
-        parsedOptions = JSON.parse(lesson.options as string);
-      } catch (e) {
-        console.warn(`Failed to parse options for lesson ${lesson.id}:`, e);
-        // If parsing fails, treat it as a single text option
-        parsedOptions = [{
-          type: 'text',
-          content: lesson.options,
-          description: ''
-        }];
-      }
-    }
-
-    const parsedLesson = {
-      ...lesson,
-      statement: parsedStatement,
-      options: parsedOptions
-    };
+    const localizedLesson = localizeLessonRecord(lesson, requestedLanguage);
 
     res.json({
-      ...parsedLesson,
-      state: { currentScreen: 'view' }
+      ...localizedLesson,
+      state: { currentScreen: 'view' },
     });
   } catch (error) {
     console.error('Error fetching lesson:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch lesson',
-      state: { currentScreen: 'error' }
+      state: { currentScreen: 'error' },
     });
   }
 };
@@ -282,37 +539,112 @@ export const getLessonById = async (req: Request, res: Response) => {
 export const updateLesson = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description, subject, ageGroup, statement, options, state } = req.body;
+    const {
+      title,
+      description,
+      subject,
+      ageGroup,
+      statement,
+      options,
+      language: languageOverride,
+      autoTranslate,
+      state,
+    } = req.body;
 
-    // Validate options if provided
     if (options && (!Array.isArray(options) || options.length < 2)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'At least two options are required',
         details: 'Lesson must have at least two options for students to explore',
-        state: { ...state, currentScreen: 'options' }
+        state: { ...state, currentScreen: 'options' },
       });
     }
 
-    // Find the lesson first to ensure it exists
+    const lessonId = Number(id);
+    if (Number.isNaN(lessonId)) {
+      return res.status(400).json({
+        error: 'Invalid lesson ID',
+        details: 'Lesson ID must be a valid number',
+        state: state || { currentScreen: 'basic-info' },
+      });
+    }
+
     const existingLesson = await prisma.lesson.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: lessonId },
     });
 
     if (!existingLesson) {
       return res.status(404).json({
         error: 'Lesson not found',
         details: `No lesson found with ID: ${id}`,
-        state: state || { currentScreen: 'basic-info' }
+        state: state || { currentScreen: 'basic-info' },
       });
-    }    const lesson = await prisma.lesson.update({
-      where: { id: parseInt(id) },
+    }
+
+    const baseLanguage = normalizeLanguageParam(languageOverride, existingLesson.language || 'en');
+
+    const parsedStatement =
+      statement !== undefined
+        ? parseLessonContent(statement)
+        : parseLessonContent(existingLesson.statement);
+
+    if (statement !== undefined && !parsedStatement) {
+      return res.status(400).json({
+        error: 'Invalid statement content',
+        details: 'Unable to process the provided statement object',
+        state: { ...state, currentScreen: 'content' },
+      });
+    }
+
+    const parsedOptions =
+      options !== undefined
+        ? parseLessonOptions(options)
+        : parseLessonOptions(existingLesson.options);
+
+    if (options !== undefined && parsedOptions.length < 2) {
+      return res.status(400).json({
+        error: 'Invalid options content',
+        details: 'Unable to process lesson options',
+        state: { ...state, currentScreen: 'options' },
+      });
+    }
+
+    const nextTitle = title !== undefined ? String(title) : existingLesson.title;
+    const nextDescription = description !== undefined ? (description !== null ? String(description) : null) : existingLesson.description;
+    const nextSubject = subject !== undefined ? String(subject) : existingLesson.subject;
+    const nextAgeGroup = ageGroup !== undefined ? String(ageGroup) : existingLesson.ageGroup;
+
+    const regeneratedTranslations = autoTranslate === false
+      ? {
+          ...parseTranslations(existingLesson.translations),
+          [baseLanguage]: createBaseTranslationEntry(
+            nextTitle,
+            nextDescription ?? undefined,
+            parsedStatement,
+            parsedOptions,
+          ),
+        }
+      : {
+          ...parseTranslations(existingLesson.translations),
+          ...(await generateLessonTranslations(
+            nextTitle,
+            nextDescription ?? undefined,
+            parsedStatement,
+            parsedOptions,
+            baseLanguage,
+          )),
+        };
+
+    const updatedLesson = await prisma.lesson.update({
+      where: { id: lessonId },
       data: {
-        title: title || undefined,
-        description: description !== undefined ? description : undefined,
-        subject: subject || undefined,
-        ageGroup: ageGroup || undefined,
-        statement: statement ? JSON.stringify(statement) : undefined,
-        options: options ? JSON.stringify(options) : undefined,
+        title: title !== undefined ? nextTitle : undefined,
+        description: description !== undefined ? nextDescription ?? '' : undefined,
+        subject: subject !== undefined ? nextSubject : undefined,
+        ageGroup: ageGroup !== undefined ? nextAgeGroup : undefined,
+        statement: statement !== undefined && parsedStatement ? JSON.stringify(parsedStatement) : undefined,
+        options: options !== undefined ? JSON.stringify(parsedOptions) : undefined,
+        language: baseLanguage,
+        translations: regeneratedTranslations as any,
       },
       include: {
         createdBy: {
@@ -325,28 +657,19 @@ export const updateLesson = async (req: Request, res: Response) => {
       },
     });
 
-    // Parse the JSON fields back into objects for the response
-    const parsedLesson = {
-      ...lesson,
-      statement: lesson.statement ? JSON.parse(lesson.statement as string) : null,
-      options: lesson.options ? JSON.parse(lesson.options as string) : []
-    };
+    const responseLanguage = normalizeLanguageParam(languageOverride, baseLanguage);
+    const localizedLesson = localizeLessonRecord(updatedLesson, responseLanguage);
 
     res.json({
-      ...parsedLesson,
-      state: { currentScreen: 'success' }
-    });
-
-    res.json({
-      ...lesson,
-      state: { currentScreen: 'success' }
+      ...localizedLesson,
+      state: { currentScreen: 'success' },
     });
   } catch (error) {
     console.error('Error updating lesson:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update lesson',
       details: error instanceof Error ? error.message : String(error),
-      state: req.body.state || { currentScreen: 'basic-info' }
+      state: req.body.state || { currentScreen: 'basic-info' },
     });
   }
 };
@@ -356,41 +679,48 @@ export const deleteLesson = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { state } = req.body;
 
-    // Check if lesson exists first
+    const lessonId = Number(id);
+    if (Number.isNaN(lessonId)) {
+      return res.status(400).json({
+        error: 'Invalid lesson ID',
+        details: 'Lesson ID must be a valid number',
+        state: state || { currentScreen: 'list' },
+      });
+    }
+
     const lesson = await prisma.lesson.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: lessonId },
     });
 
     if (!lesson) {
       return res.status(404).json({
         error: 'Lesson not found',
         details: `No lesson found with ID: ${id}`,
-        state: state || { currentScreen: 'list' }
+        state: state || { currentScreen: 'list' },
       });
     }
 
     await prisma.lesson.delete({
-      where: { id: parseInt(id) },
+      where: { id: lessonId },
     });
 
-    res.json({ 
+    res.json({
       message: 'Lesson deleted successfully',
-      state: { currentScreen: 'list' }
+      state: { currentScreen: 'list' },
     });
   } catch (error) {
     console.error('Error deleting lesson:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to delete lesson',
       details: error instanceof Error ? error.message : String(error),
-      state: req.body.state || { currentScreen: 'list' }
+      state: req.body.state || { currentScreen: 'list' },
     });
   }
 };
 
-// Add a new endpoint to validate lesson state transitions
 export const validateLessonState = async (req: Request, res: Response) => {
   const { state, data } = req.body;
-  
+
   try {
     switch (state.currentScreen) {
       case 'basic-info':
@@ -398,12 +728,12 @@ export const validateLessonState = async (req: Request, res: Response) => {
           return res.status(400).json({
             error: 'Missing required fields',
             details: 'Title, subject, and age group are required',
-            state
+            state,
           });
         }
         return res.json({
           state: { currentScreen: 'content' },
-          data
+          data,
         });
 
       case 'content':
@@ -411,12 +741,12 @@ export const validateLessonState = async (req: Request, res: Response) => {
           return res.status(400).json({
             error: 'Missing content',
             details: 'Lesson statement is required',
-            state
+            state,
           });
         }
         return res.json({
           state: { currentScreen: 'options' },
-          data
+          data,
         });
 
       case 'options':
@@ -424,34 +754,40 @@ export const validateLessonState = async (req: Request, res: Response) => {
           return res.status(400).json({
             error: 'Invalid options',
             details: 'At least two options are required',
-            state
+            state,
           });
         }
         return res.json({
           state: { currentScreen: 'review' },
-          data
+          data,
         });
 
       case 'review':
-        // For review step, we validate all required fields are present
-        if (!data.title || !data.subject || !data.ageGroup || !data.statement || 
-            !data.options || !Array.isArray(data.options) || data.options.length < 2) {
+        if (
+          !data.title ||
+          !data.subject ||
+          !data.ageGroup ||
+          !data.statement ||
+          !data.options ||
+          !Array.isArray(data.options) ||
+          data.options.length < 2
+        ) {
           return res.status(400).json({
             error: 'Missing required fields',
             details: 'Please ensure all required fields are filled out',
-            state
+            state,
           });
         }
         return res.json({
           state: { currentScreen: 'complete' },
-          data
+          data,
         });
 
       default:
         return res.status(400).json({
           error: 'Invalid state',
           details: 'Unknown screen state',
-          state: { currentScreen: 'basic-info' }
+          state: { currentScreen: 'basic-info' },
         });
     }
   } catch (error) {
@@ -459,7 +795,7 @@ export const validateLessonState = async (req: Request, res: Response) => {
     res.status(500).json({
       error: 'Failed to validate lesson state',
       details: error instanceof Error ? error.message : String(error),
-      state: { currentScreen: 'basic-info' }
+      state: { currentScreen: 'basic-info' },
     });
   }
 };
@@ -467,22 +803,18 @@ export const validateLessonState = async (req: Request, res: Response) => {
 export const getLessonsBySubject = async (req: Request, res: Response) => {
   try {
     const { subject } = req.params;
-    
-    // Validate subject parameter
+    const requestedLanguage = normalizeLanguageParam(req.query.language, 'en');
+
     if (!subject) {
       return res.status(400).json({
         error: 'Subject parameter is required',
-        state: { currentScreen: 'list' }
+        state: { currentScreen: 'list' },
       });
     }
 
     const lessons = await prisma.lesson.findMany({
-      where: {
-        subject: subject
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
+      where: { subject },
+      orderBy: { createdAt: 'desc' },
       include: {
         createdBy: {
           select: {
@@ -494,23 +826,18 @@ export const getLessonsBySubject = async (req: Request, res: Response) => {
       },
     });
 
-    // Transform the statement and options from JSON to objects
-    const transformedLessons = lessons.map(lesson => ({
-      ...lesson,
-      statement: typeof lesson.statement === 'string' ? JSON.parse(lesson.statement as string) : lesson.statement,
-      options: typeof lesson.options === 'string' ? JSON.parse(lesson.options as string) : lesson.options,
-    }));
+    const localizedLessons = lessons.map(lesson => localizeLessonRecord(lesson, requestedLanguage));
 
     res.json({
-      lessons: transformedLessons,
-      state: { currentScreen: 'list' }
+      lessons: localizedLessons,
+      state: { currentScreen: 'list' },
     });
   } catch (error) {
     console.error('Error fetching lessons by subject:', error);
     res.status(500).json({
       error: 'Failed to fetch lessons',
       details: error instanceof Error ? error.message : String(error),
-      state: { currentScreen: 'list' }
+      state: { currentScreen: 'list' },
     });
   }
 };

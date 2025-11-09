@@ -13,6 +13,7 @@ export const SUPPORTED_LANGUAGES = {
   'ja': 'Japanese',
   'ko': 'Korean',
   'ar': 'Arabic',
+  'bn': 'Bangla',
   'hi': 'Hindi',
   'nl': 'Dutch',
   'pl': 'Polish',
