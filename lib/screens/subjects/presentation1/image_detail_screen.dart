@@ -235,33 +235,36 @@ class _ImageDetailScreenState extends State<ImageDetailScreen>
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Tooltip(
-                message: 'Previous',
-                child: IconButton(
-                  onPressed: _navigateToPrevious,
-                  icon: const Icon(
-                    Icons.chevron_left,
-                    color: Color(0xFF1E4147),
-                    size: 32,
+          if (imagesList != null && currentIndex != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (currentIndex! > 0)
+                  Tooltip(
+                    message: 'Previous',
+                    child: IconButton(
+                      onPressed: _navigateToPrevious,
+                      icon: const Icon(
+                        Icons.chevron_left,
+                        color: Color(0xFF1E4147),
+                        size: 32,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              Tooltip(
-                message: 'Next',
-                child: IconButton(
-                  onPressed: _navigateToNext,
-                  icon: const Icon(
-                    Icons.chevron_right,
-                    color: Color(0xFF1E4147),
-                    size: 32,
+                if (currentIndex! < (imagesList?.length ?? 0) - 1)
+                  Tooltip(
+                    message: 'Next',
+                    child: IconButton(
+                      onPressed: _navigateToNext,
+                      icon: const Icon(
+                        Icons.chevron_right,
+                        color: Color(0xFF1E4147),
+                        size: 32,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
       body: GestureDetector(

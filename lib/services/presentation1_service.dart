@@ -17,6 +17,7 @@ class Presentation1Service {
   Map<String, String> _localImagePaths = {};
   bool _isInitialized = false;
   bool _isLoading = false;
+  String _currentLanguage = 'en';
 
   // Secure storage directories
   Directory? _secureJsonDir;
@@ -78,7 +79,7 @@ class Presentation1Service {
         'Hindi': 'hi',
         'Chinese': 'zh',
         'Arabic': 'ar',
-        'Bengali': 'bn',
+        'Bangla': 'bn',
         'Portuguese': 'pt',
         'Russian': 'ru',
       };
@@ -248,6 +249,7 @@ class Presentation1Service {
         'images': _allImages,
         'timestamp': DateTime.now().toIso8601String(),
         'version': '1.0',
+        'language': _currentLanguage,
       };
       
       await jsonFile.writeAsString(json.encode(cacheData));
@@ -268,13 +270,18 @@ class Presentation1Service {
       final jsonString = await jsonFile.readAsString();
       final cacheData = json.decode(jsonString) as Map<String, dynamic>;
       
-      // Check cache age (optional: refresh after 78 hours)
+      // Check cache language and age
+      final cachedLanguage = cacheData['language'] as String?;
+      if (cachedLanguage != _currentLanguage) {
+        print('Cache language ($cachedLanguage) differs from current ($_currentLanguage), forcing refresh');
+        return [];
+      }
+
       final timestampStr = cacheData['timestamp'] as String?;
       if (timestampStr != null) {
         final timestamp = DateTime.parse(timestampStr);
         final hoursSinceCache = DateTime.now().difference(timestamp).inHours;
         
-        // If cache is older than 78 hours, return empty to force refresh
         if (hoursSinceCache > 78) {
           print('Cache is ${hoursSinceCache}h old, forcing refresh');
           return [];
@@ -488,5 +495,11 @@ class Presentation1Service {
     const suffixes = ["B", "KB", "MB", "GB"];
     final i = (math.log(bytes) / math.log(1024)).floor();
     return ((bytes / math.pow(1024, i)).toStringAsFixed(1)) + ' ' + suffixes[i];
+  }
+
+  // Force refresh when language changes
+  Future<void> onLanguageChanged() async {
+    _isInitialized = false;
+    await initializeAllImages(forceRefresh: true);
   }
 }

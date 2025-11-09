@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:crypto/crypto.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'presentation6_video_file_player.dart';
 
@@ -22,6 +23,19 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
   bool isLoading = true;
   String? errorMessage;
 
+  static const Map<String, String> _languageMap = {
+    'English': 'en',
+    'Spanish': 'es',
+    'French': 'fr',
+    'German': 'de',
+    'Hindi': 'hi',
+    'Chinese': 'zh',
+    'Arabic': 'ar',
+    'Bangla': 'bn',
+    'Portuguese': 'pt',
+    'Russian': 'ru',
+  };
+
   // Replace with your actual API URL
   static const String apiUrl = Constants.baseUrl;
 
@@ -38,9 +52,13 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
         errorMessage = null;
       });
 
+      final prefs = await SharedPreferences.getInstance();
+      final languageName = prefs.getString('selectedLanguage') ?? 'English';
+        final languageCode = _languageMap[languageName] ?? 'en';
+
       // Fetch all videos (same as frontend)
       final response = await http.get(
-        Uri.parse('$apiUrl/videos'),
+        Uri.parse('$apiUrl/videos?language=$languageCode'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -159,6 +177,7 @@ class _VideoCategoriesScreenState extends State<VideoCategoriesScreen> {
                     description: video.description,
                     teacherName: video.name,
                     videoUrl: video.videoUrl, // Pass the original URL for downloading
+                        language: video.currentLanguage,
                   ),
             ),
           );
@@ -750,6 +769,8 @@ class VideoModel {
   final String description;
   final String videoUrl;
   final String thumbnail;
+  final String currentLanguage;
+  final List<String> availableLanguages;
 
   VideoModel({
     required this.id,
@@ -760,9 +781,18 @@ class VideoModel {
     required this.description,
     required this.videoUrl,
     this.thumbnail = '',
-  });
+    this.currentLanguage = 'en',
+    List<String>? availableLanguages,
+  }) : availableLanguages = availableLanguages ?? const ['en'];
 
   factory VideoModel.fromJson(Map<String, dynamic> json) {
+    final translations = json['translations'];
+    final parsedAvailableLanguages =
+        (json['availableLanguages'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+        (translations is Map<String, dynamic>
+            ? translations.keys.map((key) => key.toString()).toList()
+            : <String>['en']);
+
     return VideoModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? '',
@@ -772,6 +802,8 @@ class VideoModel {
       description: json['description'] ?? '',
       videoUrl: json['video_url'] ?? '',
       thumbnail: json['thumbnail'] ?? json['thumbnail_url'] ?? json['thumbnailUrl'] ?? json['image'] ?? '',
+      currentLanguage: json['currentLanguage']?.toString() ?? 'en',
+      availableLanguages: parsedAvailableLanguages,
     );
   }
 }

@@ -17,12 +17,39 @@ class Presentation2Service {
   static const String _lastUpdateKeyPrefix = 'presentation2_last_update_';
   static const Duration _cacheExpiration = Duration(days: 14); // 2 weeks
 
+  static const Map<String, String> _languageNameToCode = {
+    'English': 'en',
+    'Spanish': 'es',
+    'French': 'fr',
+    'German': 'de',
+    'Hindi': 'hi',
+    'Chinese': 'zh',
+    'Arabic': 'ar',
+    'Bangla': 'bn',
+    'Portuguese': 'pt',
+    'Russian': 'ru',
+  };
+
+  String _buildCacheKey(String subject, String language) => '$_cacheKeyPrefix${subject}_$language';
+  String _buildLastUpdateKey(String subject, String language) => '$_lastUpdateKeyPrefix${subject}_$language';
+
+  Future<String> _getCurrentLanguageCode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final languageName = prefs.getString('selectedLanguage') ?? 'English';
+      return _languageNameToCode[languageName] ?? 'en';
+    } catch (_) {
+      return 'en';
+    }
+  }
+
   /// Get lessons for a specific subject with intelligent caching
   Future<List<Lesson>> getLessonsBySubject(String subject) async {
     try {
+      final languageCode = await _getCurrentLanguageCode();
       // Check if we have valid cached data
-      final cachedLessons = await _getCachedLessons(subject);
-      final lastUpdate = await _getLastUpdateTime(subject);
+      final cachedLessons = await _getCachedLessons(subject, languageCode);
+      final lastUpdate = await _getLastUpdateTime(subject, languageCode);
       
       // If cache is valid and not expired, return cached data
       if (cachedLessons.isNotEmpty && lastUpdate != null) {
@@ -33,13 +60,13 @@ class Presentation2Service {
       }
 
       // Try to fetch fresh data from API
-      final freshLessons = await _fetchLessonsFromAPI(subject);
+      final freshLessons = await _fetchLessonsFromAPI(subject, languageCode);
       
       if (freshLessons.isNotEmpty) {
         // Save fresh data to cache
         await Future.wait([
-          _cacheLessons(subject, freshLessons),
-          _updateLastUpdateTime(subject)
+          _cacheLessons(subject, languageCode, freshLessons),
+          _updateLastUpdateTime(subject, languageCode)
         ]);
         return freshLessons;
       }
@@ -52,7 +79,8 @@ class Presentation2Service {
       return [];
     } catch (e) {
       // On error, try to return cached data regardless of age
-      final cachedLessons = await _getCachedLessons(subject);
+      final languageCode = await _getCurrentLanguageCode();
+      final cachedLessons = await _getCachedLessons(subject, languageCode);
       if (cachedLessons.isNotEmpty) {
         return cachedLessons;
       }
@@ -64,19 +92,21 @@ class Presentation2Service {
   /// Force refresh lessons (ignores cache)
   Future<List<Lesson>> refreshLessons(String subject) async {
     try {
-      final freshLessons = await _fetchLessonsFromAPI(subject);
+      final languageCode = await _getCurrentLanguageCode();
+      final freshLessons = await _fetchLessonsFromAPI(subject, languageCode);
       
       if (freshLessons.isNotEmpty) {
         await Future.wait([
-          _cacheLessons(subject, freshLessons),
-          _updateLastUpdateTime(subject)
+          _cacheLessons(subject, languageCode, freshLessons),
+          _updateLastUpdateTime(subject, languageCode)
         ]);
       }
       
       return freshLessons;
     } catch (e) {
       // On refresh error, still try to return cached data
-      final cachedLessons = await _getCachedLessons(subject);
+      final languageCode = await _getCurrentLanguageCode();
+      final cachedLessons = await _getCachedLessons(subject, languageCode);
       if (cachedLessons.isNotEmpty) {
         return cachedLessons;
       }
@@ -86,7 +116,8 @@ class Presentation2Service {
 
   /// Check if cached data exists and is fresh
   Future<bool> hasFreshCache(String subject) async {
-    final lastUpdate = await _getLastUpdateTime(subject);
+    final languageCode = await _getCurrentLanguageCode();
+    final lastUpdate = await _getLastUpdateTime(subject, languageCode);
     if (lastUpdate == null) return false;
     
     final timeSinceUpdate = DateTime.now().difference(lastUpdate);
@@ -95,7 +126,8 @@ class Presentation2Service {
 
   /// Get cache age in days
   Future<int?> getCacheAgeInDays(String subject) async {
-    final lastUpdate = await _getLastUpdateTime(subject);
+    final languageCode = await _getCurrentLanguageCode();
+    final lastUpdate = await _getLastUpdateTime(subject, languageCode);
     if (lastUpdate == null) return null;
     
     final timeSinceUpdate = DateTime.now().difference(lastUpdate);
@@ -106,10 +138,11 @@ class Presentation2Service {
   Future<void> clearCache(String subject) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await Future.wait([
-        prefs.remove('$_cacheKeyPrefix$subject'),
-        prefs.remove('$_lastUpdateKeyPrefix$subject')
-      ]);
+      final keys = prefs.getKeys();
+      final targets = keys.where((key) =>
+          key.startsWith('$_cacheKeyPrefix$subject') ||
+          key.startsWith('$_lastUpdateKeyPrefix$subject'));  
+      await Future.wait(targets.map((key) => prefs.remove(key)));
     } catch (e) {
       // Silent error - cache clearing is not critical
     }
@@ -134,9 +167,9 @@ class Presentation2Service {
 
   // Private methods
 
-  Future<List<Lesson>> _fetchLessonsFromAPI(String subject) async {
+  Future<List<Lesson>> _fetchLessonsFromAPI(String subject, String language) async {
     final response = await http.get(
-      Uri.parse('${Constants.baseUrl}/lessons/subject/$subject'),
+      Uri.parse('${Constants.baseUrl}/lessons/subject/$subject?language=$language'),
       headers: {'Content-Type': 'application/json'},
     ).timeout(const Duration(seconds: 10)); // 10-second timeout
 
@@ -154,20 +187,20 @@ class Presentation2Service {
     throw Exception('Failed to load lessons: ${response.statusCode}');
   }
 
-  Future<void> _cacheLessons(String subject, List<Lesson> lessons) async {
+  Future<void> _cacheLessons(String subject, String language, List<Lesson> lessons) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lessonsJson = json.encode(lessons.map((lesson) => lesson.toJson()).toList());
-      await prefs.setString('$_cacheKeyPrefix$subject', lessonsJson);
+      await prefs.setString(_buildCacheKey(subject, language), lessonsJson);
     } catch (e) {
       // Silent error - caching failure should not affect app functionality
     }
   }
 
-  Future<List<Lesson>> _getCachedLessons(String subject) async {
+  Future<List<Lesson>> _getCachedLessons(String subject, String language) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final lessonsJson = prefs.getString('$_cacheKeyPrefix$subject');
+      final lessonsJson = prefs.getString(_buildCacheKey(subject, language));
       
       if (lessonsJson != null) {
         final List<dynamic> data = json.decode(lessonsJson);
@@ -179,11 +212,11 @@ class Presentation2Service {
     return [];
   }
 
-  Future<void> _updateLastUpdateTime(String subject) async {
+  Future<void> _updateLastUpdateTime(String subject, String language) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-        '$_lastUpdateKeyPrefix$subject',
+        _buildLastUpdateKey(subject, language),
         DateTime.now().toIso8601String(),
       );
     } catch (e) {
@@ -191,10 +224,10 @@ class Presentation2Service {
     }
   }
 
-  Future<DateTime?> _getLastUpdateTime(String subject) async {
+  Future<DateTime?> _getLastUpdateTime(String subject, String language) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final timeString = prefs.getString('$_lastUpdateKeyPrefix$subject');
+      final timeString = prefs.getString(_buildLastUpdateKey(subject, language));
       
       if (timeString != null) {
         return DateTime.parse(timeString);

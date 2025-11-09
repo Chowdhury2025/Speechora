@@ -34,7 +34,7 @@ class TTSService {
     'Hindi': 'hi-IN',
     'Chinese': 'zh-CN',
     'Arabic': 'ar-SA',
-    'Bengali': 'bn-IN', // try bn-IN (India) or bn-BD depending on availability
+    'Bangla': 'bn-BD', // Bengali (Bangladesh) - primary locale for Bengali
     'Portuguese': 'pt-PT',
     'Russian': 'ru-RU',
   };
@@ -79,7 +79,7 @@ class TTSService {
     // We don't save to SharedPreferences here as that's handled in the settings screen
   }
 
-  /// Set language based on display name (e.g. 'Bengali' -> 'bn-IN').
+  /// Set language based on display name (e.g. 'Bangla' -> 'bn-IN').
   /// This changes the TTS language used for speaking.
   Future<void> setLanguageByName(String languageName) async {
     final locale = languageLocales[languageName] ?? 'en-US';

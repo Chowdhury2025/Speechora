@@ -204,7 +204,7 @@ class TranslationService extends ChangeNotifier {
       'Hindi': 'hi',
       'Chinese': 'zh',
       'Arabic': 'ar',
-      'Bengali': 'bn',
+      'Bangla': 'bn',
       'Portuguese': 'pt',
       'Russian': 'ru',
     };

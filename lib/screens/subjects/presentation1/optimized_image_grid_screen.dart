@@ -38,6 +38,12 @@ class _OptimizedImageGridScreenState extends State<OptimizedImageGridScreen> {
       _initializeImages();
     });
     _ttsService.init();
+
+    // Listen for language changes
+    SharedPreferences.getInstance().then((prefs) {
+      final currentLang = prefs.getString('selectedLanguage');
+      prefs.setString('lastPresentationLanguage', currentLang ?? 'English');
+    });
   }
 
   Future<void> _initializeImages() async {
@@ -123,6 +129,27 @@ class _OptimizedImageGridScreenState extends State<OptimizedImageGridScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkLanguageChange();
+  }
+
+  Future<void> _checkLanguageChange() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastLang = prefs.getString('lastPresentationLanguage') ?? 'English';
+    final currentLang = prefs.getString('selectedLanguage') ?? 'English';
+    
+    if (lastLang != currentLang) {
+      print('Language changed from $lastLang to $currentLang, refreshing content...');
+      await prefs.setString('lastPresentationLanguage', currentLang);
+      await _imageService.onLanguageChanged();
+      if (mounted) {
+        await _initializeImages();
+      }
+    }
   }
 
   @override

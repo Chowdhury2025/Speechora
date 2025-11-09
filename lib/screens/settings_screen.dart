@@ -1,4 +1,5 @@
 import 'package:speachora/screens/staticscreens/about_screen.dart';
+import 'package:speachora/screens/staticscreens/copyright_screen.dart';
 import 'package:speachora/services/tts_service.dart';
 import 'package:speachora/widgets/alarm_settings.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:speachora/l10n/app_localizations.dart';
 import 'package:speachora/providers/locale_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -34,7 +36,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     'Hindi',
     'Chinese',
     'Arabic',
-    'Bengali',
+    'Bangla',
     'Portuguese',
     'Russian',
   ];
@@ -548,6 +550,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     final backgroundColor = Theme.of(context).primaryColor;
     final cardColor = backgroundColor.withOpacity(0.7);
     final textColor = Colors.white;
+    final l10n = AppLocalizations.of(context);
 
     return Card(
       color: cardColor,
@@ -573,17 +576,33 @@ class SettingsScreenState extends State<SettingsScreen> {
                       color: Colors.white54,
                       size: 18,
                     )),
-            onTap:
-                onTap ??
-                () {
-                  if (title == 'About') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const AboutScreen(),
-                      ),
-                    );
-                  }
-                },
+            onTap: onTap ?? () {
+              if (title == l10n.about) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AboutScreen(),
+                  ),
+                );
+              } else if (title == l10n.categories) {
+                Navigator.of(context).pushNamed('/categories');
+              } else if (title == l10n.favorites) {
+                Navigator.of(context).pushNamed('/favorites');
+              } else if (title == l10n.fileLocations) {
+                _showFileLocationsDialog();
+              } else if (title == l10n.display) {
+                _showDisplaySettingsDialog();
+              } else if (title == l10n.notifications) {
+                _showNotificationsDialog();
+              } else if (title == l10n.privacy) {
+                _launchPrivacyPolicy();
+              } else if (title == l10n.copyright) {
+                _showCopyrightInfo();
+              } else if (title == l10n.rateUs) {
+                _launchAppStore();
+              } else if (title == l10n.moreApps) {
+                _launchDeveloperPage();
+              }
+            },
           ),
         ],
       ),
@@ -622,5 +641,218 @@ class SettingsScreenState extends State<SettingsScreen> {
       }
     }
     await _savePreferences();
+  }
+
+  void _showFileLocationsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context).fileLocations),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _locationItem(
+                Icons.folder_special,
+                'App Data',
+                '/data/user/0/com.book8/app_flutter',
+              ),
+              _locationItem(
+                Icons.folder,
+                'Downloads',
+                '/storage/emulated/0/Download/Book8',
+              ),
+              _locationItem(
+                Icons.image,
+                'Images',
+                '/storage/emulated/0/Pictures/Book8',
+              ),
+              _locationItem(
+                Icons.movie,
+                'Videos',
+                '/storage/emulated/0/Movies/Book8',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context).close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _locationItem(IconData icon, String title, String path) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  path,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDisplaySettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context).display),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Grid Columns'),
+              subtitle: const Text('Number of columns in grid views'),
+              trailing: DropdownButton<int>(
+                value: 2,
+                items: [1, 2, 3, 4].map((int value) {
+                  return DropdownMenuItem<int>(
+                    value: value,
+                    child: Text('$value'),
+                  );
+                }).toList(),
+                onChanged: (int? value) {
+                  // TODO: Implement column count change
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            SwitchListTile(
+              title: const Text('Dark Mode'),
+              value: Theme.of(context).brightness == Brightness.dark,
+              onChanged: (bool value) {
+                // TODO: Implement theme change
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context).close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNotificationsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context).notifications),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SwitchListTile(
+              title: const Text('Daily Reminders'),
+              value: true,
+              onChanged: (bool value) {
+                // TODO: Implement notification settings
+              },
+            ),
+            SwitchListTile(
+              title: const Text('Study Updates'),
+              value: true,
+              onChanged: (bool value) {
+                // TODO: Implement notification settings
+              },
+            ),
+            SwitchListTile(
+              title: const Text('New Content'),
+              value: true,
+              onChanged: (bool value) {
+                // TODO: Implement notification settings
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context).close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _launchPrivacyPolicy() {
+    Navigator.pushNamed(context, '/privacy-policy');
+  }
+
+  void _showCopyrightInfo() {
+    Navigator.push(
+      context, 
+      MaterialPageRoute(builder: (context) => const CopyrightScreen()),
+    );
+  }
+
+  void _launchAppStore() async {
+    const appId = 'com.book8.app';
+    try {
+      // For Android
+      final url = Uri.parse('market://details?id=$appId');
+      final fallbackUrl = Uri.parse('https://play.google.com/store/apps/details?id=$appId');
+      
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else if (await canLaunchUrl(fallbackUrl)) {
+        await launchUrl(fallbackUrl);
+      } else {
+        throw 'Could not launch store';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open app store')),
+        );
+      }
+    }
+  }
+
+  void _launchDeveloperPage() async {
+    const devId = 'Book8+Developer';
+    try {
+      // For Android
+      final url = Uri.parse('market://developer?id=$devId');
+      final fallbackUrl = Uri.parse('https://play.google.com/store/apps/developer?id=$devId');
+      
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else if (await canLaunchUrl(fallbackUrl)) {
+        await launchUrl(fallbackUrl);
+      } else {
+        throw 'Could not launch developer page';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open developer page')),
+        );
+      }
+    }
   }
 }
