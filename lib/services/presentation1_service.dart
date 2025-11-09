@@ -102,6 +102,18 @@ class Presentation1Service {
       // Initialize secure directories first
       await _initializeSecureDirectories();
 
+      // Determine current language once and keep it in sync with cache state
+      final detectedLanguage = await _getCurrentLanguageCode();
+      final languageChanged = _currentLanguage != detectedLanguage;
+      _currentLanguage = detectedLanguage;
+
+      if (languageChanged) {
+        // Clear in-memory data when the user switches languages so stale
+        // English content doesn't bleed into localized views.
+        _allImages.clear();
+        _localImagePaths.clear();
+      }
+
       // Try to load from secure JSON cache first
       if (!forceRefresh) {
         final cachedImages = await _loadImagesFromSecureCache();
@@ -120,13 +132,10 @@ class Presentation1Service {
       const maxRetries = 3;
       http.Response? response;
       
-      // Get current user's language
-      final currentLanguage = await _getCurrentLanguageCode();
-      
       for (int attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           response = await http.get(
-            Uri.parse('${Constants.baseUrl}/images?language=$currentLanguage'),
+            Uri.parse('${Constants.baseUrl}/images?language=$_currentLanguage'),
             headers: {
               'Accept': 'application/json',
               'Connection': 'keep-alive',
