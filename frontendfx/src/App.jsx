@@ -38,6 +38,7 @@ import Presentation3List from './components/Presentation3List';
 import Presentation3Form from './components/Presentation3Form';
 import PaymentCallback from './components/PaymentCallback';
 import PrivacyPolicyPage from './app/pages/PrivacyPolicyPage.jsx';
+import RequestDataDeletionPage from './app/pages/RequestDataDeletionPage.jsx';
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
@@ -240,7 +241,9 @@ function Layout() {
       <Sidebar />
       
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+        isSidebarOpen ? 'lg:ml-64 ml-0' : 'lg:ml-16 ml-0'
+      }`}>
         {/* Top Navigation Bar */}
         <header className='bg-white border-b-2 border-[#e5f5d5] shadow-sm'>
           <div className='px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between'>
@@ -293,6 +296,7 @@ function App() {
           <Route path='/verify/email/:token' element={<EmailVerification />} />
           <Route path='/payment-callback' element={<PaymentCallback />} />
           <Route path='/privacy' element={<PrivacyPolicyPage />} />
+          <Route path='/request-data-deletion' element={<RequestDataDeletionPage />} />
           {/* <Route path='/no-role' element={<NoRoleAssigned />} /> */}
           <Route path='/test' element={<UserManagementScreen />} />          
               {/* Authenticated app routes under /app */}

@@ -33,13 +33,19 @@ const Sidebar = () => {
   const role = user?.role?.toUpperCase();
 
   React.useEffect(() => {
-    // Collapse sidebar by default on mobile widths tami help here
-    try {
-      const isMobile = window?.innerWidth && window.innerWidth < 768;
-      if (isMobile) setIsOpen(false);
-    } catch (e) {
-      // ignore
-    }
+    // Auto-collapse sidebar on mobile and tablet, keep open on desktop
+    const handleResize = () => {
+      const isMobileOrTablet = window.innerWidth < 1024; // lg breakpoint
+      if (isMobileOrTablet && isOpen) {
+        setIsOpen(false);
+      } else if (!isMobileOrTablet && !isOpen) {
+        setIsOpen(true);
+      }
+    };
+
+    handleResize(); // Set initial state
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [setIsOpen]);
 
   const allNavItems = [
@@ -102,10 +108,10 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile Menu Button - Only visible on mobile */}
+      {/* Mobile Menu Button - Only visible on mobile and tablet */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 p-2 rounded-lg bg-[#58cc02] text-white md:hidden z-50
+        className="fixed top-4 left-4 p-2 rounded-lg bg-[#58cc02] text-white lg:hidden z-50
           hover:bg-[#47b102] active:bg-[#3c9202] transition-all duration-200
           border-b-2 border-[#3c9202] hover:border-[#2e7502]
           focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
@@ -113,38 +119,51 @@ const Sidebar = () => {
         {isOpen ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
       </button>
 
-      {/* Overlay - Only visible on mobile when sidebar is open */}
+      {/* Overlay - Only visible on mobile/tablet when sidebar is open */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 md:hidden z-40"
+          className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-40"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       <div className={`
-        ${isOpen ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-16'} 
-        fixed left-0 h-screen bg-white
-        flex flex-col shadow-lg transition-all duration-300 z-50
+        fixed left-0 h-screen bg-white shadow-lg transition-all duration-300 z-50
+        ${isOpen 
+          ? 'w-[280px] translate-x-0' 
+          : 'w-16 lg:w-16 translate-x-0'
+        }
       `}>
         {/* Logo Section */}
         <div className="flex items-center justify-center p-3 sm:p-4 border-b border-gray-200">
-          <img src={appLogo} alt="App Logo" className={`${isOpen ? 'w-28 sm:w-32' : 'w-0 sm:w-12'} transition-all duration-300`} />
+          <img src={appLogo} alt="App Logo" className={`transition-all duration-300 ${
+            isOpen ? 'w-28 sm:w-32' : 'w-8 sm:w-10'
+          }`} />
         </div>
-        <div className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 border-b border-slate-200">
-          <span className={`font-bold text-duo-gray-700 text-base sm:text-lg transition-all duration-300 ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>
+        <div className={`h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 border-b border-slate-200 ${
+          !isOpen ? 'px-2' : ''
+        }`}>
+          <span className={`font-bold text-duo-gray-700 transition-all duration-300 ${
+            !isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto text-base sm:text-lg'
+          }`}>
             Speechora Admin
           </span>
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="p-2 rounded-xl bg-[#58cc02] hover:bg-[#47b102] active:bg-[#3c9202] text-white 
             transition-all duration-200 border-b-2 border-[#3c9202] hover:border-[#2e7502]
-            focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2"
+            focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2
+            hidden lg:block"
           >
             {isOpen ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
           </button>
         </div>      {/* Navigation Items */}
-        <nav className="flex flex-col h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)] py-4 sm:py-6 px-2 sm:px-3">
-          <div className="flex-1 space-y-2 sm:space-y-3 overflow-y-auto custom-scrollbar max-h-[calc(100vh-11rem)] sm:max-h-[calc(100vh-12rem)]">
+        <nav className={`flex flex-col py-4 sm:py-6 px-2 sm:px-3 transition-all duration-300 ${
+          isOpen ? 'h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)]' : 'h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)]'
+        }`}>
+          <div className={`flex-1 space-y-2 sm:space-y-3 overflow-y-auto custom-scrollbar ${
+            isOpen ? 'max-h-[calc(100vh-11rem)] sm:max-h-[calc(100vh-12rem)]' : 'max-h-[calc(100vh-11rem)] sm:max-h-[calc(100vh-12rem)]'
+          }`}>
             {otherNavItems.map((item) => {
               const Icon = item.icon;
               const fullPath = item.external ? `/${item.path}` : `/app/${item.path}`;
@@ -161,7 +180,7 @@ const Sidebar = () => {
                   flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200
                   font-bold text-xs sm:text-sm
                   text-duo-gray-600 hover:bg-[#e5f5d5] hover:text-[#3c9202]
-                  ${!isOpen ? 'justify-center w-10 sm:w-12 h-10 sm:h-12' : 'h-9 sm:h-10'}
+                  ${!isOpen ? 'justify-center w-full h-10 sm:h-12' : 'h-9 sm:h-10'}
                   focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2
                 `}
                 >
@@ -196,7 +215,7 @@ const Sidebar = () => {
                   ${isActive
                       ? 'bg-[#58cc02] text-white border-b-2 border-[#3c9202]'
                       : 'text-duo-gray-600 hover:bg-[#e5f6ff] hover:text-[#1cb0f6]'}
-                  ${!isOpen ? 'justify-center w-10 sm:w-12 h-10 sm:h-12' : 'h-9 sm:h-10'}
+                  ${!isOpen ? 'justify-center w-full h-10 sm:h-12' : 'h-9 sm:h-10'}
                   focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2
                 `}
                 >
@@ -232,7 +251,9 @@ const Sidebar = () => {
               <div className={`w-full ${!isOpen ? 'text-center' : ''}`}>
                 <button
                   onClick={() => setContentOpen(!contentOpen)}
-                  className={`w-full flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200 font-bold text-xs sm:text-sm ${!isOpen ? 'justify-center' : ''}`}
+                  className={`w-full flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200 font-bold text-xs sm:text-sm ${
+                    !isOpen ? 'justify-center h-10 sm:h-12' : 'h-9 sm:h-10'
+                  }`}
                 >
                   <div className={`relative group flex items-center ${!isOpen ? 'justify-center' : ''}`}>
                     <BookOpen size={24} className={`${!isOpen ? 'text-duo-gray-600' : 'text-duo-gray-600'}`} />
@@ -266,14 +287,30 @@ const Sidebar = () => {
                     )}
 
                     <div className="sticky bottom-4 pt-3 mb-4 border-t border-slate-200 bg-white">
-            <button
+                <Link
+                  to="/request-data-deletion"
+                  className={`flex items-center px-3 py-3 rounded-xl mb-2 text-duo-gray-600 hover:bg-[#fff4e6] hover:text-[#c76e00] transition-all duration-200 font-bold text-sm ${!isOpen ? 'justify-center h-12 px-2' : 'h-10'}`}
+                >
+                  <div className="relative group mx-auto flex items-center">
+                    <Shield size={20} className="text-duo-gray-600 group-hover:text-[#c76e00] transition-colors duration-200" />
+                    <span className={`ml-3 transition-all duration-300 ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>
+                      Request data deletion
+                    </span>
+                    {!isOpen && (
+                      <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 mb-8 ">
+                        Request data deletion
+                      </div>
+                    )}
+                  </div>
+                </Link>
+                <button
               onClick={handleLogout}
               className={`
               w-full flex items-center px-3 py-3 rounded-xl
               text-duo-gray-600 hover:bg-[#ffd4d4] hover:text-[#ff4b4b]
               transition-all duration-200 font-bold text-sm
               focus:outline-none focus:ring-2 focus:ring-[#ff4b4b] focus:ring-offset-2
-              ${!isOpen ? 'justify-center h-12' : 'h-10'}
+              ${!isOpen ? 'justify-center h-12 px-2' : 'h-10'}
             `}
             >
               <div className="relative group mx-auto flex items-center">
