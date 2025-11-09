@@ -213,5 +213,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get findTheItem => 'আইটেম খুঁজুন';
 
   @override
-  String get videoLearning => 'ভিডিও শিক্ষা';
+  String get videoLearning => 'ভিডিও শেখা';
+
+  @override
+  String get games => 'গেমস';
 }

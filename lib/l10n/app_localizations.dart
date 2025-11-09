@@ -92,6 +92,7 @@ abstract class AppLocalizations {
   String get basicResponses;
   String get findTheItem;
   String get videoLearning;
+  String get games;
 
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations) ?? _instance;

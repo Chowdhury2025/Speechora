@@ -214,4 +214,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoLearning => '视频学习';
+
+  @override
+  String get games => '游戏';
 }

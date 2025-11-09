@@ -213,5 +213,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get findTheItem => 'वस्तु खोजें';
 
   @override
-  String get videoLearning => 'वीडियो सीखना';
+  String get videoLearning => 'वीडियो शिक्षा';
+
+  @override
+  String get games => 'खेल';
 }

@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:speachora/l10n/app_localizations.dart';
-import 'subjects/presentation1/reusable_image_grid_screen.dart';
-import 'subjects/presentation2/PresentationTwo.dart';
+import 'subjects/presentation1/optimized_image_grid_screen.dart';
+import 'subjects/presentation2/presentation2_screen.dart';
 
 import 'subjects/presentation3/presentation3_list.dart';
 import 'subjects/presentation4/BasicResponses.dart';
@@ -18,8 +18,14 @@ class SubjectCard {
   final String title;
   final IconData icon;
   final Color color;
+  final String id; // Add unique identifier for navigation
 
-  SubjectCard({required this.title, required this.icon, required this.color});
+  SubjectCard({
+    required this.title, 
+    required this.icon, 
+    required this.color,
+    required this.id,
+  });
 }
 
 class MyHomePage extends StatefulWidget {
@@ -60,116 +66,139 @@ class _MyHomePageState extends State<MyHomePage> {
         title: l.dailyRoutine,
         icon: Icons.home_outlined,
         color: Color(0xFF1CB0F6),
+        id: 'daily_routine',
       ),
       SubjectCard(
         title: l.home,
         icon: Icons.house,
         color: Color(0xFFFF4B4B),
+        id: 'home',
       ),
       SubjectCard(
         title: l.school,
         icon: Icons.school,
         color: Color(0xFFFFC800),
+        id: 'school',
       ),
       SubjectCard(
         title: l.therapy,
         icon: Icons.healing,
         color: Color(0xFF58CC02),
+        id: 'therapy',
       ),
       SubjectCard(
         title: l.activities,
         icon: Icons.sports_basketball,
         color: Color(0xFF1CB0F6),
+        id: 'activities',
       ),
       SubjectCard(
         title: l.familyFriends,
         icon: Icons.people,
         color: Color(0xFFFF4B4B),
+        id: 'family_friends',
       ),
       SubjectCard(
         title: l.toysGames,
         icon: Icons.toys,
         color: Color(0xFFFFC800),
+        id: 'toys_games',
       ),
       SubjectCard(
         title: l.foodDrink,
         icon: Icons.restaurant,
         color: Color(0xFF58CC02),
+        id: 'food_drink',
       ),
       SubjectCard(
         title: l.places,
         icon: Icons.place,
         color: Color(0xFF1CB0F6),
+        id: 'places',
       ),
       SubjectCard(
         title: l.actionVerbs,
         icon: Icons.directions_run,
         color: Color(0xFFFFC800),
+        id: 'action_verbs',
       ),
       SubjectCard(
         title: l.iWantNeeds,
         icon: Icons.favorite,
         color: Color(0xFFFF4B4B),
+        id: 'i_want_needs',
       ),
       SubjectCard(
         title: l.whatQuestions,
         icon: Icons.help_outline,
         color: Color(0xFF58CC02),
+        id: 'what_questions',
       ),
       SubjectCard(
         title: l.whereQuestions,
         icon: Icons.map,
         color: Color(0xFF1CB0F6),
+        id: 'where_questions',
       ),
       SubjectCard(
         title: l.whoQuestions,
         icon: Icons.person_search,
         color: Color(0xFFFF4B4B),
+        id: 'who_questions',
       ),
       SubjectCard(
         title: l.whyQuestions,
         icon: Icons.psychology,
         color: Color(0xFF58CC02),
+        id: 'why_questions',
       ),
       SubjectCard(
         title: l.howQuestions,
         icon: Icons.lightbulb_outline,
         color: Color(0xFF1CB0F6),
+        id: 'how_questions',
       ),
       SubjectCard(
         title: l.questionStarters,
         icon: Icons.question_answer,
         color: Color(0xFFFFC800),
+        id: 'question_starters',
       ),
       SubjectCard(
         title: l.whenQuestions,
         icon: Icons.access_time,
         color: Color(0xFFFFC800),
+        id: 'when_questions',
       ),
       SubjectCard(
         title: l.choiceQuestions,
         icon: Icons.rule,
         color: Color(0xFFFF4B4B),
+        id: 'choice_questions',
       ),
       SubjectCard(
         title: l.basicResponses,
         icon: Icons.more_horiz,
         color: Color(0xFF1CB0F6),
+        id: 'basic_responses',
       ),
       SubjectCard(
         title: l.findTheItem,
         icon: Icons.check_circle_outline,
         color: Color(0xFF58CC02),
+        id: 'find_the_item',
       ),
       SubjectCard(
         title: l.videoLearning,
         icon: Icons.video_library,
         color: Color(0xFF1CB0F6),
+        id: 'video_learning',
       ),
       SubjectCard(
-        title: 'Games',
+        title: l.games,
         icon: Icons.games,
         color: Color(0xFF58CC02),
+        id: 'games',
       ),
     ];
   }
@@ -234,8 +263,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _navigateToScreen(BuildContext context, String title, Color color) {
-    if (title == 'Video Learning') {
+  void _navigateToScreen(BuildContext context, String id, String title, Color color) {
+    if (id == 'video_learning') {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -246,166 +275,141 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     Widget screen;
-    switch (title) {
-      case 'Daily Routine':
-        screen = const ReusableImageGridScreen(
+    switch (id) {
+      case 'daily_routine':
+        screen = const OptimizedImageGridScreen(
           title: 'Daily Routine',
           imageCategory: 'my_world_daily_life',
           backgroundColor: Color(0xFF1CB0F6),
         );
         break;
-      case 'Home':
-        screen = const ReusableImageGridScreen(
+      case 'home':
+        screen = const OptimizedImageGridScreen(
           title: 'Home',
           imageCategory: 'home',
           backgroundColor: Color(0xFFFF4B4B),
         );
         break;
-      case 'School':
-        screen = const ReusableImageGridScreen(
+      case 'school':
+        screen = const OptimizedImageGridScreen(
           title: 'School',
           imageCategory: 'school',
           backgroundColor: Color(0xFFFFC800),
         );
         break;
-      case 'Therapy':
-        screen = const ReusableImageGridScreen(
+      case 'therapy':
+        screen = const OptimizedImageGridScreen(
           title: 'Therapy',
           imageCategory: 'therapy',
           backgroundColor: Color(0xFF58CC02),
         );
         break;
-      case 'Activities':
-        screen = const ReusableImageGridScreen(
+      case 'activities':
+        screen = const OptimizedImageGridScreen(
           title: 'Activities',
           imageCategory: 'activities',
           backgroundColor: Color(0xFF1CB0F6),
         );
         break;
-      case 'Family & Friends':
-        screen = const ReusableImageGridScreen(
+      case 'family_friends':
+        screen = const OptimizedImageGridScreen(
           title: 'Family & Friends',
           imageCategory: 'family_friends',
           backgroundColor: Color(0xFFFF4B4B),
         );
         break;
-      case 'Toys & Games':
-        screen = const ReusableImageGridScreen(
+      case 'toys_games':
+        screen = const OptimizedImageGridScreen(
           title: 'Toys & Games',
           imageCategory: 'toys_games',
           backgroundColor: Color(0xFFFFC800),
         );
         break;
-      case 'Food & Drink':
-        screen = const ReusableImageGridScreen(
+      case 'food_drink':
+        screen = const OptimizedImageGridScreen(
           title: 'Food & Drink',
           imageCategory: 'food_drink',
           backgroundColor: Color(0xFF58CC02),
         );
         break;
-      case 'Places':
-        screen = const ReusableImageGridScreen(
+      case 'places':
+        screen = const OptimizedImageGridScreen(
           title: 'Places',
           imageCategory: 'places',
           backgroundColor: Color(0xFF1CB0F6),
         );
         break;
-      case 'I Want / Needs':
-        screen = PresentationTwo(
-          title: 'I Want / Needs',
+      case 'i_want_needs':
+        screen = Presentation2Screen(
+          title: title, // Use localized title here
           backgroundColor: color,
           subject: 'wants_and_needs_expression',
-          question: '',
-          response: '',
         );
         break;
-      case 'Actions / Verbs':
-        screen = PresentationTwo(
-          title: 'Actions / Verbs',
+      case 'action_verbs':
+        screen = Presentation2Screen(
+          title: title, // Use localized title here
           backgroundColor: color,
           subject: 'action_words_and_verbs',
-          question: '',
-          response: '',
         );
         break;
-      case 'What Questions':
-        screen = PresentationTwo(
-          title: 'What Questions',
+      case 'what_questions':
+        screen = Presentation2Screen(
+          title: title, // Use localized title here
           backgroundColor: color,
           subject: 'what_questions',
-          question: '',
-          response: '',
         );
         break;
-      case 'Action Verbs':
-        screen = PresentationTwo(
-          title: 'Action Verbs',
-          backgroundColor: color,
-          subject: 'what_questions',
-          question: '',
-          response: '',
-        );
-        break;
-      case 'Where Questions':
-        screen = PresentationTwo(
-          title: 'Where Questions',
+      case 'where_questions':
+        screen = Presentation2Screen(
+          title: title, // Use localized title here
           backgroundColor: color,
           subject: 'where_questions',
-          question: '',
-          response: '',
         );
         break;
-      case 'Who Questions':
-        screen = PresentationTwo(
-          title: 'Who Questions',
+      case 'who_questions':
+        screen = Presentation2Screen(
+          title: title, // Use localized title here
           backgroundColor: color,
           subject: 'who_questions',
-          question: '',
-          response: '',
         );
         break;
-      case 'When Questions':
+      case 'when_questions':
         screen = const Presentation3List(subject: 'When_Questions');
         break;
-      case 'Why Questions':
-        screen = PresentationTwo(
-          title: 'Why Questions',
+      case 'why_questions':
+        screen = Presentation2Screen(
+          title: title, // Use localized title here
           backgroundColor: color,
-          question: 'Why Questions',
           subject: 'why_questions',
-          response: '',
         );
         break;
-      case 'Select the Item':
-        screen = BasicResponses(
-          backgroundColor: color,
-          title: 'Select the Item',
-        );
-        break;
-      case 'Find the Item':
+      case 'find_the_item':
         screen = const presentation5();
         break;
-      case 'Choice Questions':
+      case 'choice_questions':
         screen = const Presentation3List(subject: 'Choice_Questions');
         break;
-      case 'How Questions':
-        screen = VideoCategoriesScreen(backgroundColor: color);
-        break;
-      case 'Learning Games':
-        screen = LearningGamesScreen(backgroundColor: color);
-        break;
-      case 'Basic Responses':
-        screen = BasicResponses(
+      case 'question_starters':
+        screen = Presentation2Screen(
+          title: title, // Use localized title here
           backgroundColor: color,
-          title: 'Basic Responses',
+          subject: 'question_starters',
         );
         break;
-
-      case 'Video Learning':
+      case 'how_questions':
         screen = VideoCategoriesScreen(backgroundColor: color);
         break;
-
-      case 'Games':
+      case 'basic_responses':
+        screen = BasicResponses(
+          backgroundColor: color,
+          title: title, // Use localized title here
+        );
+        break;
+      case 'video_learning':
+        screen = VideoCategoriesScreen(backgroundColor: color);
+        break;
+      case 'games':
         screen = const LearningGamesScreen(backgroundColor: Color(0xFF58CC02));
         break;
       default:
@@ -417,6 +421,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -476,8 +481,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Welcome back!',
+                        Text(
+                          l.welcomeBack,
                           style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                       ],
@@ -531,6 +536,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       onTap:
                           () => _navigateToScreen(
                             context,
+                            subject.id,
                             subject.title,
                             subject.color,
                           ),

@@ -214,4 +214,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get videoLearning => 'Videolernen';
+
+  @override
+  String get games => 'Spiele';
 }
