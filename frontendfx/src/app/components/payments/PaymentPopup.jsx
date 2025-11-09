@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../../atoms';
 import api from '../../../utils/api';
 import { API_URL } from '../../../config';
-import lencoService from '../../../services/lencoService';
+import googlePayService from '../../../services/googlePayService';
 
 const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const navigate = useNavigate();
   const user = useRecoilValue(userStates);
-  const [paymentMethod, setPaymentMethod] = useState('mobile_money');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [selectedProvider, setSelectedProvider] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGooglePayAvailable, setIsGooglePayAvailable] = useState(false);
   
   // Promo code states
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+
+  useEffect(() => {
+    const checkGooglePayAvailability = async () => {
+      const available = await googlePayService.isGooglePayAvailable();
+      setIsGooglePayAvailable(available);
+    };
+    checkGooglePayAvailability();
+  }, []);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
@@ -113,6 +116,11 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
       return;
     }
 
+    if (!isGooglePayAvailable) {
+      alert('Google Pay is not available in your browser');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -137,73 +145,26 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
         }
       }
 
-      // Generate unique reference for this payment
-      const reference = await lencoService.generateReference('Speechora_PREMIUM');
-      
       // Prepare payment data
       const paymentData = {
         amount: paymentAmount,
+        currencyCode: 'USD',
         email: user.email,
-        phone: lencoService.formatPhoneNumber(phoneNumber),
         customerName: `${user.username || ''} ${user.lastName || ''}`.trim() || 'Speechora User',
-        reference: reference,
-        callbackUrl: `${window.location.origin}/payment-callback`,
-        userId: user.userId,
-        planName: planName
+        metadata: {
+          userId: user.userId,
+          planName: planName
+        }
       };
 
-      let paymentResponse;
-
-      if (paymentMethod === 'mobile_money') {
-        // Validate phone number
-        if (!phoneNumber.trim()) {
-          alert('Please enter your phone number');
-          return;
-        }
-
-        paymentData.provider = await lencoService.detectMobileProvider(phoneNumber);
-        paymentResponse = await lencoService.initializeMobileMoneyPayment(paymentData);
-      } else {
-        // Validate card details
-        if (!cardNumber.trim() || !expiryDate.trim() || !cvv.trim()) {
-          alert('Please fill in all card details');
-          return;
-        }
-
-        // Parse expiry date
-        const [month, year] = expiryDate.split('/');
-        if (!month || !year || month.length !== 2 || year.length !== 2) {
-          alert('Please enter expiry date in MM/YY format');
-          return;
-        }
-
-        paymentData.cardNumber = cardNumber.replace(/\s/g, '');
-        paymentData.expiryMonth = month;
-        paymentData.expiryYear = `20${year}`;
-        paymentData.cvv = cvv;
-
-        paymentResponse = await lencoService.initializeCardPayment(paymentData);
-      }
+      const paymentResponse = await googlePayService.initializePayment(paymentData);
 
       if (paymentResponse.success) {
-        // Handle successful payment initialization
-        if (paymentResponse.data?.payment_url) {
-          // Redirect to payment URL for completion
-          window.open(paymentResponse.data.payment_url, '_blank');
-          
-          // Start polling for payment status
-          setTimeout(() => {
-            checkPaymentStatus(reference, paymentAmount);
-          }, 5000);
-        } else if (paymentResponse.data?.status === 'success') {
-          // Payment completed immediately
-          await updateUserPremium(paymentAmount);
-        } else {
-          // Payment pending - start polling
-          checkPaymentStatus(reference, paymentAmount);
-        }
+        // Handle successful payment
+        await updateUserPremium(paymentAmount);
+        onClose();
       } else {
-        throw new Error(paymentResponse.message || 'Payment initialization failed');
+        throw new Error(paymentResponse.message || 'Payment failed');
       }
 
     } catch (error) {
@@ -353,21 +314,21 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
         </div>
 
         {/* Payment Method Tabs */}
-        <div className="flex mb-4 border-b">
-          <button
-            className={`py-2 px-4 ${paymentMethod === 'mobile_money' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
-            onClick={() => setPaymentMethod('mobile_money')}
-            disabled={isProcessing}
-          >
-            Mobile Money
-          </button>
-          <button
-            className={`py-2 px-4 ${paymentMethod === 'visa' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
-            onClick={() => setPaymentMethod('visa')}
-            disabled={isProcessing}
-          >
-            Card
-          </button>
+        <div className="flex justify-center items-center mb-6">
+          {isGooglePayAvailable ? (
+            <div className="google-pay-button">
+              <img 
+                src="/images/google-pay-mark.png" 
+                alt="Google Pay" 
+                className="h-12" 
+              />
+            </div>
+          ) : (
+            <div className="text-center text-gray-600">
+              Google Pay is not available in your browser.
+              Please ensure you're using a supported browser and have Google Pay set up.
+            </div>
+          )}
         </div>
 
         {paymentMethod === 'mobile_money' ? (

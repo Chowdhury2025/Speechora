@@ -236,8 +236,8 @@ model Lesson {
   id          Int    @id @default(autoincrement())
   title       String
   description String?
-  language  String?
-
+  language    String? @default("en")
+  translations Json? // JSON object containing all translations
   subject     String  //{wants_and_needs_expression ,action_words_and_verbs, what_questions, where_questions, who_questions, when_questions, why_questions}
   ageGroup    String
   statement   String  // JSON object with structure: { type: "text" | "image_url" | "video_url", content: string }
