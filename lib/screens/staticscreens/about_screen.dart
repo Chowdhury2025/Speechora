@@ -27,7 +27,7 @@ class AboutScreen extends StatelessWidget {
             Icon(Icons.book, size: 80, color: Colors.amberAccent),
             const SizedBox(height: 24),
             Text(
-              'Book8',
+              'Speechora',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -41,7 +41,7 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Book8 is an educational app designed to make learning fun and interactive for all ages. Enjoy curated content, interactive features, and a beautiful user experience.',
+              'Speechora is an educational app designed to make learning fun and interactive for all ages. Enjoy curated content, interactive features, and a beautiful user experience.',
               style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.9)),
               textAlign: TextAlign.center,
             ),
@@ -54,7 +54,7 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Contact: support@book8.com',
+              'Contact: support@speechora.com',
               style: TextStyle(color: textColor.withOpacity(0.7)),
             ),
           ],

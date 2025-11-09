@@ -55,7 +55,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setAsDefaultLauncher => 'Set as Default Launcher';
 
   @override
-  String get setAsDefaultLauncherDesc => 'Make Book8 your default home screen app';
+  String get setAsDefaultLauncherDesc => 'Make Speechora your default home screen app';
 
   @override
   String get copyright => 'Copyright';
@@ -122,7 +122,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseSelectDefault =>
-      'Please select Book8 as your default home app';
+      'Please select Speechora as your default home app';
 
   @override
   String get couldNotOpenHomeSettings =>

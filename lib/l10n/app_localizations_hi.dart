@@ -57,7 +57,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get setAsDefaultLauncherDesc =>
-      'Book8 को अपने डिफ़ॉल्ट होम स्क्रीन ऐप के रूप में बनाएं';
+      'Speechora को अपने डिफ़ॉल्ट होम स्क्रीन ऐप के रूप में बनाएं';
 
   @override
   String get copyright => 'कॉपीराइट';
@@ -125,7 +125,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get pleaseSelectDefault =>
-      'कृपया अपने डिफ़ॉल्ट होम स्क्रीन ऐप के रूप में Book8 चुनें';
+      'कृपया अपने डिफ़ॉल्ट होम स्क्रीन ऐप के रूप में Speechora चुनें';
 
   @override
   String get couldNotOpenHomeSettings =>

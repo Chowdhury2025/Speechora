@@ -45,7 +45,7 @@ class TranslationService extends ChangeNotifier {
     'could_not_open_tts_installer': 'Could not open TTS installer: {error}',
     'error_checking_tts': 'Error checking TTS languages: {error}',
     'device_may_not_have_voice': 'Device may not have a "{language}" voice installed; speech may fallback.\nYou can install language packs in system TTS settings or use cloud TTS for better quality.',
-    'select_book8_as_default': 'Please select speechora as your default home app',
+    'select_speechora_as_default': 'Please select speechora as your default home app',
     'could_not_open_home_settings': 'Could not open home settings',
 
     // Login screen

@@ -57,7 +57,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get setAsDefaultLauncherDesc =>
-      '将 Book8 设置为您的默认主屏幕应用';
+      '将 Speechora 设置为您的默认主屏幕应用';
 
   @override
   String get copyright => '版权';
@@ -125,7 +125,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pleaseSelectDefault =>
-      '请选择 Book8 作为您的默认主屏幕应用';
+      '请选择 Speechora 作为您的默认主屏幕应用';
 
   @override
   String get couldNotOpenHomeSettings =>

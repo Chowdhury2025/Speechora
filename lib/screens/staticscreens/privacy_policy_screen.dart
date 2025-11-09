@@ -19,7 +19,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               ),
               SizedBox(height: 16),
               Text(
-                'This is the privacy policy for the Book8 app.\n\n'
+                'This is the privacy policy for the Speechora app.\n\n'
                 'Your privacy is important to us. We do not collect or share any personal information.\n\n'
                 'For more details, please contact support.',
                 style: TextStyle(fontSize: 16),

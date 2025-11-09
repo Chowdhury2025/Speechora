@@ -176,7 +176,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       }
 
       // Open native installer for TTS data on Android
-      const channel = MethodChannel('com.book8/tts');
+      const channel = MethodChannel('com.speechora/tts');
       try {
         await channel.invokeMethod('installTtsData');
       } on PlatformException catch (e) {
@@ -621,12 +621,12 @@ class SettingsScreenState extends State<SettingsScreen> {
   void _setDefaultLauncher() async {
     if (isDefaultLauncher) {
       // Use a platform channel to open the Android home settings screen
-      const channel = MethodChannel('com.book8/app');
+      const channel = MethodChannel('com.speechora/app');
       try {
         await channel.invokeMethod('openHomeSettings');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please select Book8 as your default home app'),
+            content: Text('Please select Speechora as your default home app'),
             duration: Duration(seconds: 5),
           ),
         );
@@ -656,22 +656,22 @@ class SettingsScreenState extends State<SettingsScreen> {
               _locationItem(
                 Icons.folder_special,
                 'App Data',
-                '/data/user/0/com.book8/app_flutter',
+                '/data/user/0/com.speechora/app_flutter',
               ),
               _locationItem(
                 Icons.folder,
                 'Downloads',
-                '/storage/emulated/0/Download/Book8',
+                '/storage/emulated/0/Download/Speechora',
               ),
               _locationItem(
                 Icons.image,
                 'Images',
-                '/storage/emulated/0/Pictures/Book8',
+                '/storage/emulated/0/Pictures/Speechora',
               ),
               _locationItem(
                 Icons.movie,
                 'Videos',
-                '/storage/emulated/0/Movies/Book8',
+                '/storage/emulated/0/Movies/Speechora',
               ),
             ],
           ),
@@ -811,7 +811,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _launchAppStore() async {
-    const appId = 'com.book8.app';
+    const appId = 'com.speechora.app';
     try {
       // For Android
       final url = Uri.parse('market://details?id=$appId');
@@ -834,7 +834,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _launchDeveloperPage() async {
-    const devId = 'Book8+Developer';
+    const devId = 'Speechora+Developer';
     try {
       // For Android
       final url = Uri.parse('market://developer?id=$devId');

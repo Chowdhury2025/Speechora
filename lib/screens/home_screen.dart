@@ -470,7 +470,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         Text(
                           userName.isNotEmpty
                               ? userName
-                              : (userEmail.isNotEmpty ? userEmail : 'book8'),
+                              : (userEmail.isNotEmpty ? userEmail : 'speechora'),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

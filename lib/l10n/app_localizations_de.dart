@@ -57,7 +57,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get setAsDefaultLauncherDesc =>
-      'Machen Sie Book8 zur Standard-Startbildschirm-App';
+      'Machen Sie Speechora zur Standard-Startbildschirm-App';
 
   @override
   String get copyright => 'Urheberrecht';
@@ -125,7 +125,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pleaseSelectDefault =>
-      'Bitte wählen Sie Book8 als Standard-Startbildschirm-App';
+      'Bitte wählen Sie Speechora als Standard-Startbildschirm-App';
 
   @override
   String get couldNotOpenHomeSettings =>

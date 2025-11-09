@@ -201,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _launchRegisterWebsite() async {
-    final Uri url = Uri.parse('https://book8.vercel.app/register');
+    final Uri url = Uri.parse(Constants.frontendRegisterUrl);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -212,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _launchForgotPasswordWebsite() async {
-    final Uri url = Uri.parse('https://book8.vercel.app/forgot-password');
+    final Uri url = Uri.parse(Constants.frontendForgotPasswordUrl);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

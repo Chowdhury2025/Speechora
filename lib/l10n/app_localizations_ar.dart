@@ -57,7 +57,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get setAsDefaultLauncherDesc =>
-      'اجعل Book8 تطبيق الشاشة الرئيسية الافتراضي';
+      'اجعل Speechora تطبيق الشاشة الرئيسية الافتراضي';
 
   @override
   String get copyright => 'حقوق الطبع والنشر';
@@ -125,7 +125,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pleaseSelectDefault =>
-      'يرجى اختيار Book8 كتطبيق الشاشة الرئيسية الافتراضي';
+      'يرجى اختيار Speechora كتطبيق الشاشة الرئيسية الافتراضي';
 
   @override
   String get couldNotOpenHomeSettings =>

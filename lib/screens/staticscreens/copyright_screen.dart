@@ -32,7 +32,7 @@ class CopyrightScreen extends StatelessWidget {
                     Icon(Icons.copyright, size: 64, color: textColor.withOpacity(0.9)),
                     const SizedBox(height: 20),
                     Text(
-                      'Book8',
+                      'Speechora',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -53,16 +53,16 @@ class CopyrightScreen extends StatelessWidget {
               const SizedBox(height: 40),
               _buildSection(
                 title: 'Application Copyright',
-                content: 'The Book8 application, including its source code, design, logos, '
+                content: 'The Speechora application, including its source code, design, logos, '
                     'and user interface, is protected by copyright laws. All rights are '
-                    'reserved by Book8 and its licensors.',
+                    'reserved by Speechora and its licensors.',
                 textColor: textColor,
               ),
               _buildSection(
                 title: 'Content Copyright',
                 content: 'All content within the application, including but not limited to '
                     'text, graphics, logos, images, audio clips, digital downloads, and '
-                    'data compilations, is the property of Book8 or its content suppliers '
+                    'data compilations, is the property of Speechora or its content suppliers '
                     'and is protected by international copyright laws.',
                 textColor: textColor,
               ),
@@ -90,7 +90,7 @@ class CopyrightScreen extends StatelessWidget {
               ),
               _buildSection(
                 title: 'Intellectual Property',
-                content: 'The Book8 name, logo, and related marks are trademarks or '
+                content: 'The Speechora name, logo, and related marks are trademarks or '
                     'registered trademarks. No right or license is granted to use any '
                     'trademark or other intellectual property rights.',
                 textColor: textColor,
@@ -109,7 +109,7 @@ class CopyrightScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'copyright@book8.com',
+                  'copyright@speechora.com',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
