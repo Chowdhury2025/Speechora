@@ -16,7 +16,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Shield
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -58,7 +59,8 @@ const Sidebar = () => {
 
     { path: 'promo-codes', label: 'Promo Codes', icon: Crown, roles: ['SUPERUSER', 'ADMIN', 'SUPPORT'] },
     { path: 'analytics', label: 'Analytics', icon: BarChart2, roles: ['SUPERUSER', 'ADMIN'] },
-    { path: 'settings', label: 'Settings', icon: Settings, roles: ['SUPERUSER', 'ADMIN'] }
+    { path: 'settings', label: 'Settings', icon: Settings, roles: ['SUPERUSER', 'ADMIN'] },
+    { path: 'privacy', label: 'Privacy Policy', icon: Shield, roles: ['SUPERUSER', 'ADMIN', 'CONTENTMANAGER', 'SUPPORT', 'GUARDIAN_PARENT', 'TEACHER'], external: true }
   ];
 
   // Filter nav items based on user role
@@ -145,11 +147,46 @@ const Sidebar = () => {
           <div className="flex-1 space-y-2 sm:space-y-3 overflow-y-auto custom-scrollbar max-h-[calc(100vh-11rem)] sm:max-h-[calc(100vh-12rem)]">
             {otherNavItems.map((item) => {
               const Icon = item.icon;
-              const fullPath = `/app/${item.path}`;
-              const isActive = location.pathname === fullPath ||
-                (fullPath !== '/app/dashboard' && location.pathname.startsWith(fullPath));
+              const fullPath = item.external ? `/${item.path}` : `/app/${item.path}`;
+              const isActive = item.external ? false : (location.pathname === fullPath ||
+                (fullPath !== '/app/dashboard' && location.pathname.startsWith(fullPath)));
 
-              return (
+              return item.external ? (
+                <a
+                  key={item.path}
+                  href={fullPath}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`
+                  flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-xl transition-all duration-200
+                  font-bold text-xs sm:text-sm
+                  text-duo-gray-600 hover:bg-[#e5f5d5] hover:text-[#3c9202]
+                  ${!isOpen ? 'justify-center w-10 sm:w-12 h-10 sm:h-12' : 'h-9 sm:h-10'}
+                  focus:outline-none focus:ring-2 focus:ring-[#58cc02] focus:ring-offset-2
+                `}
+                >
+                  <div className={`relative group flex items-center ${!isOpen ? 'justify-center' : ''}`}>
+                    <Icon
+                      size={24}
+                      className="text-duo-gray-600 transition-transform duration-200 group-hover:scale-110"
+                    />
+                    <span
+                      className={`
+                      ml-4 transition-all duration-300 font-semibold
+                      ${!isOpen ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}
+                    `}
+                    >
+                      {item.label}
+                    </span>
+                    {/* Tooltip */}
+                    {!isOpen && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                        {item.label}
+                      </div>
+                    )}
+                  </div>
+                </a>
+              ) : (
                 <Link
                   key={item.path}
                   to={fullPath}
@@ -181,7 +218,7 @@ const Sidebar = () => {
                     </span>
                     {/* Tooltip */}
                     {!isOpen && (
-                      <div className="absolute left-full   ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-duo-gray-900 text-white text-xs font-bold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
                         {item.label}
                       </div>
                     )}

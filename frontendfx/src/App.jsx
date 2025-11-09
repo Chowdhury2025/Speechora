@@ -37,6 +37,7 @@ import PromoCodesPage from './app/pages/PromoCodesPage.jsx';
 import Presentation3List from './components/Presentation3List';
 import Presentation3Form from './components/Presentation3Form';
 import PaymentCallback from './components/PaymentCallback';
+import PrivacyPolicyPage from './app/pages/PrivacyPolicyPage.jsx';
 
 // Define which menu items are accessible to each role
 const ROLE_PERMISSIONS = {
@@ -291,6 +292,7 @@ function App() {
          <Route path='/verify-email' element={<EmailVerification />} />
           <Route path='/verify/email/:token' element={<EmailVerification />} />
           <Route path='/payment-callback' element={<PaymentCallback />} />
+          <Route path='/privacy' element={<PrivacyPolicyPage />} />
           {/* <Route path='/no-role' element={<NoRoleAssigned />} /> */}
           <Route path='/test' element={<UserManagementScreen />} />          
               {/* Authenticated app routes under /app */}
