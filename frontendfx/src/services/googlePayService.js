@@ -2,13 +2,20 @@ import api from '../utils/api';
 
 class GooglePayService {
   constructor() {
-    this.baseClient = window.google?.payments?.api?.PaymentsClient;
+    this.baseClient = null;
     this.paymentsClient = null;
   }
 
   async initialize() {
-    if (!this.baseClient) {
+    if (!window.google?.payments?.api?.PaymentsClient) {
       await this.loadGooglePayScript();
+    }
+
+    // Re-read the PaymentsClient constructor from the loaded script
+    this.baseClient = window.google?.payments?.api?.PaymentsClient;
+
+    if (!this.baseClient) {
+      throw new Error('Google Pay PaymentsClient not available');
     }
 
     this.paymentsClient = new this.baseClient({

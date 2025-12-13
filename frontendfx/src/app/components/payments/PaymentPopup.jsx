@@ -5,12 +5,19 @@ import { userStates } from '../../../atoms';
 import api from '../../../utils/api';
 import { API_URL } from '../../../config';
 import googlePayService from '../../../services/googlePayService';
+import lencoService from '../../../services/lencoService';
 
 const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const navigate = useNavigate();
   const user = useRecoilValue(userStates);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGooglePayAvailable, setIsGooglePayAvailable] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvv, setCvv] = useState('');
   
   // Promo code states
   const [promoCode, setPromoCode] = useState('');
@@ -116,11 +123,6 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
       return;
     }
 
-    if (!isGooglePayAvailable) {
-      alert('Google Pay is not available in your browser');
-      return;
-    }
-
     setIsProcessing(true);
 
     try {
@@ -135,6 +137,12 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
 
           if (promoResponse.data.success) {
             paymentAmount = promoResponse.data.finalPrice;
+            
+            // If 100% discount, skip payment and directly update premium
+            if (promoDiscount === 100 || paymentAmount <= 0) {
+              await updateUserPremium(amount); // Use original amount for premium credits
+              return;
+            }
           } else {
             alert(`Promo code error: ${promoResponse.data.error}`);
             return;
@@ -143,6 +151,12 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
           alert('Failed to apply promo code');
           return;
         }
+      }
+
+      // Check if Google Pay is available for actual payments
+      if (!isGooglePayAvailable) {
+        alert('Google Pay is not available in your browser');
+        return;
       }
 
       // Prepare payment data
@@ -223,25 +237,31 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
       const response = await api.post('/api/user/premium/add', {
         userId: user.userId,
         amount: amount,
-        paymentMethod: paymentMethod === 'card' ? 'visa' : 'mobile_money'
+        paymentMethod: promoDiscount === 100 ? 'promo_code' : (paymentMethod === 'card' ? 'visa' : 'mobile_money')
       });
 
       if (response.data) {
-        alert(`Payment successful! K${amount} has been added to your account.`);
+        const message = promoDiscount === 100 
+          ? `Promo code applied successfully! K${amount} credits added to your account.`
+          : `Payment successful! K${amount} has been added to your account.`;
+        alert(message);
         onClose();
         window.location.reload(); // Refresh to update premium status
       }
     } catch (error) {
       console.error('Premium update error:', error);
-      alert('Payment was successful but failed to update account. Please contact support.');
+      const errorMessage = promoDiscount === 100
+        ? 'Promo code was applied but failed to update account. Please contact support.'
+        : 'Payment was successful but failed to update account. Please contact support.';
+      alert(errorMessage);
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto my-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Pay for {planName}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -441,8 +461,10 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
           {isProcessing ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Processing...
+              {promoDiscount === 100 ? 'Applying Promo...' : 'Processing...'}
             </>
+          ) : promoDiscount === 100 ? (
+            'Claim Free Premium'
           ) : (
             `Pay K${finalAmount?.toFixed(2)} Now`
           )}
