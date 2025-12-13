@@ -129,10 +129,7 @@ const Sidebar = () => {
 
       <div className={`
         fixed left-0 h-screen bg-white shadow-lg transition-all duration-300 z-50
-        ${isOpen 
-          ? 'w-[280px] translate-x-0' 
-          : 'w-16 lg:w-16 translate-x-0'
-        }
+        ${isOpen ? 'w-[280px] translate-x-0' : 'w-16 lg:w-16 -translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo Section */}
         <div className="flex items-center justify-center p-3 sm:p-4 border-b border-gray-200">
