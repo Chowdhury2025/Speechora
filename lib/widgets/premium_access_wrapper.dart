@@ -53,6 +53,9 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
+      debugPrint('App resumed - checking premium status');
+      // Force clear cache and refresh when app resumes (user might have purchased premium)
+      _lastCheckTime = null;
       _refreshUserDetailsOnResume();
     }
   }
@@ -179,6 +182,16 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
       _errorMessage = '';
     });
 
+    // Clear the cache timestamp to force fresh API call
+    _lastCheckTime = null;
+
+    // Clear cached premium data to force refresh
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('premiumActive');
+    await prefs.remove('premiumBalance');
+    await prefs.remove('premiumExpiry');
+    debugPrint('Cleared premium cache, forcing server refresh');
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? userId = await _getUserId(prefs);
@@ -230,20 +243,16 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
 
   Future<bool> _determineAccess(Map<String, dynamic> data) async {
     final premiumActive = data['premiumActive'] == true;
-    final premiumExpiry = data['premiumExpiry']?.toString() ?? '';
+    final premiumBalance = _parseToInt(data['premiumBalance']);
+    final premiumDeduction = _parseToInt(data['premiumDeduction']);
     final trialExpiry = data['trialExpiry']?.toString() ?? '';
     final isTrialUsed = data['isTrialUsed'] == true;
 
     final now = DateTime.now();
 
-    // Check premium access
-    if (premiumActive) {
-      if (premiumExpiry.isEmpty) return true; // No expiry = unlimited
-
-      final expiry = DateTime.tryParse(premiumExpiry);
-      if (expiry != null && !now.isAfter(expiry)) {
-        return true;
-      }
+    // Check premium access (monthly billing - check if balance covers monthly cost)
+    if (premiumActive && premiumBalance >= premiumDeduction) {
+      return true;
     }
 
     // Check trial access
@@ -263,19 +272,33 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
     String message;
     final premiumActive = data['premiumActive'] == true;
     final premiumBalance = _parseToInt(data['premiumBalance']);
+    final premiumExpiry = data['premiumExpiry']?.toString() ?? '';
     final trialExpiry = data['trialExpiry']?.toString() ?? '';
     final isTrialUsed = data['isTrialUsed'] == true;
 
     if (hasAccess && premiumActive) {
-      message = 'Premium active - balance: $premiumBalance';
+      final premiumDeduction = _parseToInt(data['premiumDeduction']);
+      final monthsRemaining = premiumDeduction > 0
+          ? (premiumBalance / premiumDeduction).floor()
+          : 0;
+      message =
+          'Premium active - balance: $premiumBalance (~$monthsRemaining months remaining)';
     } else if (hasAccess && !isTrialUsed) {
-      message = 'Trial active until $trialExpiry';
+      final expiryDate =
+          DateTime.tryParse(trialExpiry)?.toLocal().toString().split(' ')[0] ??
+          'unknown';
+      message = 'Trial active until $expiryDate';
     } else {
-      message = 'No active premium or trial';
+      message =
+          'No active premium or trial - purchase premium to access all features';
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
+        backgroundColor: hasAccess ? Colors.green : Colors.orange,
+      ),
     );
   }
 
@@ -331,7 +354,7 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: _checkAccess(),
+      future: _forceRefreshAndCheckAccess(),
       builder: (context, snapshot) {
         if (_isLoading) {
           return const Scaffold(
@@ -358,7 +381,8 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height -
+                minHeight:
+                    MediaQuery.of(context).size.height -
                     MediaQuery.of(context).padding.vertical,
               ),
               child: Column(
@@ -415,35 +439,49 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
   Widget _buildActionButtons() {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Column(
           children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.black87,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: _checkPremiumStatus,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text(
+                      'Refresh Status',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
-                onPressed: _checkPremiumStatus,
-                icon: const Icon(Icons.refresh),
-                label: const Text(
-                  'Refresh Status',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[200],
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: _logout,
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Logout'),
+                  ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[200],
-                  foregroundColor: Colors.black87,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                onPressed: _logout,
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
+            const SizedBox(height: 12),
+            Text(
+              'Just purchased premium? Click "Refresh Status" to sync your account.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
               ),
             ),
           ],
@@ -469,6 +507,42 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
     );
   }
 
+  Future<bool> _forceRefreshAndCheckAccess() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? userId = await _getUserId(prefs);
+
+      if (userId != null && userId.isNotEmpty) {
+        // Force refresh from server to get latest premium status
+        try {
+          final response = await http
+              .get(
+                Uri.parse('${Constants.baseUrl}/user/details/$userId'),
+                headers: {'Content-Type': 'application/json'},
+              )
+              .timeout(const Duration(seconds: 10));
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            await _persistUserData(prefs, data);
+            debugPrint('Premium status refreshed from server');
+
+            // Now check access with fresh data
+            return await _determineAccess(data);
+          }
+        } catch (e) {
+          debugPrint('Failed to refresh from server, using cached data: $e');
+        }
+      }
+
+      // Fallback to cached data if server refresh fails
+      return await _checkAccess();
+    } catch (e) {
+      debugPrint('Error in forceRefreshAndCheckAccess: $e');
+      return await _checkAccess(); // Fallback to cached check
+    }
+  }
+
   Future<bool> _checkAccess() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -481,14 +555,12 @@ class _PremiumAccessWrapperState extends State<PremiumAccessWrapper>
 
       final now = DateTime.now();
 
-      // Check premium access
-      if (premiumActive) {
-        if (premiumExpiry.isEmpty) return true;
+      // Check premium access (monthly billing - check balance vs deduction)
+      final premiumBalance = _parseToInt(prefs.get('premiumBalance'));
+      final premiumDeduction = _parseToInt(prefs.get('premiumDeduction'));
 
-        final expiry = DateTime.tryParse(premiumExpiry);
-        if (expiry != null && !now.isAfter(expiry)) {
-          return true;
-        }
+      if (premiumActive && premiumBalance >= premiumDeduction) {
+        return true;
       }
 
       // Check trial access
