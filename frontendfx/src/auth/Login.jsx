@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { API_URL } from '../config';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
@@ -17,11 +17,13 @@ export const Login = () => {
   const setAuthStatus = useSetRecoilState(authState);
   const isAuthenticated = useRecoilValue(authState);
   const navigate = useNavigate();
+  const location = useLocation();
 useEffect(() => {
   if (isAuthenticated) {
-    navigate('/app/dashboard');
+    const dest = location?.state?.from?.pathname || '/app/dashboard';
+    navigate(dest, { replace: true });
   }
-}, [isAuthenticated, navigate]);
+}, [isAuthenticated, navigate, location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

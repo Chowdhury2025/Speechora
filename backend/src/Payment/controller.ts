@@ -78,15 +78,32 @@ export const verifyPayment = async (req: Request, res: Response) => {
           if (user) {
             const current = user.premiumBalance || 0;
             const newBalance = current + Number(amount);
+            
+            // Get system monthly pricing for deductions
+            const systemSettings = await prisma.systemSettings.findFirst();
+            const monthlyDeduction = systemSettings ? parseFloat(systemSettings.premiumPricing) : 1000;
+            
             await prisma.user.update({
               where: { id: Number(userId) },
               data: {
                 premiumBalance: newBalance,
-                premiumActive: true
+                premiumActive: true,
+                premiumExpiry: null, // Monthly billing, no fixed expiry
+                premiumDeduction: monthlyDeduction,
+                isTrialUsed: true // Mark trial as used since user purchased premium
               }
             });
+            
+            console.log(`Payment verified - Premium updated for user ${userId}: balance=${newBalance}, active=true, monthly_deduction=${monthlyDeduction}`);
+            
             // attach updated info for client convenience
-            result.enriched = { premiumBalance: newBalance, premiumActive: true };
+            result.enriched = { 
+              premiumBalance: newBalance, 
+              premiumActive: true,
+              premiumExpiry: null, // Monthly billing
+              premiumDeduction: monthlyDeduction,
+              isTrialUsed: true
+            };
           }
         }
       } catch (e) {

@@ -68,12 +68,16 @@ userRouter.post('/verify-email', userController.verifyEmailController);
 userRouter.post('/resend-verification', verifyEmailController);
 userRouter.delete('/usersof/:userId', deleteUserController);
 userRouter.get('/premium', userController.getPremiumInfo);
+userRouter.post('/premium/update', userController.updatePremium);
+userRouter.get('/premium/test/:userId', userController.testPremiumEndpoint);
 userRouter.post('/premium/add', userController.addPremiumFunds);
 userRouter.post('/premium/cancel', userController.cancelPremium);
 userRouter.post('/premium/upgrade', userController.upgradePremium);
 // userRouter.post('/premium/send-email', userController.sendPremiumEmail);
 userRouter.get('/subscription-status', userController.subscriptionStatusController);
 userRouter.post('/premium/purchase', userController.purchasePremiumController);
+userRouter.post('/premium/refresh/:userId', userController.refreshPremiumStatusController);
+userRouter.post('/premium/process-monthly', userController.processMonthlyDeductions);
 userRouter.get('/details/:userId', userController.getUserDetailsController);
 
 

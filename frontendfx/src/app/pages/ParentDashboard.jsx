@@ -99,24 +99,39 @@ const ParentDashboard = () => {
       const expiryDate = new Date(premiumData.expiry);
       if (expiryDate <= now) {
         if (premiumData.balance >= premiumData.deduction && premiumData.deduction > 0) {
-          // Deduct and update expiry
-          const newBalance = premiumData.balance - premiumData.deduction;
-          const newExpiry = new Date(expiryDate);
-          newExpiry.setMonth(newExpiry.getMonth() + 1);
-          await api.post('/api/user/premium/update', {
-            userId,
-            balance: newBalance,
-            expiry: newExpiry.toISOString(),
-            isActive: true
-          });
-          setPremium({ ...premiumData, balance: newBalance, expiry: newExpiry.toISOString() });
+          // Let the backend refresh and return the latest premium status
+          const resp = await api.post(`/api/user/premium/refresh/${userId}`);
+          if (resp.data?.success) {
+            const u = resp.data.user || {};
+            setPremium({
+              isActive: u.premiumActive ?? true,
+              balance: u.premiumBalance ?? premiumData.balance,
+              deduction: u.premiumDeduction ?? premiumData.deduction,
+              expiry: u.premiumExpiry ?? premiumData.expiry,
+              monthsRemaining: Math.floor((u.premiumBalance || 0) / (u.premiumDeduction || premiumData.deduction || 1))
+            });
+          } else {
+            // Fallback: update UI locally
+            const newBalance = premiumData.balance - premiumData.deduction;
+            const newExpiry = new Date(expiryDate);
+            newExpiry.setMonth(newExpiry.getMonth() + 1);
+            setPremium({ ...premiumData, balance: newBalance, expiry: newExpiry.toISOString() });
+          }
         } else {
-          // Deactivate and notify
-          await api.post('/api/user/premium/update', {
-            userId,
-            isActive: false
-          });
-          setPremium({ ...premiumData, isActive: false });
+          // Ask backend to refresh status (may deactivate based on balance)
+          const resp = await api.post(`/api/user/premium/refresh/${userId}`);
+          if (resp.data?.success) {
+            const u = resp.data.user || {};
+            setPremium({
+              isActive: u.premiumActive ?? false,
+              balance: u.premiumBalance ?? premiumData.balance,
+              deduction: u.premiumDeduction ?? premiumData.deduction,
+              expiry: u.premiumExpiry ?? premiumData.expiry,
+              monthsRemaining: Math.floor((u.premiumBalance || 0) / (u.premiumDeduction || premiumData.deduction || 1))
+            });
+          } else {
+            setPremium({ ...premiumData, isActive: false });
+          }
           // Optionally, trigger a notification to the user here
         }
       }
@@ -124,9 +139,15 @@ const ParentDashboard = () => {
   };
 
   const fetchPremiumInfo = async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('No userId available for fetchPremiumInfo');
+      return;
+    }
+    
+    console.log('Fetching premium info for user:', userId);
     setPremiumLoading(true);
     setPremiumError(null);
+    
     try {
       // Fetch both premium info and current system price in parallel
       const [premiumRes, priceRes] = await Promise.all([
@@ -134,18 +155,42 @@ const ParentDashboard = () => {
         api.get('/api/system/premium-pricing')
       ]);
       
+      console.log('Premium API Response:', premiumRes.data);
+      console.log('Price API Response:', priceRes.data);
+      
       const systemPrice = priceRes.data.premiumPricing;
       const premiumData = {
-        isActive: premiumRes.data.isActive,
-        balance: premiumRes.data.balance,
+        isActive: premiumRes.data.isActive || false,
+        balance: premiumRes.data.balance || 0,
         deduction: premiumRes.data.deduction || systemPrice, // Use system price if no deduction set
         expiry: premiumRes.data.expiry,
+        monthsRemaining: premiumRes.data.monthsRemaining || 0
       };
+      
+      console.log('Processed premium data:', premiumData);
       setPremium(premiumData);
       setPremiumPrice(systemPrice); // Update the premium price state
       await checkAndUpdatePremiumStatus(premiumData);
     } catch (err) {
-      setPremiumError('Failed to load premium info.');
+      console.error('Error fetching premium info:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      console.error('Request config:', err.config);
+      
+      let errorMessage = 'Failed to load premium info.';
+      if (err.response?.status === 404) {
+        errorMessage = 'User not found. Please check your login status.';
+      } else if (err.response?.status === 400) {
+        errorMessage = err.response?.data?.message || 'Invalid request. Please refresh and try again.';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.code === 'NETWORK_ERROR' || !err.response) {
+        errorMessage = 'Network connection error. Please check your internet connection.';
+      } else {
+        errorMessage = err.response?.data?.message || err.message || errorMessage;
+      }
+      
+      setPremiumError(errorMessage);
     } finally {
       setPremiumLoading(false);
     }

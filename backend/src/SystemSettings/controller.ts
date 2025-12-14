@@ -4,13 +4,20 @@ import { prisma } from '../../config/db';
 // GET premium pricing (returns value or default)
 export const getPremiumPricing = async (_req: Request, res: Response) => {
   try {
+    console.log('getPremiumPricing endpoint called');
     // Only select the premiumPricing field for efficiency
     const settings = await prisma.systemSettings.findFirst({ select: { premiumPricing: true } });
+    console.log('System settings found:', settings);
+    
     if (!settings || settings.premiumPricing === undefined || settings.premiumPricing === null) {
-      return res.json({ premiumPricing: '0' }); // Default value if not set
+      console.log('No premium pricing found, returning default');
+      return res.json({ premiumPricing: '1000' }); // Default value if not set
     }
+    
+    console.log('Returning premium pricing:', settings.premiumPricing);
     res.json({ premiumPricing: settings.premiumPricing });
   } catch (err) {
+    console.error('Error in getPremiumPricing:', err);
     res.status(500).json({ message: 'Server error', error: err });
   }
 };
@@ -29,9 +36,9 @@ export const setPremiumPricing = async (req: Request, res: Response) => {
       settings = await prisma.systemSettings.create({
         data: {
           premiumPricing: String(premiumPricing),
-          companyName: 'Default Company Name',
-          adminEmail: 'admin@example.com',
-          notificationEmail: 'notifications@example.com',
+          companyName: 'Speechora Learning Platform',
+          adminEmail: 'admin@speechora.com',
+          notificationEmail: 'notifications@speechora.com',
         },
       });
     } else {
@@ -153,5 +160,44 @@ export const updateSystemSettings = async (req: Request, res: Response) => {
   } catch (err) {
     console.error('Error updating system settings:', err);
     res.status(500).json({ message: 'Server error', error: err });
+  }
+};
+
+// Initialize system settings if they don't exist
+export const initializeSystemSettings = async (_req: Request, res: Response) => {
+  try {
+    let settings = await prisma.systemSettings.findFirst();
+    
+    if (!settings) {
+      console.log('Creating initial system settings...');
+      settings = await prisma.systemSettings.create({
+        data: {
+          companyName: 'Speechora Learning Platform',
+          adminEmail: 'admin@speechora.com',
+          premiumPricing: '1000',
+          notificationEmail: 'notifications@speechora.com',
+        },
+      });
+      console.log('Initial system settings created:', settings);
+    }
+    
+    res.json({
+      success: true,
+      message: settings ? 'System settings already exist' : 'System settings initialized',
+      settings: {
+        id: settings.id,
+        companyName: settings.companyName,
+        premiumPricing: settings.premiumPricing,
+        adminEmail: settings.adminEmail,
+        notificationEmail: settings.notificationEmail,
+      }
+    });
+  } catch (err) {
+    console.error('Error initializing system settings:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to initialize system settings', 
+      error: err instanceof Error ? err.message : 'Unknown error'
+    });
   }
 };

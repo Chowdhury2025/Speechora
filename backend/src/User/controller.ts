@@ -862,65 +862,183 @@ export const purchasePremiumController = async (req: Request, res: Response) => 
 export const getPremiumInfo = async (req: Request, res: Response) => {
   try {
     const userId = req.query.userId as string;
+    console.log('getPremiumInfo called with userId:', userId);
+    console.log('Full query params:', req.query);
+    
     if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
+      console.log('No userId provided in request');
+      return res.status(400).json({ success: false, message: 'User ID is required' });
     }
 
+    const parsedUserId = Number(userId);
+    if (isNaN(parsedUserId)) {
+      console.log('Invalid userId format:', userId);
+      return res.status(400).json({ success: false, message: 'Invalid User ID format' });
+    }
+
+    console.log('Looking up user with ID:', parsedUserId);
     const user = await prisma.user.findUnique({
-      where: { id: Number(userId) }
+      where: { id: parsedUserId }
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      console.log('User not found with ID:', parsedUserId);
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Get system-wide premium price
-    const systemSettings = await prisma.systemSettings.findFirst();
-    const systemPrice = parseFloat(systemSettings?.premiumPricing || "1000");
+    console.log('Found user:', user.username, 'premiumActive:', user.premiumActive, 'balance:', user.premiumBalance);
 
-    // Get active promo code if any
-    const activePromoCode = await prisma.promoCode.findFirst({
-      where: {
-        usedBy: {
-          some: {
-            userId: user.id
-          }
+    // Get system-wide premium price with better error handling
+    let systemSettings;
+    try {
+      systemSettings = await prisma.systemSettings.findFirst();
+      console.log('System settings found:', systemSettings ? 'yes' : 'no');
+    } catch (settingsError) {
+      console.error('Error fetching system settings:', settingsError);
+      systemSettings = null;
+    }
+    
+    const systemPrice = parseFloat(systemSettings?.premiumPricing || "1000");
+    console.log('System premium pricing:', systemPrice);
+
+    // Get active promo code if any (simplified query with better error handling)
+    let activePromoCode = null;
+    try {
+      activePromoCode = await prisma.promoCode.findFirst({
+        where: {
+          usedBy: {
+            some: {
+              userId: user.id
+            }
+          },
+          isActive: true,
+          OR: [
+            { validUntil: null },
+            { validUntil: { gt: new Date() } }
+          ]
         },
-        isActive: true,
-        OR: [
-          { validUntil: null },
-          { validUntil: { gt: new Date() } }
-        ]
-      },
-      orderBy: {
-        discount: 'desc'
-      }
-    });
+        orderBy: {
+          discount: 'desc'
+        }
+      });
+      console.log('Active promo code for user:', activePromoCode?.code || 'none');
+    } catch (promoError) {
+      console.log('Error fetching promo code (continuing without):', promoError);
+      // Continue without promo code if there's an issue
+    }
 
     // Calculate final price after discount
     const discount = activePromoCode ? (systemPrice * activePromoCode.discount / 100) : 0;
-    const finalDeduction = systemPrice - discount;
+    const finalDeduction = Math.max(0, systemPrice - discount); // Ensure non-negative
 
     const premiumInfo = {
+      success: true,
       isActive: user.premiumActive || false,
       balance: user.premiumBalance || 0,
-      deduction: finalDeduction,
+      deduction: user.premiumDeduction || finalDeduction,
       systemPrice: systemPrice,
       appliedDiscount: discount,
-      expiry: user.premiumExpiry || null
+      expiry: user.premiumExpiry || null,
+      monthsRemaining: user.premiumDeduction && user.premiumDeduction > 0 
+        ? Math.floor((user.premiumBalance || 0) / user.premiumDeduction)
+        : 0
     };
 
+    console.log('Returning premium info:', premiumInfo);
     res.json(premiumInfo);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching premium info:', error);
-    res.status(500).json({ message: 'Failed to fetch premium info' });
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch premium info',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Update premium fields for a user (called from admin or scheduled tasks/frontend)
+export const updatePremium = async (req: Request, res: Response) => {
+  try {
+    const { userId, balance, expiry, isActive, deduction } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'userId is required' });
+    }
+
+    const updateData: any = {};
+    if (balance !== undefined) updateData.premiumBalance = Number(balance);
+    if (typeof isActive === 'boolean') updateData.premiumActive = isActive;
+    if (deduction !== undefined) updateData.premiumDeduction = Number(deduction);
+    if (expiry !== undefined && expiry !== null) {
+      const parsed = new Date(expiry);
+      if (!isNaN(parsed.getTime())) updateData.premiumExpiry = parsed;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const updated = await prisma.user.update({ where: { id: Number(userId) }, data: updateData });
+
+    return res.json({ success: true, message: 'Premium updated', user: {
+      id: updated.id,
+      premiumActive: updated.premiumActive,
+      premiumBalance: updated.premiumBalance,
+      premiumDeduction: updated.premiumDeduction,
+      premiumExpiry: updated.premiumExpiry
+    }});
+  } catch (err: any) {
+    console.error('Error in updatePremium:', err);
+    return res.status(500).json({ success: false, message: 'Failed to update premium', error: err?.message || err });
+  }
+};
+
+// Test endpoint to debug premium info issues
+export const testPremiumEndpoint = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    console.log('Test endpoint called with userId:', userId);
+    
+    const user = await prisma.user.findUnique({
+      where: { id: Number(userId) },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        premiumActive: true,
+        premiumBalance: true,
+        premiumDeduction: true,
+        premiumExpiry: true,
+        isTrialUsed: true,
+        trialExpiry: true
+      }
+    });
+    
+    const systemSettings = await prisma.systemSettings.findFirst();
+    
+    res.json({
+      success: true,
+      debug: {
+        userId: userId,
+        user: user,
+        systemSettings: systemSettings,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error: any) {
+    console.error('Test endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
   }
 };
 
 export const addPremiumFunds = async (req: Request, res: Response) => {
   try {
     const { userId, amount } = req.body;
-    if (!userId || !amount) {
+    if (!userId || amount === undefined || amount === null) {
       return res.status(400).json({ message: 'User ID and amount are required' });
     }
 
@@ -935,27 +1053,48 @@ export const addPremiumFunds = async (req: Request, res: Response) => {
     const currentBalance = user.premiumBalance || 0;
     const newBalance = currentBalance + Number(amount);
 
+    // Get system monthly pricing for deductions
+    const systemSettings = await prisma.systemSettings.findFirst();
+    const monthlyDeduction = systemSettings ? parseFloat(systemSettings.premiumPricing) : 1000;
+
+    // Set initial expiry to one month from now so users get a full period
+    const now = new Date();
+    const initialExpiry = new Date(now);
+    initialExpiry.setMonth(initialExpiry.getMonth() + 1);
+
+    // Update user with comprehensive premium data
     await prisma.user.update({
       where: { id: Number(userId) },
       data: {
         premiumBalance: newBalance,
         premiumActive: true,
-        premiumDeduction: user.premiumDeduction || 1000 // Set default if not exists
+        premiumExpiry: initialExpiry,
+        premiumDeduction: monthlyDeduction,
+        // Mark trial as used since user has purchased premium
+        isTrialUsed: true
       }
     });
 
-    const updatedUser = await prisma.user.findUnique({ where: { id: Number(userId) } });
+    // Log the premium update for debugging
+    console.log(`Premium updated for user ${userId}: balance=${newBalance}, active=true, monthly_deduction=${monthlyDeduction}`);
 
     res.json({ 
       success: true,
-      message: 'Funds added successfully',
+      message: 'Premium activated successfully - monthly deductions will apply',
       newBalance: newBalance,
-      premiumActive: updatedUser?.premiumActive ?? true,
-      premiumBalance: updatedUser?.premiumBalance ?? newBalance
+      premiumActive: true,
+      premiumBalance: newBalance,
+      premiumDeduction: monthlyDeduction,
+      premiumExpiry: null, // Monthly billing, no fixed expiry
+      isTrialUsed: true
     });
   } catch (error) {
     console.error('Error adding premium funds:', error);
-    res.status(500).json({ message: 'Failed to add funds' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to add funds',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
@@ -1079,5 +1218,179 @@ export const upgradePremium = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error upgrading premium:', error);
     res.status(500).json({ message: 'Failed to upgrade premium' });
+  }
+};
+
+// Dedicated endpoint to refresh premium status (for mobile app sync)
+export const refreshPremiumStatusController = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.userId);
+    if (!userId) {
+      return res.status(400).json({ message: 'Valid userId is required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    // Perform immediate server-side monthly deduction when refreshing
+    const systemSettings = await prisma.systemSettings.findFirst();
+    const monthlyDeduction = (user.premiumDeduction && user.premiumDeduction > 0)
+      ? user.premiumDeduction
+      : (systemSettings ? parseFloat(systemSettings.premiumPricing) : 0);
+
+    const now = new Date();
+    let updatedUser = user;
+
+    if (user.premiumActive) {
+      // If monthly deduction is configured, only attempt to deduct when the billing period is due
+      if (monthlyDeduction && monthlyDeduction > 0) {
+        const currentExpiry = user.premiumExpiry ? new Date(user.premiumExpiry) : null;
+
+        // If expiry is set and now is past or equal to expiry, perform deduction for the next period
+        if (currentExpiry && now >= currentExpiry) {
+          const balance = user.premiumBalance || 0;
+          if (balance >= monthlyDeduction) {
+            const newBalance = parseFloat((balance - monthlyDeduction).toFixed(2));
+
+            const newExpiry = new Date(currentExpiry);
+            newExpiry.setMonth(newExpiry.getMonth() + 1);
+
+            updatedUser = await prisma.user.update({
+              where: { id: userId },
+              data: {
+                premiumBalance: newBalance,
+                premiumActive: true,
+                premiumExpiry: newExpiry,
+                isTrialUsed: true
+              }
+            });
+          } else {
+            // Insufficient balance - deactivate premium (do not zero out balance)
+            updatedUser = await prisma.user.update({
+              where: { id: userId },
+              data: { premiumActive: false }
+            });
+          }
+        } else if (!currentExpiry) {
+          // No expiry present: initialize expiry to one month from now without deducting immediately
+          const initExpiry = new Date(now);
+          initExpiry.setMonth(initExpiry.getMonth() + 1);
+          updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+              premiumExpiry: initExpiry,
+              isTrialUsed: true
+            }
+          });
+        }
+      }
+    }
+
+    // Check if user has sufficient balance for premium access
+    const hasAccess = updatedUser.premiumActive && 
+                     (updatedUser.premiumBalance || 0) >= (updatedUser.premiumDeduction || monthlyDeduction || 0);
+
+    // Return the same structure as getUserDetailsController
+    const normalizeDate = (d: any) => (d ? new Date(d).toISOString() : null);
+
+    res.json({
+      success: true,
+      message: 'Premium status refreshed successfully',
+      hasAccess: hasAccess,
+      user: {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        premiumActive: updatedUser.premiumActive,
+        premiumBalance: updatedUser.premiumBalance,
+        premiumDeduction: updatedUser.premiumDeduction,
+        premiumExpiry: normalizeDate(updatedUser.premiumExpiry),
+        trialStartDate: normalizeDate(updatedUser.trialStartDate),
+        trialExpiry: normalizeDate(updatedUser.trialExpiry),
+        isTrialUsed: updatedUser.isTrialUsed,
+      }
+    });
+  } catch (error: any) {
+    console.error('Error refreshing premium status:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to refresh premium status', 
+      error: error?.message || error 
+    });
+  }
+};
+
+// Process monthly premium deductions (should be called by a scheduled job)
+export const processMonthlyDeductions = async (_req: Request, res: Response) => {
+  try {
+    // Get all users with active premium
+    const premiumUsers = await prisma.user.findMany({
+      where: {
+        premiumActive: true,
+        premiumBalance: { gt: 0 }
+      }
+    });
+
+    const results = [];
+    
+    for (const user of premiumUsers) {
+      const balance = user.premiumBalance || 0;
+      const deduction = user.premiumDeduction || 0;
+      
+      if (balance >= deduction) {
+        // Sufficient balance - deduct monthly fee
+        const newBalance = balance - deduction;
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { premiumBalance: newBalance }
+        });
+        
+        results.push({
+          userId: user.id,
+          username: user.username,
+          oldBalance: balance,
+          newBalance: newBalance,
+          deducted: deduction,
+          status: 'deducted'
+        });
+      } else {
+        // Insufficient balance - deactivate premium
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { 
+            premiumActive: false,
+            premiumBalance: 0 
+          }
+        });
+        
+        results.push({
+          userId: user.id,
+          username: user.username,
+          oldBalance: balance,
+          newBalance: 0,
+          deducted: 0,
+          status: 'deactivated'
+        });
+      }
+    }
+
+    console.log(`Processed monthly deductions for ${results.length} users`);
+    
+    res.json({
+      success: true,
+      message: `Processed ${results.length} premium users`,
+      results: results
+    });
+  } catch (error: any) {
+    console.error('Error processing monthly deductions:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to process monthly deductions', 
+      error: error?.message || error 
+    });
   }
 };

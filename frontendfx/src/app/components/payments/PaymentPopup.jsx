@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { userStates } from '../../../atoms';
 import api from '../../../utils/api';
@@ -9,6 +9,7 @@ import lencoService from '../../../services/lencoService';
 
 const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useRecoilValue(userStates);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGooglePayAvailable, setIsGooglePayAvailable] = useState(false);
@@ -119,7 +120,7 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
   const handlePayment = async () => {
     if (!user?.userId) {
       alert('Please log in to make a purchase');
-      navigate('/login');
+      navigate('/login', { state: { from: location }, replace: true });
       return;
     }
 
@@ -258,10 +259,18 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
         return false;
       }
 
+      // Force refresh premium status to ensure mobile app gets updated data
+      try {
+        await api.post(`/api/user/premium/refresh/${user.userId}`);
+        console.log('Premium status refreshed for mobile sync');
+      } catch (refreshError) {
+        console.warn('Failed to refresh premium status, but payment was successful:', refreshError);
+      }
+
       // Success path
       const message = promoDiscount === 100
-        ? `Promo code applied successfully! K${amount} credits added to your account.`
-        : `Payment successful! K${amount} has been added to your account.`;
+        ? `Promo code applied successfully! K${amount} credits added to your account. This covers monthly premium access. Please restart the mobile app to see changes.`
+        : `Payment successful! K${amount} has been added to your account. This covers monthly premium access with automatic deductions. Please restart the mobile app to see changes.`;
       alert(message);
       onClose();
       // Navigate to app/dashboard instead of forcing a reload

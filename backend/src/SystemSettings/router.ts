@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getPremiumPricing, setPremiumPricing, getSystemSettings, updateSystemSettings } from './controller';
+import { getPremiumPricing, setPremiumPricing, getSystemSettings, updateSystemSettings, initializeSystemSettings } from './controller';
 import { getPremiumPrice } from './getPremiumPrice';
 
 const router = Router();
@@ -11,5 +11,6 @@ router.get('/premium-price', getPremiumPrice);
 // General system settings endpoints
 router.get('/settings', getSystemSettings);
 router.patch('/settings', updateSystemSettings);
+router.post('/init', initializeSystemSettings);
 
 export default router;

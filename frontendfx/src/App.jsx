@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { RecoilRoot, useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
 import { authState, userStates, sidebarState } from './atoms';
 
@@ -107,10 +107,11 @@ function ProtectedRoute({ permission, children }) {
   const isAuthenticated = useRecoilValue(authState);
   const user = useRecoilValue(userStates);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login', { replace: true });
+      navigate('/login', { state: { from: location }, replace: true });
       return;
     }
 
@@ -137,10 +138,11 @@ function IndexRouteHandler() {
   const isAuthenticated = useRecoilValue(authState);
   const user = useRecoilValue(userStates);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login', { replace: true });
+      navigate('/login', { state: { from: location }, replace: true });
       return;
     }
 
@@ -163,6 +165,7 @@ function AutoLogout() {
   const setAuth = useSetRecoilState(authState);
   const setUser = useSetRecoilState(userStates);
   const navigate = useNavigate();
+  const location = useLocation();
   const [autoLogoutTime, setAutoLogoutTime] = useState(30); // Default to 30 minutes
   useEffect(() => {
     // Using default auto logout time since system settings API is not ready
@@ -177,7 +180,7 @@ function AutoLogout() {
       localStorage.removeItem("user");
       setUser(null);
       setAuth(false);
-      navigate("/login");
+      navigate('/login', { state: { from: location }, replace: true });
     };
 
     const resetTimer = () => {
@@ -207,9 +210,11 @@ function Layout() {
   const [isSidebarOpen] = useRecoilState(sidebarState);
   const setAuth = useSetRecoilState(authState);
   const setUser = useSetRecoilState(userStates);
-  const navigate = useNavigate();  useEffect(() => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login', { replace: true });
+      navigate('/login', { state: { from: location }, replace: true });
       return;
     }
 
@@ -234,7 +239,7 @@ function Layout() {
     localStorage.removeItem("user");
     setUser(null);
     setAuth(false);
-    navigate("/login");
+    navigate('/login', { state: { from: location }, replace: true });
   };
   return (    <div className='flex h-screen bg-gradient-to-br from-azure-500 to-azure-400 overflow-hidden'>
       {/* Sidebar */}

@@ -1,14 +1,14 @@
 
-// export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-export const API_URL = import.meta.env.VITE_API_URL || 'https://book8-backend.vercel.app';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// export const API_URL = import.meta.env.VITE_API_URL || 'https://book8-backend.vercel.app';
 
 // Frontend URLs
 export const FRONTEND_URLS = {
   base: import.meta.env.VITE_FRONTEND_URL || 'https://speechora.vercel.app',
-  register: 'https://speechora.vercel.app/register',
-  login: 'https://speechora.vercel.app/login',
-  forgotPassword: 'https://speechora.vercel.app/forgot-password',
-  premium: 'https://speechora.vercel.app/app/premium'
+  register: `${import.meta.env.VITE_FRONTEND_URL || 'https://speechora.vercel.app'}/register`,
+  login: `${import.meta.env.VITE_FRONTEND_URL || 'https://speechora.vercel.app'}/login`,
+  forgotPassword: `${import.meta.env.VITE_FRONTEND_URL || 'https://speechora.vercel.app'}/forgot-password`,
+  premium: `${import.meta.env.VITE_FRONTEND_URL || 'https://speechora.vercel.app'}/app/premium`
 };
 
 // Cloudflare R2 Configuration
