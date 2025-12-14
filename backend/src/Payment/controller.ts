@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import lencoService from "../services/LencoService";
+import { prisma } from "../../config/db";
 
 // Get payment configuration for frontend widget
 export const getPaymentConfig = async (req: Request, res: Response) => {
@@ -62,8 +63,36 @@ export const verifyPayment = async (req: Request, res: Response) => {
     }
 
     const result = await lencoService.verifyPayment(reference);
-    
+
+    // If Lenco reports success, try to update the user's premium balance
     if (result.success) {
+      try {
+        const raw = result.data || result;
+        // Try multiple common places for metadata / amount
+        const metadata = raw.metadata || raw.meta || raw.data?.metadata || raw.payment?.metadata;
+        const amount = raw.amount || raw.data?.amount || raw.payment?.amount || raw.paidAmount;
+        const userId = metadata?.userId || metadata?.user_id || metadata?.user || metadata?.customerUserId;
+
+        if (userId && amount) {
+          const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
+          if (user) {
+            const current = user.premiumBalance || 0;
+            const newBalance = current + Number(amount);
+            await prisma.user.update({
+              where: { id: Number(userId) },
+              data: {
+                premiumBalance: newBalance,
+                premiumActive: true
+              }
+            });
+            // attach updated info for client convenience
+            result.enriched = { premiumBalance: newBalance, premiumActive: true };
+          }
+        }
+      } catch (e) {
+        console.error('Error while updating user after payment verification:', e);
+      }
+
       res.json(result);
     } else {
       res.status(400).json(result);

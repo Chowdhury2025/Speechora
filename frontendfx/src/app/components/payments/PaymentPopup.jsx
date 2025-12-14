@@ -202,10 +202,22 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
     
     try {
       const statusResponse = await lencoService.verifyPayment(reference);
-      
-      if (statusResponse.data?.status === 'success') {
+      // normalize status detection from Lenco / backend
+      const raw = statusResponse || {};
+      const lencoData = raw.data || raw.data?.data || raw; // try multiple shapes
+      const statusVal = (
+        lencoData?.status ||
+        lencoData?.payment_status ||
+        lencoData?.state ||
+        lencoData?.collectionStatus ||
+        raw?.status
+      );
+
+      const normalized = String(statusVal || '').toLowerCase();
+
+      if (['success', 'paid', 'paid_success', 'successful', 'ok'].includes(normalized)) {
         await updateUserPremium(amount);
-      } else if (statusResponse.data?.status === 'failed') {
+      } else if (['failed', 'failure', 'error'].includes(normalized)) {
         alert('Payment failed. Please try again.');
         setIsProcessing(false);
       } else if (attempts < maxAttempts) {
@@ -240,14 +252,21 @@ const PaymentPopup = ({ isOpen, onClose, amount, planName }) => {
         paymentMethod: promoDiscount === 100 ? 'promo_code' : (paymentMethod === 'card' ? 'visa' : 'mobile_money')
       });
 
-      if (response.data) {
-        const message = promoDiscount === 100 
-          ? `Promo code applied successfully! K${amount} credits added to your account.`
-          : `Payment successful! K${amount} has been added to your account.`;
-        alert(message);
-        onClose();
-        window.location.reload(); // Refresh to update premium status
+      const data = response.data || {};
+      if (data.success === false) {
+        alert(data.message || 'Failed to update account after payment.');
+        return false;
       }
+
+      // Success path
+      const message = promoDiscount === 100
+        ? `Promo code applied successfully! K${amount} credits added to your account.`
+        : `Payment successful! K${amount} has been added to your account.`;
+      alert(message);
+      onClose();
+      // Navigate to app/dashboard instead of forcing a reload
+      navigate('/');
+      return true;
     } catch (error) {
       console.error('Premium update error:', error);
       const errorMessage = promoDiscount === 100

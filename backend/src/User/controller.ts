@@ -944,9 +944,14 @@ export const addPremiumFunds = async (req: Request, res: Response) => {
       }
     });
 
+    const updatedUser = await prisma.user.findUnique({ where: { id: Number(userId) } });
+
     res.json({ 
+      success: true,
       message: 'Funds added successfully',
-      newBalance: newBalance 
+      newBalance: newBalance,
+      premiumActive: updatedUser?.premiumActive ?? true,
+      premiumBalance: updatedUser?.premiumBalance ?? newBalance
     });
   } catch (error) {
     console.error('Error adding premium funds:', error);
