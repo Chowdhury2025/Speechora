@@ -4,6 +4,15 @@ const LENCO_BASE_URL = 'https://api.lenco.co/access/v2';
 const LENCO_PUBLIC_KEY = process.env.LENCO_PUBLIC_KEY || 'pub-45885ee23a940550a65ca5874b8d58684c069616b7aac36b';
 const LENCO_PRIVATE_KEY = process.env.LENCO_PRIVATE_KEY || 'f0874c6950dda4628bb39f840895f03da80bfce64380049aba6d40e359f87768';
 
+export interface LencoResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+  error?: any;
+  status?: number;
+  enriched?: any;
+}
+
 class LencoService {
   private apiClient: any;
 
@@ -23,7 +32,7 @@ class LencoService {
   }
 
   // Verify payment status using Lenco's verification endpoint
-  async verifyPayment(reference: string) {
+  async verifyPayment(reference: string): Promise<LencoResponse> {
     try {
       const response = await this.apiClient.get(`/collections/status/${reference}`);
       return {
@@ -57,7 +66,7 @@ class LencoService {
       }
     };
   }
-  handleError(error: unknown) {
+  handleError(error: unknown): LencoResponse {
     if (axios.isAxiosError(error)) {
       if (error.response) {
         // Server responded with error status
